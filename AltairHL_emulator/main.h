@@ -43,7 +43,6 @@ static void measure_sensor_handler(EventLoopTimer *eventLoopTimer);
 static void mqtt_dowork_handler(EventLoopTimer *eventLoopTimer);
 static void panel_refresh_handler(EventLoopTimer *eventLoopTimer);
 static void process_control_panel_commands(void);
-static void WatchdogMonitorTimerHandler(EventLoopTimer *eventLoopTimer);
 
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
@@ -118,7 +117,6 @@ static DX_TIMER_BINDING memory_diagnostics_timer = {.period = {60, 0}, .name = "
 static DX_TIMER_BINDING device_stats_timer = {.period = {45, 0}, .name = "memory_diagnostics_timer", .handler = device_stats_handler};
 static DX_TIMER_BINDING mqtt_do_work_timer = {.name = "mqtt_do_work_timer", .handler = mqtt_dowork_handler};
 static DX_TIMER_BINDING panel_refresh_timer = {.period = {0, 20 * OneMS}, .name = "panel_refresh_timer", .handler = panel_refresh_handler};
-static DX_TIMER_BINDING watchdogMonitorTimer = {.period = {5, 0}, .name = "watchdogMonitorTimer", .handler = WatchdogMonitorTimerHandler};
 
 // Azure IoT Central Properties (Device Twins)
 DX_DEVICE_TWIN_BINDING dt_channelId = {.propertyName = "DesiredChannelId", .twinType = DX_DEVICE_TWIN_INT, .handler = device_twin_set_channel_id_handler};
@@ -179,8 +177,7 @@ static DX_TIMER_BINDING *timerSet[] = {&connectionStatusLedOnTimer,
                                        &measure_sensor_timer,
                                        &restartDeviceOneShotTimer,
                                        &mqtt_do_work_timer,
-                                       &panel_refresh_timer,
-                                       &watchdogMonitorTimer
+                                       &panel_refresh_timer
 #if defined(ALTAIR_FRONT_PANEL_CLICK) || defined(ALTAIR_FRONT_PANEL_RETRO_CLICK)
                                        ,
                                        &turnOffNotificationsTimer
