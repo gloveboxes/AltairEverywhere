@@ -15,6 +15,16 @@
 //#include "examples/mqttexample.h"
 #include "examples/mqttnet.h"
 
+#ifdef ENABLE_MQTT_TLS
+static const char* mTlsCaFile;
+static const char* mTlsCertFile;
+static const char* mTlsKeyFile;
+#ifdef HAVE_SNI
+static int useSNI = 0;
+static const char* mTlsSniHostName;
+#endif
+#endif
+
 #define MQTT_CLIENT_ID		"altair%d"
 #define PUB_TOPIC_DATA		"altair/%d/web"
 #define SUB_TOPIC_DATA		"altair/%d/dev"

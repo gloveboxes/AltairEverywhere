@@ -109,11 +109,9 @@ static DX_GPIO_BINDING azure_iot_connected_led = {
     .pin = NETWORK_CONNECTED_LED, .direction = DX_OUTPUT, .initialState = GPIO_Value_Low, .invertPin = true, .name = "azure_iot_connected_led"};
 
 // Common Timers
-DX_TIMER_BINDING restartDeviceOneShotTimer = {.name = "restartDeviceOneShotTimer", .handler = delay_restart_device_handler};
 static DX_TIMER_BINDING connectionStatusLedOffTimer = {.name = "connectionStatusLedOffTimer", .handler = connection_status_led_off_handler};
 static DX_TIMER_BINDING connectionStatusLedOnTimer = {.name = "connectionStatusLedOnTimer", .handler = connection_status_led_on_handler};
 static DX_TIMER_BINDING measure_sensor_timer = {.period = {30, 0}, .name = "measure_sensor_timer", .handler = measure_sensor_handler};
-static DX_TIMER_BINDING memory_diagnostics_timer = {.period = {60, 0}, .name = "memory_diagnostics_timer", .handler = memory_diagnostics_handler};
 static DX_TIMER_BINDING device_stats_timer = {.period = {45, 0}, .name = "memory_diagnostics_timer", .handler = device_stats_handler};
 static DX_TIMER_BINDING mqtt_do_work_timer = {.name = "mqtt_do_work_timer", .handler = mqtt_dowork_handler};
 static DX_TIMER_BINDING panel_refresh_timer = {.period = {0, 20 * OneMS}, .name = "panel_refresh_timer", .handler = panel_refresh_handler};
@@ -172,10 +170,8 @@ static DX_GPIO_BINDING *gpioSet[] = {&azure_iot_connected_led,
 
 static DX_TIMER_BINDING *timerSet[] = {&connectionStatusLedOnTimer,
                                        &connectionStatusLedOffTimer,
-                                       &memory_diagnostics_timer,
                                        &device_stats_timer,
                                        &measure_sensor_timer,
-                                       &restartDeviceOneShotTimer,
                                        &mqtt_do_work_timer,
                                        &panel_refresh_timer
 #if defined(ALTAIR_FRONT_PANEL_CLICK) || defined(ALTAIR_FRONT_PANEL_RETRO_CLICK)

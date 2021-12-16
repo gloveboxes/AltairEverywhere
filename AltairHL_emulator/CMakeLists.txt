@@ -139,7 +139,11 @@ target_link_libraries(${PROJECT_NAME} applibs)
 target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC AZURE_IOT_HUB_CONFIGURED)
-target_link_libraries(${PROJECT_NAME} applibs pthread gcc_s c azure_sphere_devx wolfssl tlsutils curl)
+target_link_libraries(${PROJECT_NAME} applibs pthread c desktop_devx wolfssl curl)
+
+target_link_options(${PROJECT_NAME} PUBLIC "-L/usr/local/lib")
+
+
 target_include_directories(${PROJECT_NAME} PUBLIC AzureSphereDevX/include )
 target_include_directories(${PROJECT_NAME} PUBLIC ../IntercoreContract)
 target_include_directories(${PROJECT_NAME} PUBLIC wolfMQTT wolfMQTT/wolfmqtt ./ )

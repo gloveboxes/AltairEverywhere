@@ -130,7 +130,12 @@ static bool load_application(const char* fileName) {
 	snprintf(filePathAndName, sizeof(filePathAndName), "%s/%s", BASIC_SAMPLES_DIRECTORY, fileName);
 
 	Log_Debug("LOADING '%s'\n", fileName);
-	int GameFd = Storage_OpenFileInImagePackage(filePathAndName);
+
+
+// TODO: OPEN FILE
+
+	// int GameFd = Storage_OpenFileInImagePackage(filePathAndName);
+	int GameFd = 0;
 	if (GameFd >= 0) {
 		// get length.
 		off_t length = lseek(GameFd, 0, SEEK_END);
@@ -640,7 +645,9 @@ static inline uint8_t sense(void) {
 }
 
 static bool loadRomImage(char* romImageName, uint16_t loadAddress) {
-	int romFd = Storage_OpenFileInImagePackage(romImageName);
+	// TODO OPEN FILE
+	// int romFd = Storage_OpenFileInImagePackage(romImageName);
+	int romFd = 0;
 	if (romFd == -1)
 		return false;
 

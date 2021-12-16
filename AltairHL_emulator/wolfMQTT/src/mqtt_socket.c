@@ -351,17 +351,17 @@ int MqttSocket_Peek(MqttClient *client, byte* buf, int buf_len, int timeout_ms)
 /// <param name="ssl"></param>
 /// <param name="context"></param>
 /// <returns></returns>
-int wolfSSL_SetCertCbCtx(WOLFSSL* ssl, void* context) {
+// int wolfSSL_SetCertCbCtx(WOLFSSL* ssl, void* context) {
 
-    int rc = 0;
-    // THIS ASSUMES FD WILL REMAIN THE FIRST ITEM IN THE SocketContext object
-    int fd = *(int*)context;
+//     int rc = 0;
+//     // THIS ASSUMES FD WILL REMAIN THE FIRST ITEM IN THE SocketContext object
+//     int fd = *(int*)context;
 
-    // Associate socket with wolfSSL session.
-    rc = wolfSSL_set_fd(ssl, fd);
+//     // Associate socket with wolfSSL session.
+//     rc = wolfSSL_set_fd(ssl, fd);
 
-    return rc;
-}
+//     return rc;
+// }
 
 #endif // AZURE_SPHERE
 

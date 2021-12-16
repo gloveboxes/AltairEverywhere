@@ -144,69 +144,121 @@ int mqtt_check_timeout(int rc, word32* start_sec, word32 timeout_sec) {
 }
 #endif /* WOLFMQTT_NONBLOCK */
 
+#ifdef ENABLE_MQTT_TLS
+static int mqtt_tls_verify_cb(int preverify, WOLFSSL_X509_STORE_CTX* store)
+{
+    char buffer[WOLFSSL_MAX_ERROR_SZ];
+    MQTTCtx *mqttCtx = NULL;
+    char appName[PRINT_BUFFER_SIZE] = {0};
 
-int mqtt_tls_cb(MqttClient* client) {
-	int ret;
-	char* abs_path = NULL;
-	int rc = WOLFSSL_FAILURE;
+    if (store->userCtx != NULL) {
+        /* The client.ctx was stored during MqttSocket_Connect. */
+        mqttCtx = (MQTTCtx *)store->userCtx;
+        XSTRNCPY(appName, " for ", PRINT_BUFFER_SIZE-1);
+        XSTRNCAT(appName, mqttCtx->app_name,
+                PRINT_BUFFER_SIZE-XSTRLEN(appName)-1);
+    }
 
-	client->tls.ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
-	if (client->tls.ctx == NULL) {
-		return WOLFSSL_FAILURE;
-	}
+    PRINTF("MQTT TLS Verify Callback%s: PreVerify %d, Error %d (%s)",
+            appName, preverify,
+            store->error, store->error != 0 ?
+                    wolfSSL_ERR_error_string(store->error, buffer) : "none");
+    PRINTF("  Subject's domain name is %s", store->domain);
 
-	/* Load root CA certificates full path */
-	abs_path = Storage_GetAbsolutePathInImagePackage(MQTT_CA_CERTIFICATE);
-	if (abs_path) {
-		rc = wolfSSL_CTX_load_verify_locations(client->tls.ctx, abs_path, NULL);
-		if (rc != WOLFSSL_SUCCESS) {
-			free(abs_path);
-			abs_path = NULL;
+    if (store->error != 0) {
+        /* Allowing to continue */
+        /* Should check certificate and return 0 if not okay */
+        PRINTF("  Allowing cert anyways");
+    }
 
-			//Log_Debug("Error loading CA %s: %d", mTlsCaFile, rc);
-			return rc;
-		}
-		free(abs_path);
-		abs_path = NULL;
-	}
-
-	abs_path = Storage_GetAbsolutePathInImagePackage(MQTT_CLIENT_PRIVATE_KEY);
-	if (abs_path == NULL) {
-		Log_Debug("ERROR: the private key path could not be resolved\n");
-		return WOLFSSL_FAILURE;
-	}
-
-	ret = wolfSSL_CTX_use_PrivateKey_file(client->tls.ctx, abs_path, WOLFSSL_FILETYPE_PEM);
-	if (ret != WOLFSSL_SUCCESS) {
-		Log_Debug("ERROR: failed to private key certificate\n");
-		free(abs_path);
-		abs_path = NULL;
-		return WOLFSSL_FAILURE;
-	}
-
-	free(abs_path);
-	abs_path = NULL;
-
-
-	abs_path = Storage_GetAbsolutePathInImagePackage(MQTT_CLIENT_CERTIFICATE);
-	if (abs_path == NULL) {
-		Log_Debug("ERROR: the client certificate path could not be resolved\n");
-		return WOLFSSL_FAILURE;
-	}
-
-	ret = wolfSSL_CTX_use_certificate_file(client->tls.ctx, abs_path, WOLFSSL_FILETYPE_PEM);
-	if (ret != WOLFSSL_SUCCESS) {
-		Log_Debug("ERROR: failed to client certificate\n");
-		free(abs_path);
-		abs_path = NULL;
-		return WOLFSSL_FAILURE;
-	}
-
-	free(abs_path);
-	abs_path = NULL;
-
-	return WOLFSSL_SUCCESS;
+    return 1;
 }
+
+/* Use this callback to setup TLS certificates and verify callbacks */
+int mqtt_tls_cb(MqttClient* client)
+{
+    int rc = WOLFSSL_FAILURE;
+
+    client->tls.ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+    if (client->tls.ctx) {
+        wolfSSL_CTX_set_verify(client->tls.ctx, WOLFSSL_VERIFY_PEER,
+                mqtt_tls_verify_cb);
+
+        /* default to success */
+        rc = WOLFSSL_SUCCESS;
+
+#if !defined(NO_CERT)
+    #if !defined(NO_FILESYSTEM)
+        if (mTlsCaFile) {
+            /* Load CA certificate file */
+            rc = wolfSSL_CTX_load_verify_locations(client->tls.ctx,
+                mTlsCaFile, NULL);
+            if (rc != WOLFSSL_SUCCESS) {
+                PRINTF("Error loading CA %s: %d (%s)", mTlsCaFile,
+                    rc, wolfSSL_ERR_reason_error_string(rc));
+                return rc;
+            }
+        }
+        if (mTlsCertFile && mTlsKeyFile) {
+            /* Load If using a mutual authentication */
+            rc = wolfSSL_CTX_use_certificate_file(client->tls.ctx,
+                mTlsCertFile, WOLFSSL_FILETYPE_PEM);
+            if (rc != WOLFSSL_SUCCESS) {
+                PRINTF("Error loading certificate %s: %d (%s)", mTlsCertFile,
+                    rc, wolfSSL_ERR_reason_error_string(rc));
+                return rc;
+            }
+            rc = wolfSSL_CTX_use_PrivateKey_file(client->tls.ctx,
+                mTlsKeyFile, WOLFSSL_FILETYPE_PEM);
+            if (rc != WOLFSSL_SUCCESS) {
+                PRINTF("Error loading key %s: %d (%s)", mTlsKeyFile,
+                    rc, wolfSSL_ERR_reason_error_string(rc));
+                return rc;
+            }
+        }
+    #else
+    #if 0
+        /* Examples for loading buffer directly */
+        /* Load CA certificate buffer */
+        rc = wolfSSL_CTX_load_verify_buffer(client->tls.ctx,
+            (const byte*)root_ca, (long)XSTRLEN(root_ca), WOLFSSL_FILETYPE_PEM);
+
+        /* Load Client Cert */
+        if (rc == WOLFSSL_SUCCESS)
+            rc = wolfSSL_CTX_use_certificate_buffer(client->tls.ctx,
+                (const byte*)device_cert, (long)XSTRLEN(device_cert),
+                WOLFSSL_FILETYPE_PEM);
+
+        /* Load Private Key */
+        if (rc == WOLFSSL_SUCCESS)
+            rc = wolfSSL_CTX_use_PrivateKey_buffer(client->tls.ctx,
+                (const byte*)device_priv_key, (long)XSTRLEN(device_priv_key),
+                WOLFSSL_FILETYPE_PEM);
+    #endif
+    #endif /* !NO_FILESYSTEM */
+#endif /* !NO_CERT */
+    }
+#ifdef HAVE_SNI
+    if ((rc == WOLFSSL_SUCCESS) && (mTlsSniHostName != NULL)) {
+        rc = wolfSSL_CTX_UseSNI(client->tls.ctx, WOLFSSL_SNI_HOST_NAME,
+                mTlsSniHostName, (word16) XSTRLEN(mTlsSniHostName));
+        if (rc != WOLFSSL_SUCCESS) {
+            PRINTF("UseSNI failed");
+        }
+    }
+#endif /* HAVE_SNI */
+
+    PRINTF("MQTT TLS Setup (%d)", rc);
+
+    return rc;
+}
+#else
+int mqtt_tls_cb(MqttClient* client)
+{
+    (void)client;
+    return 0;
+}
+#endif /* ENABLE_MQTT_TLS */
 
 TOPIC_TYPE topic_type(char* topic_name, size_t topic_name_length) {
 	if (strncmp(topic_name, sub_topic_data, topic_name_length) == 0) {
