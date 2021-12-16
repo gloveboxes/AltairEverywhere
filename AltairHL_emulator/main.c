@@ -756,7 +756,6 @@ static void InitPeripheralAndHandlers(void) {
 
 	dx_deviceTwinSubscribe(deviceTwinBindingSet, NELEMS(deviceTwinBindingSet));
 	dx_timerSetStart(timerSet, NELEMS(timerSet));
-	dx_directMethodSubscribe(directMethodBindingSet, NELEMS(directMethodBindingSet));
 
 	// onboard_sensors_init(i2c_onboard_sensors.fd);
 	// onboard_sensors_read(&onboard_telemetry.latest);
@@ -774,7 +773,6 @@ static void InitPeripheralAndHandlers(void) {
 static void ClosePeripheralAndHandlers(void) {
 	dx_azureToDeviceStop();
 	dx_deviceTwinUnsubscribe();
-	dx_directMethodUnsubscribe();
 	dx_timerEventLoopStop();
 	dx_gpioSetClose(gpioSet, NELEMS(gpioSet));
 	dx_gpioSetClose(ledRgb, NELEMS(ledRgb));

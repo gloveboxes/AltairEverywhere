@@ -191,4 +191,3 @@ static DX_DEVICE_TWIN_BINDING *deviceTwinBindingSet[] = {&dt_reportedDeviceStart
                                                          &dt_desiredLocalSerial,      &dt_desiredTemperature, &dt_reportedTemperature, &dt_diskCacheHits,
                                                          &dt_diskCacheMisses,         &dt_diskTotalWrites,    &dt_diskTotalErrors};
 
-DX_DIRECT_METHOD_BINDING *directMethodBindingSet[] = { };

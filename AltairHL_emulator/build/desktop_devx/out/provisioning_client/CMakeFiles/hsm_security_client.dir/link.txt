@@ -1,2 +1,0 @@
-/usr/bin/ar qc libhsm_security_client.a CMakeFiles/hsm_security_client.dir/adapters/hsm_client_data.c.o CMakeFiles/hsm_security_client.dir/adapters/hsm_client_riot.c.o CMakeFiles/hsm_security_client.dir/adapters/hsm_client_tpm.c.o CMakeFiles/hsm_security_client.dir/adapters/hsm_client_key.c.o
-/usr/bin/ranlib libhsm_security_client.a

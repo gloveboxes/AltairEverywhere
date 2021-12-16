@@ -1,2 +1,0 @@
-/usr/bin/ar qc libutpm.a CMakeFiles/utpm.dir/src/Marshal.c.o CMakeFiles/utpm.dir/src/Memory.c.o CMakeFiles/utpm.dir/src/tpm_codec.c.o CMakeFiles/utpm.dir/src/gbfiledescript.c.o CMakeFiles/utpm.dir/src/tpm_comm_linux.c.o CMakeFiles/utpm.dir/src/tpm_socket_comm.c.o
-/usr/bin/ranlib libutpm.a

@@ -1,2 +1,0 @@
-/usr/bin/ar qc libapplibs.a CMakeFiles/applibs.dir/comms_manager.c.o CMakeFiles/applibs.dir/src/adc.c.o CMakeFiles/applibs.dir/src/gpio.c.o CMakeFiles/applibs.dir/src/i2c.c.o CMakeFiles/applibs.dir/src/log.c.o CMakeFiles/applibs.dir/src/pwm.c.o CMakeFiles/applibs.dir/src/remotex.c.o CMakeFiles/applibs.dir/src/spi.c.o CMakeFiles/applibs.dir/src/storage.c.o CMakeFiles/applibs.dir/src/uart.c.o
-/usr/bin/ranlib libapplibs.a

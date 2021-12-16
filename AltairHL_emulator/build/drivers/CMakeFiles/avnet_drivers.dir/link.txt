@@ -1,2 +1,0 @@
-/usr/bin/ar qc libavnet_drivers.a CMakeFiles/avnet_drivers.dir/imu_temp_pressure.c.o CMakeFiles/avnet_drivers.dir/light_sensor.c.o CMakeFiles/avnet_drivers.dir/__/Common/lps22hh_reg.c.o CMakeFiles/avnet_drivers.dir/__/Common/lsm6dso_reg.c.o
-/usr/bin/ranlib libavnet_drivers.a
