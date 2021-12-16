@@ -1,0 +1,105 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"DesktopDevX/azure-iot-sdk-c/umqtt/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 164,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 170,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 185,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 192,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/umqtt/libumqtt.a"
+			],
+			"targetId" : "umqtt::@e0c1729d1b9d7b025eb2",
+			"targetIndex" : 45,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "include/azureiot/azure_umqtt_c",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/umqtt/./inc/azure_umqtt_c/mqtt_client.h",
+				"DesktopDevX/azure-iot-sdk-c/umqtt/./inc/azure_umqtt_c/mqtt_codec.h",
+				"DesktopDevX/azure-iot-sdk-c/umqtt/./inc/azure_umqtt_c/mqttconst.h",
+				"DesktopDevX/azure-iot-sdk-c/umqtt/./inc/azure_umqtt_c/mqtt_message.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"exportName" : "umqttTargets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "umqtt::@e0c1729d1b9d7b025eb2",
+					"index" : 45
+				}
+			],
+			"paths" : 
+			[
+				"desktop_devx/out/umqtt/CMakeFiles/Export/cmake/umqttTargets.cmake"
+			],
+			"type" : "export"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/umqtt/configs/umqttConfig.cmake",
+				"build/desktop_devx/out/umqtt/umqtt/umqttConfigVersion.cmake"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "desktop_devx/out/umqtt",
+		"source" : "DesktopDevX/azure-iot-sdk-c/umqtt"
+	}
+}

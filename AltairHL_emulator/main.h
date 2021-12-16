@@ -1,15 +1,17 @@
 #pragma once
 
+#include "hw/azure_sphere_learning_path.h"
+
 // DevX Libraries
 #include "dx_config.h"
+#include "dx_device_twins.h"
+#include "dx_direct_methods.h"
 #include "dx_exit_codes.h"
 #include "dx_gpio.h"
 #include "dx_i2c.h"
 #include "dx_terminate.h"
 #include "dx_timer.h"
-#include "dx_intercore.h"
 #include "dx_version.h"
-#include "../IntercoreContract/intercore_contract.h"
 #include "onboard_sensors.h"
 
 #ifdef ALTAIR_FRONT_PANEL_CLICK
@@ -57,21 +59,6 @@ typedef struct {
 
 ENVIRONMENT onboard_telemetry;
 
-INTERCORE_DISK_DATA_BLOCK_T intercore_disk_block;
-
-DX_INTERCORE_BINDING intercore_disk_cache_ctx = {.sockFd = -1,
-                                                 .nonblocking_io = true,
-                                                 .rtAppComponentId = CORE_DISK_CACHE_COMPONENT_ID,
-                                                 .interCoreCallback = NULL,
-                                                 .intercore_recv_block = &intercore_disk_block,
-                                                 .intercore_recv_block_length = sizeof(intercore_disk_block)};
-
-DX_INTERCORE_BINDING intercore_sd_card_ctx = {.sockFd = -1,
-                                              .nonblocking_io = false,
-                                              .rtAppComponentId = CORE_SD_CARD_COMPONENT_ID,
-                                              .interCoreCallback = NULL,
-                                              .intercore_recv_block = &intercore_disk_block,
-                                              .intercore_recv_block_length = sizeof(intercore_disk_block)};
 
 #ifdef ALTAIR_FRONT_PANEL_CLICK
 
@@ -120,7 +107,7 @@ static DX_GPIO_BINDING led_output_enable = {
 
 static DX_GPIO_BINDING buttonA = {.pin = BUTTON_A, .direction = DX_INPUT, .detect = DX_GPIO_DETECT_LOW, .name = "buttonA"};
 static DX_GPIO_BINDING azure_iot_connected_led = {
-    .pin = AZURE_CONNECTED_LED, .direction = DX_OUTPUT, .initialState = GPIO_Value_Low, .invertPin = true, .name = "azure_iot_connected_led"};
+    .pin = NETWORK_CONNECTED_LED, .direction = DX_OUTPUT, .initialState = GPIO_Value_Low, .invertPin = true, .name = "azure_iot_connected_led"};
 
 // Common Timers
 DX_TIMER_BINDING restartDeviceOneShotTimer = {.name = "restartDeviceOneShotTimer", .handler = delay_restart_device_handler};
@@ -147,8 +134,6 @@ static DX_DEVICE_TWIN_BINDING dt_reportedDeviceStartTime = {.propertyName = "Rep
 static DX_DEVICE_TWIN_BINDING dt_reportedTemperature = {.propertyName = "ReportedTemperature", .twinType = DX_DEVICE_TWIN_INT};
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
 
-// Azure IoT Central Commands (Direct Methods)
-static DX_DIRECT_METHOD_BINDING dm_restartDevice = {.methodName = "RestartDevice", .handler = RestartDeviceHandler};
 
 // Initialize Sets
 static DX_GPIO_BINDING *ledRgb[] = {&(DX_GPIO_BINDING){.pin = LED_RED, .direction = DX_OUTPUT, .initialState = GPIO_Value_Low, .invertPin = true, .name = "red led"},
@@ -206,4 +191,4 @@ static DX_DEVICE_TWIN_BINDING *deviceTwinBindingSet[] = {&dt_reportedDeviceStart
                                                          &dt_desiredLocalSerial,      &dt_desiredTemperature, &dt_reportedTemperature, &dt_diskCacheHits,
                                                          &dt_diskCacheMisses,         &dt_diskTotalWrites,    &dt_diskTotalErrors};
 
-DX_DIRECT_METHOD_BINDING *directMethodBindingSet[] = {&dm_restartDevice};
+DX_DIRECT_METHOD_BINDING *directMethodBindingSet[] = { };

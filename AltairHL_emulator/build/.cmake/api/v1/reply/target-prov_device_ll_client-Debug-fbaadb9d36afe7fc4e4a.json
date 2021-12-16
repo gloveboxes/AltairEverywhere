@@ -1,0 +1,590 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "desktop_devx/out/provisioning_client/libprov_device_ll_client.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"install",
+			"target_link_libraries",
+			"linkSharedUtil",
+			"link_security_client",
+			"add_compile_definitions",
+			"include",
+			"add_definitions",
+			"include_directories"
+		],
+		"files" : 
+		[
+			"DesktopDevX/azure-iot-sdk-c/provisioning_client/CMakeLists.txt",
+			"DesktopDevX/azure-iot-sdk-c/configs/azure_iot_sdksFunctions.cmake",
+			"CMakeLists.txt",
+			"cmake/altair_config.cmake",
+			"DesktopDevX/azure-iot-sdk-c/CMakeLists.txt",
+			"DesktopDevX/azure-iot-sdk-c/dependencies.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 197,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 402,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 203,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 199,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 103,
+				"parent" : 4
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 200,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 140,
+				"parent" : 6
+			},
+			{
+				"file" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 84,
+				"parent" : 8
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 7,
+				"parent" : 8
+			},
+			{
+				"file" : 3,
+				"parent" : 10
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 19,
+				"parent" : 11
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 12,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 34,
+				"parent" : 8
+			},
+			{
+				"file" : 4
+			},
+			{
+				"command" : 7,
+				"file" : 4,
+				"line" : 180,
+				"parent" : 15
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 32,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 41,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 40,
+				"parent" : 8
+			},
+			{
+				"command" : 7,
+				"file" : 4,
+				"line" : 28,
+				"parent" : 15
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 13,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 15,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 14,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 31,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 17,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 33,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 18,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 49,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 25,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 24,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 27,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 35,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 28,
+				"parent" : 8
+			},
+			{
+				"command" : 8,
+				"file" : 4,
+				"line" : 292,
+				"parent" : 15
+			},
+			{
+				"command" : 8,
+				"file" : 4,
+				"line" : 293,
+				"parent" : 15
+			},
+			{
+				"command" : 6,
+				"file" : 4,
+				"line" : 295,
+				"parent" : 15
+			},
+			{
+				"file" : 5,
+				"parent" : 36
+			},
+			{
+				"command" : 8,
+				"file" : 5,
+				"line" : 42,
+				"parent" : 37
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 84,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 85,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 86,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 106,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 164,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 167,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 171,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 304,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : " -Werror -DUSE_PROV_MODULE_FULL -DUSE_PROV_MODULE -DUSE_PROV_MODULE -DHSM_TYPE_X509 -DHSM_TYPE_SAS_TOKEN -DHSM_TYPE_SYMM_KEY -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk"
+				},
+				{
+					"fragment" : "-std=gnu99"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 9,
+					"define" : "ALTAIR_FRONT_PANEL_NONE"
+				},
+				{
+					"backtrace" : 12,
+					"define" : "ALTAIR_MQTT_HOST=\"test.mosquitto.org\""
+				},
+				{
+					"backtrace" : 13,
+					"define" : "ALTAIR_MQTT_SECURE_PORT_WOLF=8884"
+				},
+				{
+					"backtrace" : 14,
+					"define" : "AZURE_SPHERE"
+				},
+				{
+					"backtrace" : 16,
+					"define" : "DONT_USE_UPLOADTOBLOB"
+				},
+				{
+					"backtrace" : 17,
+					"define" : "ENABLE_MQTT_TLS"
+				},
+				{
+					"backtrace" : 18,
+					"define" : "IOT_HUB_POLL_TIME_NANOSECONDS=500000000"
+				},
+				{
+					"backtrace" : 19,
+					"define" : "IOT_HUB_POLL_TIME_SECONDS=1"
+				},
+				{
+					"backtrace" : 20,
+					"define" : "MACOSX"
+				},
+				{
+					"backtrace" : 21,
+					"define" : "MQTT_CA_CERTIFICATE=\"certs/ca.crt\""
+				},
+				{
+					"backtrace" : 22,
+					"define" : "MQTT_CLIENT_CERTIFICATE=\"certs/client.crt\""
+				},
+				{
+					"backtrace" : 23,
+					"define" : "MQTT_CLIENT_PRIVATE_KEY=\"certs/client.key\""
+				},
+				{
+					"backtrace" : 24,
+					"define" : "MQTT_USE_WOLFSSL"
+				},
+				{
+					"backtrace" : 25,
+					"define" : "MQTT_WOLF_DRIVER"
+				},
+				{
+					"backtrace" : 26,
+					"define" : "NO_DH"
+				},
+				{
+					"backtrace" : 27,
+					"define" : "PRINTF=Log_Debug"
+				},
+				{
+					"backtrace" : 7,
+					"define" : "RIOTBUILD"
+				},
+				{
+					"backtrace" : 7,
+					"define" : "RIOTSECP256R1"
+				},
+				{
+					"backtrace" : 28,
+					"define" : "SD_CARD_ENABLED"
+				},
+				{
+					"backtrace" : 29,
+					"define" : "WOLFMQTT_DISCONNECT_CB"
+				},
+				{
+					"backtrace" : 30,
+					"define" : "WOLFMQTT_MULTITHREAD"
+				},
+				{
+					"backtrace" : 31,
+					"define" : "WOLFMQTT_NO_STDIO"
+				},
+				{
+					"backtrace" : 32,
+					"define" : "WOLFMQTT_USER_SETTINGS"
+				},
+				{
+					"backtrace" : 33,
+					"define" : "WOLFSSL_USER_SETTINGS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 34,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/deps/azure-macro-utils-c/inc"
+				},
+				{
+					"backtrace" : 35,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/deps/umock-c/inc"
+				},
+				{
+					"backtrace" : 38,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/c-utility/inc"
+				},
+				{
+					"backtrace" : 38,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/c-utility/pal/linux"
+				},
+				{
+					"backtrace" : 39,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/./deps/RIoT/Simulation/DICE"
+				},
+				{
+					"backtrace" : 40,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/./deps/RIoT/Simulation/RIoT/Core"
+				},
+				{
+					"backtrace" : 41,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/./deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include"
+				},
+				{
+					"backtrace" : 42,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/inc"
+				},
+				{
+					"backtrace" : 43,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/inc"
+				},
+				{
+					"backtrace" : 43,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/inc/internal"
+				},
+				{
+					"backtrace" : 44,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/../deps/parson"
+				},
+				{
+					"backtrace" : 45,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/adapters"
+				},
+				{
+					"backtrace" : 46,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/umqtt/inc"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/DICE"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls"
+				}
+			],
+			"language" : "C",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1
+				],
+				"standard" : "99"
+			},
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 3,
+			"id" : "parson::@6329479b4bc7bc8a3fe1"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "aziotsharedutil::@d20dc724c4939fdee891"
+		},
+		{
+			"backtrace" : 7,
+			"id" : "hsm_security_client::@cd2c1869d613d402d732"
+		},
+		{
+			"backtrace" : 7,
+			"id" : "prov_auth_client::@cd2c1869d613d402d732"
+		},
+		{
+			"backtrace" : 7,
+			"id" : "msr_riot::@8437e2f640d24f60da41"
+		},
+		{
+			"backtrace" : 7,
+			"id" : "utpm::@48e1eddd51e2694db2c6"
+		}
+	],
+	"id" : "prov_device_ll_client::@cd2c1869d613d402d732",
+	"install" : 
+	{
+		"destinations" : 
+		[
+			{
+				"backtrace" : 2,
+				"path" : "lib"
+			}
+		],
+		"prefix" : 
+		{
+			"path" : "/usr/local"
+		}
+	},
+	"name" : "prov_device_ll_client",
+	"nameOnDisk" : "libprov_device_ll_client.a",
+	"paths" : 
+	{
+		"build" : "desktop_devx/out/provisioning_client",
+		"source" : "DesktopDevX/azure-iot-sdk-c/provisioning_client"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				1,
+				2
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/provisioning_client/src/prov_device_ll_client.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/provisioning_client/inc/azure_prov_client/prov_client_const.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/provisioning_client/inc/azure_prov_client/prov_device_ll_client.h",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

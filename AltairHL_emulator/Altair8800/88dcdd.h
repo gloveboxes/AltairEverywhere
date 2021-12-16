@@ -1,10 +1,6 @@
 #ifndef _88DCDD_H_
 #define _88DCDD_H_
 
-#include "comms_manager_wolf.h"
-#include "dx_device_twins.h"
-#include "dx_intercore.h"
-#include "intercore_contract.h"
 #include "types.h"
 #include "utils.h"
 #include <applibs/log.h>
@@ -18,11 +14,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-extern DX_DEVICE_TWIN_BINDING dt_diskCacheHits;
-extern DX_DEVICE_TWIN_BINDING dt_diskCacheMisses;
-extern DX_DEVICE_TWIN_BINDING dt_diskTotalWrites;
-extern DX_DEVICE_TWIN_BINDING dt_diskTotalErrors;
 
 #define STATUS_ENWD			1
 #define STATUS_MOVE_HEAD	2
@@ -67,9 +58,6 @@ typedef struct
 } disks;
 
 extern disks disk_drive;
-extern DX_INTERCORE_BINDING intercore_sd_card_ctx;
-extern DX_INTERCORE_BINDING intercore_disk_cache_ctx;
-extern INTERCORE_DISK_DATA_BLOCK_T intercore_disk_block;
 
 void disk_select(uint8_t b);
 uint8_t disk_status(void);
@@ -77,17 +65,6 @@ void disk_function(uint8_t b);
 uint8_t sector(void);
 void disk_write(uint8_t b);
 uint8_t disk_read(void);
-
-void vdisk_mqtt_response_cb(uint8_t* sector);
-void vdisk_cache_response_cb(INTERCORE_DISK_DATA_BLOCK_T* intercore_disk_block);
-
-
-typedef struct {
-	int sector_number;
-	bool dirty;
-	uint8_t data[137];
-} VDISK_SECTOR_T;
-
 
 
 #endif

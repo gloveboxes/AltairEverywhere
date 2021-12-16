@@ -1,0 +1,23 @@
+desktop_devx/out/deps/umock-c/CMakeFiles/umock_c.dir/src/umocktypename.c.o: \
+  /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/deps/umock-c/src/umocktypename.c \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/ctype.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/_ctype.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/sys/cdefs.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/sys/_symbol_aliasing.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/sys/_posix_availability.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/runetype.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/_types.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/sys/_types.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/machine/_types.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/arm/_types.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/sys/_pthread/_pthread_types.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/sys/_types/_size_t.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/sys/_types/_ct_rune_t.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/sys/_types/_rune_t.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/sys/_types/_wchar_t.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/include/sys/_types/_wint_t.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/13.0.0/include/stddef.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/13.0.0/include/__stddef_max_align_t.h \
+  /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/deps/umock-c/inc/umock_c/umocktypename.h \
+  /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/deps/umock-c/inc/umock_c/umockalloc.h \
+  /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/deps/umock-c/inc/umock_c/umock_log.h

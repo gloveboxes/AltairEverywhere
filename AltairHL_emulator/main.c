@@ -55,9 +55,6 @@ uint16_t bus_switches = 0x00;
 int altair_spi_fd = -1;
 int console_fd = -1;
 
-const struct itimerspec watchdogInterval = { {60, 0}, {60, 0} };
-timer_t watchdogTimer;
-
 // basic app load helpers.
 static bool haveCtrlPending = false;
 static char haveCtrlCharacter = 0x00;
@@ -87,34 +84,6 @@ static char Log_Debug_Time_buffer[64];
 
 // End of variable declarations
 
-/// <summary>
-/// This timer extends the app level lease watchdog timer
-/// </summary>
-/// <param name="eventLoopTimer"></param>
-static void WatchdogMonitorTimerHandler(EventLoopTimer* eventLoopTimer) {
-	if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0) {
-		dx_terminate(DX_ExitCode_ConsumeEventLoopTimeEvent);
-		return;
-	}
-	timer_settime(watchdogTimer, 0, &watchdogInterval, NULL);
-}
-
-/// <summary>
-/// Set up watchdog timer - the lease is extended via the WatchdogMonitorTimerHandler function
-/// </summary>
-/// <param name=""></param>
-void SetupWatchdog(void) {
-	struct sigevent alarmEvent;
-	alarmEvent.sigev_notify = SIGEV_SIGNAL;
-	alarmEvent.sigev_signo = SIGALRM;
-	alarmEvent.sigev_value.sival_ptr = &watchdogTimer;
-
-	if (timer_create(CLOCK_MONOTONIC, &alarmEvent, &watchdogTimer) == 0) {
-		if (timer_settime(watchdogTimer, 0, &watchdogInterval, NULL) == -1) {
-			Log_Debug("Issue setting watchdog timer. %s %d\n", strerror(errno), errno);
-		}
-	}
-}
 
 /// <summary>
 /// Report on first connect the software version and device startup UTC time
@@ -380,7 +349,7 @@ static void handle_inbound_message(const char* topic_name, size_t topic_name_siz
 		}
 		break;
 	case TOPIC_VDISK_SUB: // vdisk response
-		vdisk_mqtt_response_cb(data);
+		// vdisk_mqtt_response_cb(data);
 		break;
 	default:
 		break;
@@ -789,29 +758,14 @@ static void InitPeripheralAndHandlers(void) {
 	dx_timerSetStart(timerSet, NELEMS(timerSet));
 	dx_directMethodSubscribe(directMethodBindingSet, NELEMS(directMethodBindingSet));
 
-	onboard_sensors_init(i2c_onboard_sensors.fd);
-	onboard_sensors_read(&onboard_telemetry.latest);
-	onboard_telemetry.updated = true;
+	// onboard_sensors_init(i2c_onboard_sensors.fd);
+	// onboard_sensors_read(&onboard_telemetry.latest);
+	// onboard_telemetry.updated = true;
 
-#ifdef SD_CARD_ENABLED
-
-        dx_intercoreConnect(&intercore_sd_card_ctx);
-        // set intercore read after publish timeout to 10000000 microseconds = 10 seconds
-        dx_intercorePublishThenReadTimeout(&intercore_sd_card_ctx, 10000000);
-
-#else
-
-        dx_intercoreConnect(&intercore_disk_cache_ctx);
-        // set intercore read after publish timeout to 1000 microseconds
-        dx_intercorePublishThenReadTimeout(&intercore_disk_cache_ctx, 1000);
-
-#endif // SD_CARD_ENABLED
 
 	dx_timerOneShotSet(&mqtt_do_work_timer, &(struct timespec){1, 0});
 	dx_timerOneShotSet(&connectionStatusLedOnTimer, &(struct timespec){1, 0});
 	dx_startThreadDetached(altair_thread, NULL, "altair_thread");
-
-	SetupWatchdog();
 }
 
 /// <summary>
@@ -836,14 +790,8 @@ int main(int argc, char* argv[]) {
 	}
 	InitPeripheralAndHandlers();
 
-	// Main loop
-	while (!dx_isTerminationRequired()) {
-		int result = EventLoop_Run(dx_timerGetEventLoop(), -1, true);
-		// Continue if interrupted by signal, e.g. due to breakpoint being set.
-		if (result == -1 && errno != EINTR) {
-			dx_terminate(DX_ExitCode_Main_EventLoopFail);
-		}
-	}
+	dx_eventLoopRun();
+
 	ClosePeripheralAndHandlers();
 	Log_Debug("\n\nApplication exiting. Last known exit code: %d\n", dx_getTerminationExitCode());
 	return dx_getTerminationExitCode();

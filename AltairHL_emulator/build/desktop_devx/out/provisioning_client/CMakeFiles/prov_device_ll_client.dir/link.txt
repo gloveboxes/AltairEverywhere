@@ -1,0 +1,2 @@
+/usr/bin/ar qc libprov_device_ll_client.a CMakeFiles/prov_device_ll_client.dir/src/prov_device_ll_client.c.o
+/usr/bin/ranlib libprov_device_ll_client.a

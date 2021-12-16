@@ -1,17 +1,32 @@
 {
-    "cmake.generator": "Ninja",
-    "cmake.buildDirectory": "${workspaceRoot}/out/ARM-${buildType}",
-    "cmake.buildToolArgs": [ "-v" ],
-    "cmake.configureSettings": {
-        "CMAKE_TOOLCHAIN_FILE": "${command:azuresphere.AzureSphereSdkDir}/CMakeFiles/AzureSphereToolchain.cmake",
-        "AZURE_SPHERE_TARGET_API_SET": "latest-lts"
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#65c89b",
+        "activityBar.activeBorder": "#945bc4",
+        "activityBar.background": "#65c89b",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#945bc4",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "sash.hoverBorder": "#65c89b",
+        "statusBar.background": "#42b883",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#359268",
+        "statusBarItem.remoteBackground": "#42b883",
+        "statusBarItem.remoteForeground": "#15202b",
+        "titleBar.activeBackground": "#42b883",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#42b88399",
+        "titleBar.inactiveForeground": "#15202b99"
     },
-    "cmake.configureOnOpen": true,
-    "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
-    "AzureSphere.partnerApplications": {
-        "ac8d863a-4424-11eb-b378-0242ac130002": "",
-        "2e319eae-7be5-4a0c-ba47-9353aa6ca96a": "",
-        "9b684af8-21b9-42aa-91e4-621d5428e497": "",
-        "005180bc-402f-4cb3-a662-72937dbcde47": ""
+    "peacock.color": "#42b883",
+    "files.associations": {
+        "uv.h": "c",
+        "unix.h": "c",
+        "dx_i2c.h": "c",
+        "iotc_manager.h": "c",
+        "utils.h": "c",
+        "intel8080.h": "c",
+        "azure_sphere_learning_path.h": "c"
     }
 }

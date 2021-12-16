@@ -1,0 +1,2 @@
+/usr/bin/ar qc libumqtt.a CMakeFiles/umqtt.dir/src/mqtt_client.c.o CMakeFiles/umqtt.dir/src/mqtt_codec.c.o CMakeFiles/umqtt.dir/src/mqtt_message.c.o
+/usr/bin/ranlib libumqtt.a

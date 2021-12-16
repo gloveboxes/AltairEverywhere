@@ -1,0 +1,2 @@
+/usr/bin/ar qc libprov_auth_client.a CMakeFiles/prov_auth_client.dir/src/prov_auth_client.c.o CMakeFiles/prov_auth_client.dir/src/prov_security_factory.c.o CMakeFiles/prov_auth_client.dir/src/iothub_auth_client.c.o CMakeFiles/prov_auth_client.dir/src/iothub_security_factory.c.o
+/usr/bin/ranlib libprov_auth_client.a

@@ -1,0 +1,79 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"DesktopDevX/azure-iot-sdk-c/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 204,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 212,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/libparson.a"
+			],
+			"targetId" : "parson::@6329479b4bc7bc8a3fe1",
+			"targetIndex" : 37,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/deps/parson/parson.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib/cmake/parson",
+			"exportName" : "parsonTargets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "parson::@6329479b4bc7bc8a3fe1",
+					"index" : 37
+				}
+			],
+			"paths" : 
+			[
+				"desktop_devx/out/CMakeFiles/Export/lib/cmake/parson/parsonConfig.cmake"
+			],
+			"type" : "export"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "desktop_devx/out",
+		"source" : "DesktopDevX/azure-iot-sdk-c"
+	}
+}

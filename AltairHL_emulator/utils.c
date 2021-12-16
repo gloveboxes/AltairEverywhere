@@ -3,7 +3,6 @@
 
 #include "utils.h"
 #include <applibs/log.h>
-#include <applibs/networking.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -92,14 +91,4 @@ char* get_i8080_instruction_name(uint8_t opcode, uint8_t* i8080_instruction_size
 
 	*i8080_instruction_size = i8080_instruction_length[opcode];
 	return i8080_instruction[opcode];
-}
-
-char* log_memory_usage(char* buffer, size_t buffer_size, const char* message) {
-	snprintf(buffer, buffer_size, "%s: TMU %dKB, PUMU %dKB, UMM %dKB \n",
-		message,
-		Applications_GetTotalMemoryUsageInKB(),
-		Applications_GetPeakUserModeMemoryUsageInKB(),
-		Applications_GetUserModeMemoryUsageInKB());
-
-	return buffer;
 }

@@ -4,22 +4,8 @@
 cmake_minimum_required (VERSION 3.10)
 project (AltairHL_emulator C)
 
-get_filename_component(PARENT_DIR ${PROJECT_SOURCE_DIR} DIRECTORY)
-
 include(cmake/altair_config.cmake)
 
-if (EXISTS "${PARENT_DIR}/Tools/cmake/azsphere_config.cmake")
-    include(../Tools/cmake/azsphere_config.cmake)
-    auto_generate_azsphere_config()
-else()
-
-    # For information on setting tools revision and target api set see 
-    # https://docs.microsoft.com/en-us/azure-sphere/app-development/using-cmake-functions
-
-    azsphere_configure_tools(TOOLS_REVISION "21.07")
-    azsphere_configure_api(TARGET_API_SET "10")
-
-endif()
 
 # MQTT BROKER CONFIG ##############################################################################################
 #
@@ -41,7 +27,7 @@ add_compile_definitions(WOLFMQTT_DISCONNECT_CB)
 add_compile_definitions(WOLFMQTT_NO_STDIO)
 add_compile_definitions(WOLFSSL_USER_SETTINGS)
 # add_compile_definitions(WOLFMQTT_V5)
-add_compile_definitions(__linux__)
+# add_compile_definitions(__linux__)
 add_compile_definitions(MQTT_USE_WOLFSSL)
 add_compile_definitions(ENABLE_MQTT_TLS)
 add_compile_definitions(NO_DH)
@@ -54,9 +40,6 @@ add_compile_definitions(WOLFMQTT_USER_SETTINGS)
 add_compile_definitions(IOT_HUB_POLL_TIME_SECONDS=1)
 add_compile_definitions(IOT_HUB_POLL_TIME_NANOSECONDS=500000000)
 ###################################################################################################################
-
-
-add_subdirectory("AzureSphereDevX" out)
 
 if(AVNET OR AVNET_REV_2)
     add_subdirectory("Drivers/AVNET/HL" drivers)
@@ -140,6 +123,20 @@ set(ALL_FILES
 
 # Create executable
 add_executable(${PROJECT_NAME} ${ALL_FILES})
+add_subdirectory("AzureSphereRemoteX.Client" applibs)
+
+################################################################################
+# Following lines required for DesktopDevX
+add_subdirectory("DesktopDevX" desktop_devx)
+target_link_libraries(${PROJECT_NAME} "desktop_devx")
+################################################################################
+
+################################################################################
+# The following line required for the AzureSphereRemoteX.Client library
+target_link_libraries(${PROJECT_NAME} applibs)
+################################################################################
+
+target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC AZURE_IOT_HUB_CONFIGURED)
 target_link_libraries(${PROJECT_NAME} applibs pthread gcc_s c azure_sphere_devx wolfssl tlsutils curl)
@@ -174,50 +171,42 @@ set_source_files_properties(wolfMQTT/src/mqttnet.c PROPERTIES COMPILE_FLAGS -Wno
 set_source_files_properties(wolfMQTT/wolfmqtt/mqtt_client.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
 set_source_files_properties(wolfMQTT/wolfmqtt/mqtt_packet.h PROPERTIES COMPILE_FLAGS -Wno-conversion)
 
+# Set hardware definitons
 
-if(ALTAIR_FRONT_PANEL_CLICK)
+set(BOARD_COUNTER 0)
 
-add_subdirectory("Drivers/CLICK_8x8_LED_MAX7219" max7219_driver)
-include_directories(${CMAKE_SOURCE_DIR} Drivers/CLICK_8x8_LED_MAX7219)
-target_link_libraries(${PROJECT_NAME} max7219_driver)
-target_include_directories(${PROJECT_NAME} PUBLIC Drivers/CLICK_8x8_LED_MAX7219 )
-
-add_subdirectory("Drivers/CLICK_4x4_KEY_74HC165" 74HC165_driver)
-include_directories(${CMAKE_SOURCE_DIR} Drivers/CLICK_4x4_KEY_74HC165)
-target_link_libraries(${PROJECT_NAME} 74HC165_driver)
-target_include_directories(${PROJECT_NAME} PUBLIC Drivers/CLICK_4x4_KEY_74HC165 )
-
-endif(ALTAIR_FRONT_PANEL_CLICK)
-
-
-if(ALTAIR_FRONT_PANEL_RETRO_CLICK)
-
-add_subdirectory("Drivers/CLICK_8800_RETRO_AS1115" as1115_driver)
-include_directories(${PROJECT_NAME} Drivers/CLICK_8800_RETRO_AS1115)
-target_link_libraries(${PROJECT_NAME} as1115_driver)
-target_include_directories(${PROJECT_NAME} PUBLIC Drivers/CLICK_8800_RETRO_AS1115 )
-
-endif(ALTAIR_FRONT_PANEL_RETRO_CLICK)
-
-if(AVNET)    
-    add_compile_definitions(OEM_AVNET)
-    azsphere_target_hardware_definition(${PROJECT_NAME} TARGET_DIRECTORY "../HardwareDefinitions/avnet_mt3620_sk" TARGET_DEFINITION "azure_sphere_learning_path.json")
+if(AVNET)
+    MATH(EXPR BOARD_COUNTER "${BOARD_COUNTER}+1")
+    add_definitions( -DOEM_AVNET=TRUE )
+    target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/HardwareDefinitions/avnet_mt3620_sk/inc/")
+    message(STATUS "Azure Sphere board selected: AVNET REV 1")
 endif(AVNET)
 
 if(AVNET_REV_2)
-    add_compile_definitions(OEM_AVNET)
-    azsphere_target_hardware_definition(${PROJECT_NAME} TARGET_DIRECTORY "../HardwareDefinitions/avnet_mt3620_sk_rev2" TARGET_DEFINITION "azure_sphere_learning_path.json")
+    MATH(EXPR BOARD_COUNTER "${BOARD_COUNTER}+1")
+    add_definitions( -DOEM_AVNET=TRUE )
+    target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/HardwareDefinitions/avnet_mt3620_sk_rev2/inc/")
+    message(STATUS "Azure Sphere board selected: AVNET REV 2")
 endif(AVNET_REV_2)
 
-if (SEEED_STUDIO_RDB)   
-    add_compile_definitions(OEM_SEEED_STUDIO)
-    azsphere_target_hardware_definition(${PROJECT_NAME} TARGET_DIRECTORY "../HardwareDefinitions/mt3620_rdb" TARGET_DEFINITION "azure_sphere_learning_path.json")
+if (SEEED_STUDIO_RDB)
+    MATH(EXPR BOARD_COUNTER "${BOARD_COUNTER}+1")
+    add_definitions( -DOEM_SEEED_STUDIO=TRUE )
+    target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/HardwareDefinitions/mt3620_rdb/inc/")
+    message(STATUS "Azure Sphere board selected: SEEED STUDIO RDB")
 endif()
 
+if (SEEED_STUDIO_MINI)
+    MATH(EXPR BOARD_COUNTER "${BOARD_COUNTER}+1")
+    add_definitions( -DOEM_SEEED_STUDIO_MINI=TRUE )    
+    target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/HardwareDefinitions/seeed_mt3620_mdb/inc/")
+    message(STATUS "Azure Sphere board selected: SEEED STUDIO MINI")
+endif(SEEED_STUDIO_MINI)
 
-# If MICRO_SD_CLICK enabled then don't deploy the "Disks/cpm63k.dsk" disk image as CP/M will be booted from microSD Card. Reduces deploymemt time.
-if (MICRO_SD_CLICK)
-    azsphere_target_add_image_package(${PROJECT_NAME} RESOURCE_FILES  "certs/ca.crt" "certs/client.key" "certs/client.crt" "BasicSamples/STARTREK.BAS" "BasicSamples/TICTACTOE.BAS" "BasicSamples/SIMPLE.BAS" "BasicSamples/LOOPY.BAS" "BasicSamples/WEATHER.BAS" "BasicSamples/IOT.BAS" "Disks/88dskrom.bin")
-else (MICRO_SD_CLICK)
-    azsphere_target_add_image_package(${PROJECT_NAME} RESOURCE_FILES  "certs/ca.crt" "certs/client.key" "certs/client.crt" "BasicSamples/STARTREK.BAS" "BasicSamples/TICTACTOE.BAS" "BasicSamples/SIMPLE.BAS" "BasicSamples/LOOPY.BAS" "BasicSamples/WEATHER.BAS" "BasicSamples/IOT.BAS" "Disks/88dskrom.bin" "Disks/cpm63k.dsk")
-endif (MICRO_SD_CLICK)
+if(BOARD_COUNTER EQUAL 0)
+    message(FATAL_ERROR "No Azure Sphere boards selected. Ensure one board set")
+endif()
+
+if(BOARD_COUNTER GREATER 1)
+    message(FATAL_ERROR "Multiple (${BOARD_COUNTER}) Azure Sphere boards selected. Ensure only one board set")
+endif()

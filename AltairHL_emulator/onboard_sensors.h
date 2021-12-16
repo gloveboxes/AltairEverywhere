@@ -17,5 +17,9 @@ typedef struct {
 } ONBOARD_TELEMETRY;
 
 bool onboard_sensors_read(ONBOARD_TELEMETRY *telemetry);
+#ifdef OEM_AVNET
 bool onboard_sensors_init(int i2c_fd);
+#else
+bool onboard_sensors_init(void);
+#endif
 bool onboard_sensors_close(void);

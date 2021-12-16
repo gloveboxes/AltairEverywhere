@@ -1,0 +1,119 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 90,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 96,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 106,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 113,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/provisioning_client/deps/libmsr_riot.a"
+			],
+			"targetId" : "msr_riot::@8437e2f640d24f60da41",
+			"targetIndex" : 36,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "include/azureiot/msr_riot",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/DICE/DiceSha256.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoT.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RiotStatus.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/RiotCrypt.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/base64.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/derenc.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/x509bldr.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/aes.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/ecdh.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/ecdsa.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/ecp.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/bignum.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/hkdf.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/hmac_drbg.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/md.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/platform.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/platform_util.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/sha1.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls/sha256.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"exportName" : "msr_riotTargets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "msr_riot::@8437e2f640d24f60da41",
+					"index" : 36
+				}
+			],
+			"paths" : 
+			[
+				"desktop_devx/out/provisioning_client/deps/CMakeFiles/Export/cmake/azure_iot_sdksTargets.cmake"
+			],
+			"type" : "export"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"paths" : 
+			[
+				"build/desktop_devx/out/provisioning_client/deps/azure_iot_sdks/azure_iot_sdksConfigVersion.cmake"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "desktop_devx/out/provisioning_client/deps",
+		"source" : "DesktopDevX/azure-iot-sdk-c/provisioning_client/deps"
+	}
+}

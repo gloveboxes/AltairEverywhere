@@ -1,0 +1,741 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "desktop_devx/out/iothub_client/libiothub_client.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"install",
+			"target_link_libraries",
+			"add_compile_definitions",
+			"include",
+			"add_definitions",
+			"include_directories"
+		],
+		"files" : 
+		[
+			"DesktopDevX/azure-iot-sdk-c/iothub_client/CMakeLists.txt",
+			"CMakeLists.txt",
+			"cmake/altair_config.cmake",
+			"DesktopDevX/azure-iot-sdk-c/CMakeLists.txt",
+			"DesktopDevX/azure-iot-sdk-c/dependencies.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 437,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 495,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 448,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 447,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 451,
+				"parent" : 0
+			},
+			{
+				"file" : 1
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 84,
+				"parent" : 6
+			},
+			{
+				"command" : 4,
+				"file" : 1,
+				"line" : 7,
+				"parent" : 6
+			},
+			{
+				"file" : 2,
+				"parent" : 8
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 19,
+				"parent" : 9
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 12,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 34,
+				"parent" : 6
+			},
+			{
+				"file" : 3
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 180,
+				"parent" : 13
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 32,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 41,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 40,
+				"parent" : 6
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 28,
+				"parent" : 13
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 13,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 15,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 14,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 31,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 17,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 33,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 18,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 49,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 25,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 24,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 27,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 35,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 28,
+				"parent" : 6
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 292,
+				"parent" : 13
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 293,
+				"parent" : 13
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 295,
+				"parent" : 13
+			},
+			{
+				"file" : 4,
+				"parent" : 34
+			},
+			{
+				"command" : 6,
+				"file" : 4,
+				"line" : 42,
+				"parent" : 35
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 255,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 259,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 333,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : " -Werror -DUSE_PROV_MODULE_FULL -DUSE_PROV_MODULE -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk"
+				},
+				{
+					"fragment" : "-std=gnu99"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 7,
+					"define" : "ALTAIR_FRONT_PANEL_NONE"
+				},
+				{
+					"backtrace" : 10,
+					"define" : "ALTAIR_MQTT_HOST=\"test.mosquitto.org\""
+				},
+				{
+					"backtrace" : 11,
+					"define" : "ALTAIR_MQTT_SECURE_PORT_WOLF=8884"
+				},
+				{
+					"backtrace" : 12,
+					"define" : "AZURE_SPHERE"
+				},
+				{
+					"backtrace" : 14,
+					"define" : "DONT_USE_UPLOADTOBLOB"
+				},
+				{
+					"backtrace" : 15,
+					"define" : "ENABLE_MQTT_TLS"
+				},
+				{
+					"backtrace" : 16,
+					"define" : "IOT_HUB_POLL_TIME_NANOSECONDS=500000000"
+				},
+				{
+					"backtrace" : 17,
+					"define" : "IOT_HUB_POLL_TIME_SECONDS=1"
+				},
+				{
+					"backtrace" : 18,
+					"define" : "MACOSX"
+				},
+				{
+					"backtrace" : 19,
+					"define" : "MQTT_CA_CERTIFICATE=\"certs/ca.crt\""
+				},
+				{
+					"backtrace" : 20,
+					"define" : "MQTT_CLIENT_CERTIFICATE=\"certs/client.crt\""
+				},
+				{
+					"backtrace" : 21,
+					"define" : "MQTT_CLIENT_PRIVATE_KEY=\"certs/client.key\""
+				},
+				{
+					"backtrace" : 22,
+					"define" : "MQTT_USE_WOLFSSL"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "MQTT_WOLF_DRIVER"
+				},
+				{
+					"backtrace" : 24,
+					"define" : "NO_DH"
+				},
+				{
+					"backtrace" : 25,
+					"define" : "PRINTF=Log_Debug"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "RIOTBUILD"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "RIOTSECP256R1"
+				},
+				{
+					"backtrace" : 26,
+					"define" : "SD_CARD_ENABLED"
+				},
+				{
+					"backtrace" : 27,
+					"define" : "WOLFMQTT_DISCONNECT_CB"
+				},
+				{
+					"backtrace" : 28,
+					"define" : "WOLFMQTT_MULTITHREAD"
+				},
+				{
+					"backtrace" : 29,
+					"define" : "WOLFMQTT_NO_STDIO"
+				},
+				{
+					"backtrace" : 30,
+					"define" : "WOLFMQTT_USER_SETTINGS"
+				},
+				{
+					"backtrace" : 31,
+					"define" : "WOLFSSL_USER_SETTINGS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 32,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/deps/azure-macro-utils-c/inc"
+				},
+				{
+					"backtrace" : 33,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/deps/umock-c/inc"
+				},
+				{
+					"backtrace" : 36,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/c-utility/inc"
+				},
+				{
+					"backtrace" : 36,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/c-utility/pal/linux"
+				},
+				{
+					"backtrace" : 37,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/inc"
+				},
+				{
+					"backtrace" : 37,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/inc/internal"
+				},
+				{
+					"backtrace" : 38,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/iothub_client/inc"
+				},
+				{
+					"backtrace" : 39,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/umqtt/inc"
+				},
+				{
+					"backtrace" : 5,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/DICE"
+				},
+				{
+					"backtrace" : 5,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core"
+				},
+				{
+					"backtrace" : 5,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include"
+				},
+				{
+					"backtrace" : 5,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls"
+				}
+			],
+			"language" : "C",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1
+				],
+				"standard" : "99"
+			},
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 3,
+			"id" : "parson::@6329479b4bc7bc8a3fe1"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "aziotsharedutil::@d20dc724c4939fdee891"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "umqtt::@e0c1729d1b9d7b025eb2"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "hsm_security_client::@cd2c1869d613d402d732"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "prov_auth_client::@cd2c1869d613d402d732"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "msr_riot::@8437e2f640d24f60da41"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "utpm::@48e1eddd51e2694db2c6"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "iothub_client_mqtt_transport::@e6ce4a1e75b4242451fd"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "iothub_client_mqtt_ws_transport::@e6ce4a1e75b4242451fd"
+		}
+	],
+	"id" : "iothub_client::@e6ce4a1e75b4242451fd",
+	"install" : 
+	{
+		"destinations" : 
+		[
+			{
+				"backtrace" : 2,
+				"path" : "lib"
+			}
+		],
+		"prefix" : 
+		{
+			"path" : "/usr/local"
+		}
+	},
+	"name" : "iothub_client",
+	"nameOnDisk" : "libiothub_client.a",
+	"paths" : 
+	{
+		"build" : "desktop_devx/out/iothub_client",
+		"source" : "DesktopDevX/azure-iot-sdk-c/iothub_client"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub_client.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub_client_core.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub_client_core_ll.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub_client_diagnostic.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub_client_ll.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub_device_client.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub_device_client_ll.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub_message.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub_module_client.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothub_module_client_ll.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/iothubtransport.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/src/version.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_client_core.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_client_core_ll.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_client.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_client_core_common.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_client_ll.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/internal/iothub_client_diagnostic.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/internal/iothub_internal_consts.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_client_options.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/internal/iothub_client_private.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_client_version.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_device_client.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_device_client_ll.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_module_client.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_module_client_ll.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_transport_ll.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/iothub_message.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/internal/iothub_message_private.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/internal/iothubtransport.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "DesktopDevX/azure-iot-sdk-c/iothub_client/inc/internal/iothub_client_hsm_ll.h",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

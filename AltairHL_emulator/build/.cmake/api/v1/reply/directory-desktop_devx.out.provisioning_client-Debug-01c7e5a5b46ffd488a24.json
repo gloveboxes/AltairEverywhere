@@ -1,0 +1,141 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"DesktopDevX/azure-iot-sdk-c/provisioning_client/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 400,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 402,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include/azure_prov_client",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./adapters/hsm_client_data.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./adapters/hsm_client_riot.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./adapters/hsm_client_tpm.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./adapters/hsm_client_key.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/internal/prov_auth_client.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/prov_security_factory.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/internal/iothub_auth_client.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/internal/prov_auth_client.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/iothub_security_factory.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/prov_client_const.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/prov_device_ll_client.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/prov_client_const.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/prov_device_client.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/prov_transport.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/prov_transport_mqtt_ws_client.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/internal/prov_transport_private.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/internal/prov_transport_mqtt_common.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/prov_transport.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/prov_transport_mqtt_client.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/internal/prov_transport_private.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/./inc/azure_prov_client/internal/prov_transport_mqtt_common.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/provisioning_client/libhsm_security_client.a"
+			],
+			"targetId" : "hsm_security_client::@cd2c1869d613d402d732",
+			"targetIndex" : 32,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/provisioning_client/libprov_auth_client.a"
+			],
+			"targetId" : "prov_auth_client::@cd2c1869d613d402d732",
+			"targetIndex" : 38,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/provisioning_client/libprov_device_ll_client.a"
+			],
+			"targetId" : "prov_device_ll_client::@cd2c1869d613d402d732",
+			"targetIndex" : 40,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/provisioning_client/libprov_device_client.a"
+			],
+			"targetId" : "prov_device_client::@cd2c1869d613d402d732",
+			"targetIndex" : 39,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/provisioning_client/libprov_mqtt_ws_transport.a"
+			],
+			"targetId" : "prov_mqtt_ws_transport::@cd2c1869d613d402d732",
+			"targetIndex" : 42,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/provisioning_client/libprov_mqtt_transport.a"
+			],
+			"targetId" : "prov_mqtt_transport::@cd2c1869d613d402d732",
+			"targetIndex" : 41,
+			"type" : "target"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "desktop_devx/out/provisioning_client",
+		"source" : "DesktopDevX/azure-iot-sdk-c/provisioning_client"
+	}
+}

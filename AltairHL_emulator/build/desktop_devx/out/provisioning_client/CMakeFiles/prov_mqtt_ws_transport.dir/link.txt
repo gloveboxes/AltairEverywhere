@@ -1,0 +1,2 @@
+/usr/bin/ar qc libprov_mqtt_ws_transport.a CMakeFiles/prov_mqtt_ws_transport.dir/src/prov_transport_mqtt_ws_client.c.o CMakeFiles/prov_mqtt_ws_transport.dir/src/prov_transport_mqtt_common.c.o
+/usr/bin/ranlib libprov_mqtt_ws_transport.a

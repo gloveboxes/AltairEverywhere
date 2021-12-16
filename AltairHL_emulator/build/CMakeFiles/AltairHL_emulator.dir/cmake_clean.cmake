@@ -1,0 +1,43 @@
+file(REMOVE_RECURSE
+  "AltairHL_emulator"
+  "AltairHL_emulator.pdb"
+  "CMakeFiles/AltairHL_emulator.dir/Altair8800/88dcdd.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/Altair8800/88dcdd.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/Altair8800/intel8080.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/Altair8800/intel8080.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/Altair8800/memory.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/Altair8800/memory.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/FrontPanels/front_panel_none.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/FrontPanels/front_panel_none.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/FrontPanels/front_panel_virtual.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/FrontPanels/front_panel_virtual.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/comms_manager_wolf.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/comms_manager_wolf.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/iotc_manager.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/iotc_manager.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/location_from_ip.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/location_from_ip.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/main.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/main.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/onboard_sensors.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/onboard_sensors.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/storage.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/storage.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/utils.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/utils.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/weather.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/weather.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/wolfMQTT/examples/mqttnet.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/wolfMQTT/examples/mqttnet.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/wolfMQTT/src/mqtt_client.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/wolfMQTT/src/mqtt_client.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/wolfMQTT/src/mqtt_packet.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/wolfMQTT/src/mqtt_packet.c.o.d"
+  "CMakeFiles/AltairHL_emulator.dir/wolfMQTT/src/mqtt_socket.c.o"
+  "CMakeFiles/AltairHL_emulator.dir/wolfMQTT/src/mqtt_socket.c.o.d"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/AltairHL_emulator.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

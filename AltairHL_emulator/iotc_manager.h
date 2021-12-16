@@ -5,11 +5,10 @@
 
 #include "comms_manager_wolf.h"
 #include "dx_azure_iot.h"
+#include "dx_json_serializer.h"
 #include "dx_utilities.h"
 #include "sphere_panel.h"
 #include "storage.h"
-#include <applibs/applications.h>
-#include <applibs/powermanagement.h>
 
 extern bool local_serial;
 extern char msgBuffer[MSG_BUFFER_BYTES];
@@ -30,8 +29,6 @@ extern as1115_t retro_click;
 #endif //  ALTAIR_FRONT_PANEL_RETRO_CLICK
 
 
-
-DX_DIRECT_METHOD_RESPONSE_CODE RestartDeviceHandler(JSON_Value* json, DX_DIRECT_METHOD_BINDING* directMethodBinding, char** responseMsg);
 void delay_restart_device_handler(EventLoopTimer* eventLoopTimer);
 void device_twin_set_channel_id_handler(DX_DEVICE_TWIN_BINDING* deviceTwinBinding);
 void device_twin_set_cpu_state_handler(DX_DEVICE_TWIN_BINDING* deviceTwinBinding);

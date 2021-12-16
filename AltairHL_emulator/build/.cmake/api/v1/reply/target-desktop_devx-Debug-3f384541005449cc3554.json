@@ -1,0 +1,563 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "desktop_devx/libdesktop_devx.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"target_link_libraries",
+			"add_compile_definitions",
+			"include",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"DesktopDevX/CMakeLists.txt",
+			"CMakeLists.txt",
+			"cmake/altair_config.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 31,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 67,
+				"parent" : 0
+			},
+			{
+				"file" : 1
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 84,
+				"parent" : 3
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 7,
+				"parent" : 3
+			},
+			{
+				"file" : 2,
+				"parent" : 5
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 19,
+				"parent" : 6
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 12,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 34,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 32,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 41,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 40,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 13,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 15,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 14,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 31,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 17,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 33,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 18,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 49,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 25,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 24,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 27,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 35,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 28,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 34,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 46,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 51,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 52,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 53,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 54,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 55,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 62,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 4,
+					"define" : "ALTAIR_FRONT_PANEL_NONE"
+				},
+				{
+					"backtrace" : 7,
+					"define" : "ALTAIR_MQTT_HOST=\"test.mosquitto.org\""
+				},
+				{
+					"backtrace" : 8,
+					"define" : "ALTAIR_MQTT_SECURE_PORT_WOLF=8884"
+				},
+				{
+					"backtrace" : 9,
+					"define" : "AZURE_SPHERE"
+				},
+				{
+					"backtrace" : 10,
+					"define" : "ENABLE_MQTT_TLS"
+				},
+				{
+					"backtrace" : 11,
+					"define" : "IOT_HUB_POLL_TIME_NANOSECONDS=500000000"
+				},
+				{
+					"backtrace" : 12,
+					"define" : "IOT_HUB_POLL_TIME_SECONDS=1"
+				},
+				{
+					"backtrace" : 13,
+					"define" : "MQTT_CA_CERTIFICATE=\"certs/ca.crt\""
+				},
+				{
+					"backtrace" : 14,
+					"define" : "MQTT_CLIENT_CERTIFICATE=\"certs/client.crt\""
+				},
+				{
+					"backtrace" : 15,
+					"define" : "MQTT_CLIENT_PRIVATE_KEY=\"certs/client.key\""
+				},
+				{
+					"backtrace" : 16,
+					"define" : "MQTT_USE_WOLFSSL"
+				},
+				{
+					"backtrace" : 17,
+					"define" : "MQTT_WOLF_DRIVER"
+				},
+				{
+					"backtrace" : 18,
+					"define" : "NO_DH"
+				},
+				{
+					"backtrace" : 19,
+					"define" : "PRINTF=Log_Debug"
+				},
+				{
+					"backtrace" : 2,
+					"define" : "RIOTBUILD"
+				},
+				{
+					"backtrace" : 2,
+					"define" : "RIOTSECP256R1"
+				},
+				{
+					"backtrace" : 20,
+					"define" : "SD_CARD_ENABLED"
+				},
+				{
+					"backtrace" : 21,
+					"define" : "WOLFMQTT_DISCONNECT_CB"
+				},
+				{
+					"backtrace" : 22,
+					"define" : "WOLFMQTT_MULTITHREAD"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "WOLFMQTT_NO_STDIO"
+				},
+				{
+					"backtrace" : 24,
+					"define" : "WOLFMQTT_USER_SETTINGS"
+				},
+				{
+					"backtrace" : 25,
+					"define" : "WOLFSSL_USER_SETTINGS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 26,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/../AzureSphereRemoteX.Client"
+				},
+				{
+					"backtrace" : 27,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/include"
+				},
+				{
+					"backtrace" : 28,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/iothub_client/inc"
+				},
+				{
+					"backtrace" : 29,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/inc"
+				},
+				{
+					"backtrace" : 30,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/c-utility/inc"
+				},
+				{
+					"backtrace" : 31,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/deps/umock-c/inc"
+				},
+				{
+					"backtrace" : 32,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/deps/azure-macro-utils-c/inc"
+				},
+				{
+					"backtrace" : 33,
+					"path" : "/opt/homebrew/include"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/c-utility/pal/linux"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/DICE"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/RIoT/Simulation/RIoT/Core/RIoTCrypt/include/mbedtls"
+				}
+			],
+			"language" : "C",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 2,
+			"id" : "parson::@6329479b4bc7bc8a3fe1"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "aziotsharedutil::@d20dc724c4939fdee891"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "umqtt::@e0c1729d1b9d7b025eb2"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "hsm_security_client::@cd2c1869d613d402d732"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "prov_auth_client::@cd2c1869d613d402d732"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "prov_device_ll_client::@cd2c1869d613d402d732"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "prov_mqtt_transport::@cd2c1869d613d402d732"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "msr_riot::@8437e2f640d24f60da41"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "utpm::@48e1eddd51e2694db2c6"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "iothub_client_mqtt_transport::@e6ce4a1e75b4242451fd"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "iothub_client_mqtt_ws_transport::@e6ce4a1e75b4242451fd"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "iothub_client::@e6ce4a1e75b4242451fd"
+		}
+	],
+	"id" : "desktop_devx::@ea8c01627b8c9ab62f31",
+	"name" : "desktop_devx",
+	"nameOnDisk" : "libdesktop_devx.a",
+	"paths" : 
+	{
+		"build" : "desktop_devx",
+		"source" : "DesktopDevX"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_avnet_iot_connect.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_azure_iot.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_config.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_device_twins.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_direct_methods.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_gpio.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_i2c.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_pwm.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_json_serializer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_terminate.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_timer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/dx_utilities.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "DesktopDevX/src/parson.c",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

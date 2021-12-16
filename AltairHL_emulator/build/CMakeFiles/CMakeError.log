@@ -1,0 +1,81 @@
+Determining if the __x86_64__ exist failed with the following output:
+Change Dir: /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_ad382/fast && /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_ad382.dir/build.make CMakeFiles/cmTC_ad382.dir/build
+Building C object CMakeFiles/cmTC_ad382.dir/CheckSymbolExists.c.o
+/usr/bin/clang   -Werror -DUSE_PROV_MODULE_FULL -Werror  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -fPIE -MD -MT CMakeFiles/cmTC_ad382.dir/CheckSymbolExists.c.o -MF CMakeFiles/cmTC_ad382.dir/CheckSymbolExists.c.o.d -o CMakeFiles/cmTC_ad382.dir/CheckSymbolExists.c.o -c /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:7:19: error: use of undeclared identifier '__x86_64__'
+  return ((int*)(&__x86_64__))[argc];
+                  ^
+1 error generated.
+make[1]: *** [CMakeFiles/cmTC_ad382.dir/CheckSymbolExists.c.o] Error 1
+make: *** [cmTC_ad382/fast] Error 2
+
+
+File /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef __x86_64__
+  return ((int*)(&__x86_64__))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining if the __i386__ exist failed with the following output:
+Change Dir: /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_5aebf/fast && /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_5aebf.dir/build.make CMakeFiles/cmTC_5aebf.dir/build
+Building C object CMakeFiles/cmTC_5aebf.dir/CheckSymbolExists.c.o
+/usr/bin/clang   -Werror -DUSE_PROV_MODULE_FULL -Werror  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -fPIE -MD -MT CMakeFiles/cmTC_5aebf.dir/CheckSymbolExists.c.o -MF CMakeFiles/cmTC_5aebf.dir/CheckSymbolExists.c.o.d -o CMakeFiles/cmTC_5aebf.dir/CheckSymbolExists.c.o -c /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:7:19: error: use of undeclared identifier '__i386__'
+  return ((int*)(&__i386__))[argc];
+                  ^
+1 error generated.
+make[1]: *** [CMakeFiles/cmTC_5aebf.dir/CheckSymbolExists.c.o] Error 1
+make: *** [cmTC_5aebf/fast] Error 2
+
+
+File /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef __i386__
+  return ((int*)(&__i386__))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining if the __arm__ exist failed with the following output:
+Change Dir: /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_30806/fast && /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_30806.dir/build.make CMakeFiles/cmTC_30806.dir/build
+Building C object CMakeFiles/cmTC_30806.dir/CheckSymbolExists.c.o
+/usr/bin/clang   -Werror -DUSE_PROV_MODULE_FULL -Werror  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -fPIE -MD -MT CMakeFiles/cmTC_30806.dir/CheckSymbolExists.c.o -MF CMakeFiles/cmTC_30806.dir/CheckSymbolExists.c.o.d -o CMakeFiles/cmTC_30806.dir/CheckSymbolExists.c.o -c /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:7:19: error: use of undeclared identifier '__arm__'
+  return ((int*)(&__arm__))[argc];
+                  ^
+1 error generated.
+make[1]: *** [CMakeFiles/cmTC_30806.dir/CheckSymbolExists.c.o] Error 1
+make: *** [cmTC_30806/fast] Error 2
+
+
+File /Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef __arm__
+  return ((int*)(&__arm__))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}

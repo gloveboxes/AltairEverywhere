@@ -1,0 +1,76 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"DesktopDevX/azure-iot-sdk-c/serializer/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 127,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 129,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include/azureiot",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/agenttypesystem.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/codefirst.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/commanddecoder.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/datamarshaller.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/datapublisher.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/dataserializer.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/iotdevice.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/jsondecoder.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/jsonencoder.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/multitree.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/schema.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/schemalib.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/schemaserializer.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/serializer.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/serializer_devicetwin.h",
+				"DesktopDevX/azure-iot-sdk-c/serializer/./inc/methodreturn.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/serializer/libserializer.a"
+			],
+			"targetId" : "serializer::@59977687ded60f9f6769",
+			"targetIndex" : 43,
+			"type" : "target"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "desktop_devx/out/serializer",
+		"source" : "DesktopDevX/azure-iot-sdk-c/serializer"
+	}
+}

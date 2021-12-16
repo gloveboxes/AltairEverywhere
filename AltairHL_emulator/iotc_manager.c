@@ -46,24 +46,6 @@ void device_twin_set_channel_id_handler(DX_DEVICE_TWIN_BINDING* deviceTwinBindin
 	dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
 }
 
-/// <summary>
-/// Report back to IoT Central device memory usage
-/// </summary>
-/// <param name="eventLoopTimer"></param>
-void memory_diagnostics_handler(EventLoopTimer* eventLoopTimer) {
-	if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0) {
-		dx_terminate(DX_ExitCode_ConsumeEventLoopTimeEvent);
-		return;
-	}
-
-	if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2,
-		DX_JSON_INT, "TotalMemoryUsage", Applications_GetTotalMemoryUsageInKB(),
-		DX_JSON_INT, "PeakUserModeMemoryUsage", Applications_GetPeakUserModeMemoryUsageInKB()))
-	{
-		dx_azurePublish(msgBuffer, strlen(msgBuffer), NULL, 0, NULL);
-	}
-}
-
 void publish_telemetry(int temperature, int pressure) {
 	if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2,
 		DX_JSON_INT, "Temperature", temperature, 
@@ -73,23 +55,3 @@ void publish_telemetry(int temperature, int pressure) {
 	}
 }
 
-/// <summary>
-/// Restart the Device
-/// </summary>
-void delay_restart_device_handler(EventLoopTimer* eventLoopTimer) {
-	if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0) {
-		dx_terminate(DX_ExitCode_ConsumeEventLoopTimeEvent);
-		return;
-	}
-
-	PowerManagement_ForceSystemReboot();
-}
-
-/// <summary>
-/// Start Device Power Restart Direct Method
-/// </summary>
-DX_DIRECT_METHOD_RESPONSE_CODE RestartDeviceHandler(JSON_Value* json, DX_DIRECT_METHOD_BINDING* directMethodBinding, char** responseMsg) {
-	*responseMsg = NULL;
-	dx_timerOneShotSet(&restartDeviceOneShotTimer, &(struct timespec){2, 0});  // restart the device in 2 seconds
-	return DX_METHOD_SUCCEEDED;
-}

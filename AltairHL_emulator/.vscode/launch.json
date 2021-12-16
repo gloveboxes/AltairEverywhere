@@ -5,27 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch for Azure Sphere High-Level Applications (gdb)",
-            "type": "azurespheredbg",
+            "preLaunchTask": "build",
+            "type": "lldb",
             "request": "launch",
+            "name": "Debug",
+            "program": "${workspaceFolder}/build/AltairHL_emulator",
             "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": true,
-            "partnerComponents": [
-                "2e319eae-7be5-4a0c-ba47-9353aa6ca96a",
-                "9b684af8-21b9-42aa-91e4-621d5428e497",
-                "005180bc-402f-4cb3-a662-72937dbcde47"
-            ],
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

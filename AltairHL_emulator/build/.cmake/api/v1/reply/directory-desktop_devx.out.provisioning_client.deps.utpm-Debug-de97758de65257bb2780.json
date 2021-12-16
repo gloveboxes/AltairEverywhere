@@ -1,0 +1,116 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 194,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 200,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 210,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 217,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/provisioning_client/deps/utpm/libutpm.a"
+			],
+			"targetId" : "utpm::@48e1eddd51e2694db2c6",
+			"targetIndex" : 46,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "include/azureiot/azure_utpm_c",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/BaseTypes.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/Capabilities.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/CompilerDependencies.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/GpMacros.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/gbfiledescript.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/Implementation.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/Marshal_fp.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/Memory_fp.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/swap.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/Tpm.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/TPMB.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/TpmBuildSwitches.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/TpmError.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/TpmTypes.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/tpm_codec.h",
+				"DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm/./inc/azure_utpm_c/tpm_comm.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"exportName" : "utpmTargets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "utpm::@48e1eddd51e2694db2c6",
+					"index" : 46
+				}
+			],
+			"paths" : 
+			[
+				"desktop_devx/out/provisioning_client/deps/utpm/CMakeFiles/Export/cmake/utpmTargets.cmake"
+			],
+			"type" : "export"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"paths" : 
+			[
+				"build/desktop_devx/out/provisioning_client/deps/utpm/utpm/utpmConfigVersion.cmake"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "desktop_devx/out/provisioning_client/deps/utpm",
+		"source" : "DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm"
+	}
+}

@@ -1,0 +1,85 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"DesktopDevX/azure-iot-sdk-c/deps/azure-macro-utils-c/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 28,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 57,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 64,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include/azure_macro_utils",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/deps/azure-macro-utils-c/inc/azure_macro_utils/macro_utils.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/azure-macro-utils-c/inc/azure_macro_utils/macro_utils_generated.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"exportName" : "azure_macro_utils_cTargets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "azure_macro_utils_c::@698fb6ab333b249ae115",
+					"index" : 0
+				}
+			],
+			"paths" : 
+			[
+				"desktop_devx/out/deps/azure-macro-utils-c/CMakeFiles/Export/cmake/azure_macro_utils_cTargets.cmake"
+			],
+			"type" : "export"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/deps/azure-macro-utils-c/configs/azure_macro_utils_cConfig.cmake",
+				"build/desktop_devx/out/deps/azure-macro-utils-c/azure_macro_utils_c/azure_macro_utils_cConfigVersion.cmake"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "desktop_devx/out/deps/azure-macro-utils-c",
+		"source" : "DesktopDevX/azure-iot-sdk-c/deps/azure-macro-utils-c"
+	}
+}

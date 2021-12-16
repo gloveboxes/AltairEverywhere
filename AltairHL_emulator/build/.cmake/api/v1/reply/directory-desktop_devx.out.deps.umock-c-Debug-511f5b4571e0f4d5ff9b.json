@@ -1,0 +1,121 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"DesktopDevX/azure-iot-sdk-c/deps/umock-c/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 173,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 179,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 194,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 201,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"desktop_devx/out/deps/umock-c/libumock_c.a"
+			],
+			"targetId" : "umock_c::@da91f7b2438369745a78",
+			"targetIndex" : 44,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "include/umock_c",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umock_c.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umock_c_internal.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umock_c_negative_tests.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umock_c_prod.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umockalloc.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umockcall.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umockcallrecorder.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umocktypename.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umocktypes.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umocktypes_bool.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umocktypes_c.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umocktypes_stdint.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umocktypes_charptr.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umocktypes_struct.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umocktypes_wcharptr.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umockcallpairs.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umockstring.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umockautoignoreargs.h",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/./inc/umock_c/umock_log.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"exportName" : "umock_cTargets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "umock_c::@da91f7b2438369745a78",
+					"index" : 44
+				}
+			],
+			"paths" : 
+			[
+				"desktop_devx/out/deps/umock-c/CMakeFiles/Export/cmake/umock_cTargets.cmake"
+			],
+			"type" : "export"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"paths" : 
+			[
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/configs/umock_cFunctions.cmake",
+				"DesktopDevX/azure-iot-sdk-c/deps/umock-c/configs/umock_cConfig.cmake",
+				"build/desktop_devx/out/deps/umock-c/umock_c/umock_cConfigVersion.cmake"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "desktop_devx/out/deps/umock-c",
+		"source" : "DesktopDevX/azure-iot-sdk-c/deps/umock-c"
+	}
+}

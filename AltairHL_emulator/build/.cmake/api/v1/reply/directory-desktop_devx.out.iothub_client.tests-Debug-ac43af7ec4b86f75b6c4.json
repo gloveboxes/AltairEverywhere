@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "desktop_devx/out/iothub_client/tests",
+		"source" : "DesktopDevX/azure-iot-sdk-c/iothub_client/tests"
+	}
+}

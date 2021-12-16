@@ -1,0 +1,813 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				},
+				{
+					"build" : "applibs",
+					"jsonFile" : "directory-applibs-Debug-e2b75bd5bd94f498dedd.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.8"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "AzureSphereRemoteX.Client",
+					"targetIndexes" : 
+					[
+						29
+					]
+				},
+				{
+					"build" : "desktop_devx",
+					"childIndexes" : 
+					[
+						3
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx-Debug-79546a0a18f7e3def567.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.8"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "DesktopDevX",
+					"targetIndexes" : 
+					[
+						31
+					]
+				},
+				{
+					"build" : "desktop_devx/out",
+					"childIndexes" : 
+					[
+						4,
+						5,
+						6,
+						7,
+						8,
+						12,
+						14
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx.out-Debug-ea90fa7346c2bf1393cb.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 2,
+					"projectIndex" : 3,
+					"source" : "DesktopDevX/azure-iot-sdk-c",
+					"targetIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+						24,
+						25,
+						26,
+						27,
+						28,
+						37
+					]
+				},
+				{
+					"build" : "desktop_devx/out/deps/azure-macro-utils-c",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx.out.deps.azure-macro-utils-c-Debug-03c25b3615942d3401ce.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.8.11"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 4,
+					"source" : "DesktopDevX/azure-iot-sdk-c/deps/azure-macro-utils-c"
+				},
+				{
+					"build" : "desktop_devx/out/deps/umock-c",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx.out.deps.umock-c-Debug-511f5b4571e0f4d5ff9b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.8.11"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 5,
+					"source" : "DesktopDevX/azure-iot-sdk-c/deps/umock-c",
+					"targetIndexes" : 
+					[
+						44
+					]
+				},
+				{
+					"build" : "desktop_devx/out/c-utility",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx.out.c-utility-Debug-134b4393dfcf24457fdf.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 6,
+					"source" : "DesktopDevX/azure-iot-sdk-c/c-utility",
+					"targetIndexes" : 
+					[
+						30
+					]
+				},
+				{
+					"build" : "desktop_devx/out/umqtt",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx.out.umqtt-Debug-ecffb0d725ea3a7bf7b6.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 7,
+					"source" : "DesktopDevX/azure-iot-sdk-c/umqtt",
+					"targetIndexes" : 
+					[
+						45
+					]
+				},
+				{
+					"build" : "desktop_devx/out/provisioning_client",
+					"childIndexes" : 
+					[
+						9,
+						11
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx.out.provisioning_client-Debug-01c7e5a5b46ffd488a24.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 3,
+					"source" : "DesktopDevX/azure-iot-sdk-c/provisioning_client",
+					"targetIndexes" : 
+					[
+						32,
+						38,
+						39,
+						40,
+						41,
+						42
+					]
+				},
+				{
+					"build" : "desktop_devx/out/provisioning_client/deps",
+					"childIndexes" : 
+					[
+						10
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx.out.provisioning_client.deps-Debug-e8092cdd6123f8869833.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 8,
+					"projectIndex" : 3,
+					"source" : "DesktopDevX/azure-iot-sdk-c/provisioning_client/deps",
+					"targetIndexes" : 
+					[
+						36
+					]
+				},
+				{
+					"build" : "desktop_devx/out/provisioning_client/deps/utpm",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx.out.provisioning_client.deps.utpm-Debug-de97758de65257bb2780.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 9,
+					"projectIndex" : 8,
+					"source" : "DesktopDevX/azure-iot-sdk-c/provisioning_client/deps/utpm",
+					"targetIndexes" : 
+					[
+						46
+					]
+				},
+				{
+					"build" : "desktop_devx/out/provisioning_client/tests",
+					"jsonFile" : "directory-desktop_devx.out.provisioning_client.tests-Debug-92ebed4ac3ead0e268be.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 8,
+					"projectIndex" : 3,
+					"source" : "DesktopDevX/azure-iot-sdk-c/provisioning_client/tests"
+				},
+				{
+					"build" : "desktop_devx/out/iothub_client",
+					"childIndexes" : 
+					[
+						13
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx.out.iothub_client-Debug-e7ad9837a4d4be06634c.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 3,
+					"source" : "DesktopDevX/azure-iot-sdk-c/iothub_client",
+					"targetIndexes" : 
+					[
+						33,
+						34,
+						35
+					]
+				},
+				{
+					"build" : "desktop_devx/out/iothub_client/tests",
+					"jsonFile" : "directory-desktop_devx.out.iothub_client.tests-Debug-ac43af7ec4b86f75b6c4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 12,
+					"projectIndex" : 3,
+					"source" : "DesktopDevX/azure-iot-sdk-c/iothub_client/tests"
+				},
+				{
+					"build" : "desktop_devx/out/serializer",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-desktop_devx.out.serializer-Debug-7b06120941dfa27a0022.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 3,
+					"source" : "DesktopDevX/azure-iot-sdk-c/serializer",
+					"targetIndexes" : 
+					[
+						43
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "AltairHL_emulator",
+					"targetIndexes" : 
+					[
+						0
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "applibs",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						29
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						3
+					],
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "desktop_devx",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						31
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						4,
+						5,
+						6,
+						7,
+						8
+					],
+					"directoryIndexes" : 
+					[
+						3,
+						8,
+						9,
+						11,
+						12,
+						13,
+						14
+					],
+					"name" : "azure_iot_sdks",
+					"parentIndex" : 2,
+					"targetIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+						24,
+						25,
+						26,
+						27,
+						28,
+						32,
+						33,
+						34,
+						35,
+						36,
+						37,
+						38,
+						39,
+						40,
+						41,
+						42,
+						43
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						4
+					],
+					"name" : "azure_macro_utils_c",
+					"parentIndex" : 3
+				},
+				{
+					"directoryIndexes" : 
+					[
+						5
+					],
+					"name" : "umock_c",
+					"parentIndex" : 3,
+					"targetIndexes" : 
+					[
+						44
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						6
+					],
+					"name" : "azure_c_shared_utility",
+					"parentIndex" : 3,
+					"targetIndexes" : 
+					[
+						30
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						7
+					],
+					"name" : "umqtt",
+					"parentIndex" : 3,
+					"targetIndexes" : 
+					[
+						45
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						10
+					],
+					"name" : "utpm",
+					"parentIndex" : 3,
+					"targetIndexes" : 
+					[
+						46
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "AltairHL_emulator::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-AltairHL_emulator-Debug-0378e5b4566a2b36425c.json",
+					"name" : "AltairHL_emulator",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "Continuous::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-Continuous-Debug-f2df33c7204433de95db.json",
+					"name" : "Continuous",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ContinuousBuild::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ContinuousBuild-Debug-dcf8aead2c6a370eb7ea.json",
+					"name" : "ContinuousBuild",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ContinuousConfigure::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ContinuousConfigure-Debug-0861b5931404f94bb31e.json",
+					"name" : "ContinuousConfigure",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ContinuousCoverage::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ContinuousCoverage-Debug-289d76cd0886cada08e2.json",
+					"name" : "ContinuousCoverage",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ContinuousMemCheck::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ContinuousMemCheck-Debug-eba05107023257ad8774.json",
+					"name" : "ContinuousMemCheck",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ContinuousStart::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ContinuousStart-Debug-5cbf49e7b07c51c26913.json",
+					"name" : "ContinuousStart",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ContinuousSubmit::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ContinuousSubmit-Debug-06d59a64bec0107b3467.json",
+					"name" : "ContinuousSubmit",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ContinuousTest::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ContinuousTest-Debug-5edbc504b60f36c9b9eb.json",
+					"name" : "ContinuousTest",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ContinuousUpdate::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ContinuousUpdate-Debug-ece73a06c964016d51de.json",
+					"name" : "ContinuousUpdate",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "Experimental::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-Experimental-Debug-484047a2dbf46db14248.json",
+					"name" : "Experimental",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ExperimentalBuild::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ExperimentalBuild-Debug-70556e4716ecc746814b.json",
+					"name" : "ExperimentalBuild",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ExperimentalConfigure::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ExperimentalConfigure-Debug-edba3b2503987bef559e.json",
+					"name" : "ExperimentalConfigure",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ExperimentalCoverage::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ExperimentalCoverage-Debug-2241a7a043a5154532d3.json",
+					"name" : "ExperimentalCoverage",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ExperimentalMemCheck::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ExperimentalMemCheck-Debug-4fab492d16ea1dabc953.json",
+					"name" : "ExperimentalMemCheck",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ExperimentalStart::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ExperimentalStart-Debug-422e88f484d891ae838c.json",
+					"name" : "ExperimentalStart",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ExperimentalSubmit::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ExperimentalSubmit-Debug-6f7418eaaa99877876c7.json",
+					"name" : "ExperimentalSubmit",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ExperimentalTest::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ExperimentalTest-Debug-c49fa25a3b8819f5a80f.json",
+					"name" : "ExperimentalTest",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ExperimentalUpdate::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-ExperimentalUpdate-Debug-9c1d3805bad2840946d3.json",
+					"name" : "ExperimentalUpdate",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "Nightly::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-Nightly-Debug-e0219cfcebc164f32a08.json",
+					"name" : "Nightly",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "NightlyBuild::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-NightlyBuild-Debug-540559c02ebb3098a359.json",
+					"name" : "NightlyBuild",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "NightlyConfigure::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-NightlyConfigure-Debug-db07fd26c91e643c4ceb.json",
+					"name" : "NightlyConfigure",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "NightlyCoverage::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-NightlyCoverage-Debug-88062d708dbd3d3f86f9.json",
+					"name" : "NightlyCoverage",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "NightlyMemCheck::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-NightlyMemCheck-Debug-d96d4d828d4fc8b19aae.json",
+					"name" : "NightlyMemCheck",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "NightlyMemoryCheck::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-NightlyMemoryCheck-Debug-cde6e52f1706221bbe29.json",
+					"name" : "NightlyMemoryCheck",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "NightlyStart::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-NightlyStart-Debug-14e6a08c2aaf17acfa62.json",
+					"name" : "NightlyStart",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "NightlySubmit::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-NightlySubmit-Debug-85406164821855b07eee.json",
+					"name" : "NightlySubmit",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "NightlyTest::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-NightlyTest-Debug-9bb99a10c748e1365dec.json",
+					"name" : "NightlyTest",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "NightlyUpdate::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-NightlyUpdate-Debug-7320443a8b2853cff68a.json",
+					"name" : "NightlyUpdate",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "applibs::@9cda30b31f95536b5811",
+					"jsonFile" : "target-applibs-Debug-7441319c76e615d02505.json",
+					"name" : "applibs",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "aziotsharedutil::@d20dc724c4939fdee891",
+					"jsonFile" : "target-aziotsharedutil-Debug-aa14efb17bc2929e8b66.json",
+					"name" : "aziotsharedutil",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "desktop_devx::@ea8c01627b8c9ab62f31",
+					"jsonFile" : "target-desktop_devx-Debug-3f384541005449cc3554.json",
+					"name" : "desktop_devx",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "hsm_security_client::@cd2c1869d613d402d732",
+					"jsonFile" : "target-hsm_security_client-Debug-49dfc61bb379b7230633.json",
+					"name" : "hsm_security_client",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 12,
+					"id" : "iothub_client::@e6ce4a1e75b4242451fd",
+					"jsonFile" : "target-iothub_client-Debug-c63616337447e1bbbfc0.json",
+					"name" : "iothub_client",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 12,
+					"id" : "iothub_client_mqtt_transport::@e6ce4a1e75b4242451fd",
+					"jsonFile" : "target-iothub_client_mqtt_transport-Debug-fdc6603879233b7da59a.json",
+					"name" : "iothub_client_mqtt_transport",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 12,
+					"id" : "iothub_client_mqtt_ws_transport::@e6ce4a1e75b4242451fd",
+					"jsonFile" : "target-iothub_client_mqtt_ws_transport-Debug-7e28af5d8d96ce5651fa.json",
+					"name" : "iothub_client_mqtt_ws_transport",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 9,
+					"id" : "msr_riot::@8437e2f640d24f60da41",
+					"jsonFile" : "target-msr_riot-Debug-3dc72f11c9f18aa10650.json",
+					"name" : "msr_riot",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "parson::@6329479b4bc7bc8a3fe1",
+					"jsonFile" : "target-parson-Debug-3dedf59db9144c27b8ea.json",
+					"name" : "parson",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "prov_auth_client::@cd2c1869d613d402d732",
+					"jsonFile" : "target-prov_auth_client-Debug-70eb0476c8c4760f7d66.json",
+					"name" : "prov_auth_client",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "prov_device_client::@cd2c1869d613d402d732",
+					"jsonFile" : "target-prov_device_client-Debug-b88c44301589fac2e279.json",
+					"name" : "prov_device_client",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "prov_device_ll_client::@cd2c1869d613d402d732",
+					"jsonFile" : "target-prov_device_ll_client-Debug-fbaadb9d36afe7fc4e4a.json",
+					"name" : "prov_device_ll_client",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "prov_mqtt_transport::@cd2c1869d613d402d732",
+					"jsonFile" : "target-prov_mqtt_transport-Debug-cde9377d1c8db8d9e411.json",
+					"name" : "prov_mqtt_transport",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "prov_mqtt_ws_transport::@cd2c1869d613d402d732",
+					"jsonFile" : "target-prov_mqtt_ws_transport-Debug-4f5324204170d3e261e7.json",
+					"name" : "prov_mqtt_ws_transport",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 14,
+					"id" : "serializer::@59977687ded60f9f6769",
+					"jsonFile" : "target-serializer-Debug-e132e47f1fa3462c51af.json",
+					"name" : "serializer",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "umock_c::@da91f7b2438369745a78",
+					"jsonFile" : "target-umock_c-Debug-5f61ffc6ed711cb4797f.json",
+					"name" : "umock_c",
+					"projectIndex" : 5
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "umqtt::@e0c1729d1b9d7b025eb2",
+					"jsonFile" : "target-umqtt-Debug-d178b235ed843ca58164.json",
+					"name" : "umqtt",
+					"projectIndex" : 7
+				},
+				{
+					"directoryIndex" : 10,
+					"id" : "utpm::@48e1eddd51e2694db2c6",
+					"jsonFile" : "target-utpm-Debug-ff22d90378664558c41a.json",
+					"name" : "utpm",
+					"projectIndex" : 8
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator/build",
+		"source" : "/Users/dave/GitHub/AzureSphereAltair8800/AltairHL_emulator"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}
