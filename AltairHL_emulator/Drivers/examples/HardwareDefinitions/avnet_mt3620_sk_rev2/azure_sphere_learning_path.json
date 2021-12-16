@@ -1,0 +1,35 @@
+{
+    "Metadata": {
+        "Type": "Azure Sphere Hardware Definition",
+        "Version": 1
+    },
+    "Description":
+    {
+        "Name": "Sample hardware abstraction for MT3620 RDB",
+        "MainCoreHeaderFileTopContent": [
+            "/* Copyright (c) Microsoft Corporation. All rights reserved.",
+            "   Licensed under the MIT License. */",
+            "",
+            "// This file defines the mapping from the MT3620 reference development board (RDB) to the",
+            "// 'sample hardware' abstraction used by the samples at https://github.com/Azure/azure-sphere-samples.",
+            "// Some peripherals are on-board on the RDB, while other peripherals must be attached externally if needed.",
+            "// https://docs.microsoft.com/en-us/azure-sphere/app-development/manage-hardware-dependencies",
+            "// to enable apps to work across multiple hardware variants."
+        ]
+    },
+    "Imports" : [ {"Path": "avnet_mt3620_sk_rev2.json"} ],
+    "Peripherals": [
+        {"Name": "BUTTON_A", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_USER_BUTTON_A", "Comment": "Button A"},
+        {"Name": "BUTTON_B", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_USER_BUTTON_B", "Comment": "Button B"},
+        {"Name": "AZURE_CONNECTED_LED", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_APP_STATUS_LED_YELLOW", "Comment": "Azure Connected"},
+        {"Name": "LED_RED", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_USER_LED_RED", "Comment": "Red LED"},
+        {"Name": "LED_GREEN", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_USER_LED_GREEN", "Comment": "Green LED"},
+        {"Name": "LED_BLUE", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_USER_LED_BLUE", "Comment": "Blue LED"},
+        {"Name": "SWITCHES_LOAD", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_GPIO42", "Comment": "Altair panel - switch load"},
+        {"Name": "SWITCHES_CHIP_SELECT", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_GPIO2", "Comment": "Altair panel - switch load"},
+        {"Name": "LED_MASTER_RESET", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_GPIO0", "Comment": "Altair panel - LED reset"},
+        {"Name": "LED_STORE", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_GPIO5", "Comment": "Altair panel - LED Store"},
+        {"Name": "LED_OUTPUT_ENABLE", "Type": "Gpio", "Mapping": "AVNET_MT3620_SK_GPIO1", "Comment": "Altair panel - LED Output enbale"},
+        {"Name": "ISU2", "Type": "I2cMaster", "Mapping": "AVNET_MT3620_SK_ISU2_I2C", "Comment": "AVNET Start Kit Definition"}
+    ]
+}

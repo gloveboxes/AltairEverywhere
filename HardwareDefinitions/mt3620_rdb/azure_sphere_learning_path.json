@@ -1,0 +1,38 @@
+{
+    "Metadata": {
+        "Type": "Azure Sphere Hardware Definition",
+        "Version": 1
+    },
+    "Description":
+    {
+        "Name": "Sample hardware abstraction for MT3620 RDB",
+        "MainCoreHeaderFileTopContent": [
+            "/* Copyright (c) Microsoft Corporation. All rights reserved.",
+            "   Licensed under the MIT License. */",
+            "",
+            "// This file defines the mapping from the MT3620 reference development board (RDB) to the",
+            "// 'sample hardware' abstraction used by the samples at https://github.com/Azure/azure-sphere-samples.",
+            "// Some peripherals are on-board on the RDB, while other peripherals must be attached externally if needed.",
+            "// https://docs.microsoft.com/en-us/azure-sphere/app-development/manage-hardware-dependencies",
+            "// to enable apps to work across multiple hardware variants."
+        ]
+    },
+    "Imports" : [ {"Path": "mt3620_rdb.json"} ],
+    "Peripherals": [
+        {"Name": "BUTTON_A", "Type": "Gpio", "Mapping": "MT3620_RDB_BUTTON_A", "Comment": "MT3620 RDB: Button A"},
+        {"Name": "BUTTON_B", "Type": "Gpio", "Mapping": "MT3620_RDB_BUTTON_B", "Comment": "MT3620 RDB: Button B"},
+        {"Name": "MQTT_CONNECTED_LED", "Type": "Gpio", "Mapping": "MT3620_RDB_LED1_GREEN", "Comment": "MQTT Connected"},
+        {"Name": "AZURE_CONNECTED_LED", "Type": "Gpio", "Mapping": "MT3620_RDB_NETWORKING_LED_RED", "Comment": "Azure Connected"},
+        {"Name": "UART0", "Type": "Uart", "Mapping": "MT3620_RDB_HEADER2_ISU0_UART", "Comment": "ISU0 UART is exposed on header 2, pin 1 (RX), pin 3 (TX), pin 5 (CTS), pin 7 (RTS)"},
+        {"Name": "LED_RED", "Type": "Gpio", "Mapping": "MT3620_RDB_LED4_RED", "Comment": "MT3620 RDB: LED 1"},
+        {"Name": "LED_GREEN", "Type": "Gpio", "Mapping": "MT3620_RDB_LED4_GREEN", "Comment": "MT3620 RDB: LED 1"},
+        {"Name": "LED_BLUE", "Type": "Gpio", "Mapping": "MT3620_RDB_LED4_BLUE", "Comment": "MT3620 RDB: LED 1"},
+        {"Name": "ISU2", "Type": "I2cMaster", "Mapping": "MT3620_RDB_HEADER2_ISU0_I2C", "Comment": "Mapped to ISU 0 as not used on Seeed RDB"},
+        {"Name": "SWITCHES_LOAD", "Type": "Gpio", "Mapping": "MT3620_RDB_HEADER4_PIN14_GPIO", "Comment": "Altair panel - switch load"},
+        {"Name": "SWITCHES_CHIP_SELECT", "Type": "Gpio", "Mapping": "MT3620_RDB_HEADER4_PIN12_GPIO", "Comment": "Altair panel - switch load"},
+        {"Name": "LED_MASTER_RESET", "Type": "Gpio", "Mapping": "MT3620_RDB_HEADER4_PIN10_GPIO", "Comment": "Altair panel - LED reset"},
+        {"Name": "LED_STORE", "Type": "Gpio", "Mapping": "MT3620_RDB_HEADER4_PIN8_GPIO", "Comment": "Altair panel - LED Store"},
+        {"Name": "LED_OUTPUT_ENABLE", "Type": "Gpio", "Mapping": "MT3620_RDB_HEADER4_PIN6_GPIO", "Comment": "Altair panel - LED Output enbale"},
+        {"Name": "SD_CARD_CHIP_SELECT", "Type": "Gpio", "Mapping": "MT3620_RDB_HEADER3_PIN12_GPIO", "Comment": "Altair panel - SD Card select"}
+    ]
+}

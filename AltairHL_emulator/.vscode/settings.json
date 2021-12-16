@@ -1,0 +1,17 @@
+{
+    "cmake.generator": "Ninja",
+    "cmake.buildDirectory": "${workspaceRoot}/out/ARM-${buildType}",
+    "cmake.buildToolArgs": [ "-v" ],
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "${command:azuresphere.AzureSphereSdkDir}/CMakeFiles/AzureSphereToolchain.cmake",
+        "AZURE_SPHERE_TARGET_API_SET": "latest-lts"
+    },
+    "cmake.configureOnOpen": true,
+    "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
+    "AzureSphere.partnerApplications": {
+        "ac8d863a-4424-11eb-b378-0242ac130002": "",
+        "2e319eae-7be5-4a0c-ba47-9353aa6ca96a": "",
+        "9b684af8-21b9-42aa-91e4-621d5428e497": "",
+        "005180bc-402f-4cb3-a662-72937dbcde47": ""
+    }
+}

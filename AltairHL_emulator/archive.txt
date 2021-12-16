@@ -1,0 +1,109 @@
+// Scroll content for 8x8 LED Display
+
+static uint8_t* renderArrayPtr = 0x00;
+static uint8_t renderArrayLength = 0;
+static uint8_t renderPosition = 0;	// position in the horizontal render array.
+
+// Render content for Command and Address.
+static uint8_t CommandLength = 43;
+static uint8_t bCommand[] = {
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x1C, 0x22, 0x22, 0x22, 0x00,
+0x0C, 0x12, 0x12, 0x0C, 0x00,
+0x1E, 0x08, 0x08, 0x1E, 0x00,
+0x1E, 0x08, 0x08, 0x1E, 0x00,
+0x00, 0x16, 0x14, 0x0E, 0x00,
+0x1E, 0x10, 0x10, 0x0E, 0x00,
+0x0C, 0x12, 0x12, 0x3E, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static uint8_t AddressLength = 43;
+static uint8_t bAddress[] = {
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x1E, 0x28, 0x28, 0x1E, 0x00,
+	0x0C, 0x12, 0x12, 0x3E, 0x00,
+	0x0C, 0x12, 0x12, 0x3E, 0x00,
+	0x00, 0x1E, 0x08, 0x10, 0x00,
+	0x0C, 0x1A, 0x1A, 0x0A, 0x00,
+	0x0A, 0x1A, 0x16, 0x14, 0x00,
+	0x0A, 0x1A, 0x16, 0x14, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+
+// setup timer for rendering text on the 8x8 LED display
+static DX_TIMER maxledscroll = { .period = {0, 0}, .name = "maxledscrollhandler", .handler = max_led_scroll_handler };
+
+
+#ifdef ALTAIR_FRONT_PANEL_CLICK
+/// <summary>
+/// Renderer for scrolling text.
+/// </summary>
+static void max_led_scroll_handler(EventLoopTimer* eventLoopTimer)
+{
+	if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0) {
+		dx_terminate(ExitCode_ConsumeEventLoopTimeEvent);
+		return;
+	}
+
+	if (!renderText) {
+		return;
+	}
+
+	// render text.
+	// work in rows... (render data array is in vertical stripes).
+
+	// clear the rows.
+	for (int x = 0; x < 8; x++) {
+		panel8x8.bitmap[x] = 0x00;
+	}
+
+	// build the render
+	uint8_t WriteMask = 128;
+	for (int x = 0; x < 8; x++) {
+		// get the vertical stripe.
+		uint8_t val = renderArrayPtr[renderPosition + x];
+		// get the vals
+		uint8_t ReadMask = 128;
+		for (int y = 0; y < 8; y++) {
+			if (val & ReadMask)
+				panel8x8.bitmap[7 - x] |= ReadMask;
+
+			ReadMask /= 2;
+		}
+		WriteMask /= 2;
+	}
+
+	// gfx_rotate_counterclockwise(panel8x8.bitmap, 1, 1, panel8x8.bitmap);
+	max7219_panel_write(&panel8x8);
+
+	renderPosition++;
+	if (renderPosition == renderArrayLength) {
+		renderText = false;
+	}
+	else {
+		dx_timerOneShotSet(&maxledscroll, &(struct timespec){0, OneMS * 50});
+	}
+}
+#endif // ALTAIR_FRONT_PANEL_CLICK
+
+
+
+
+		/*
+		*  LEAVE HERE FOR THE TIME BEING - THIS IS THE CODE FOR SCROLLING NOTIFICATION
+
+		renderPosition = 0;
+		if (click_4x4_key_mode == CONTROL_MODE) {
+			renderArrayLength = CommandLength;
+			renderArrayPtr = bCommand;
+		}
+		else {
+			renderArrayLength = AddressLength;
+			renderArrayPtr = bAddress;
+		}
+		renderText = true;
+		dx_timerOneShotSet(&maxledscroll, &(struct timespec){0, OneMS * 50});
+		
+		*/

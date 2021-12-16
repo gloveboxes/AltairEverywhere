@@ -1,0 +1,11 @@
+{
+  "SchemaVersion": 1,
+  "Name": "Retro8800Click",
+  "ComponentId": "af44c060-ff2d-4ed6-ad42-fefd2557ca2e",
+  "EntryPoint": "/bin/app",
+  "CmdArgs": [],
+  "Capabilities": {
+    "I2cMaster": [ "$ISU2" ]
+  },
+  "ApplicationType": "Default"
+}
