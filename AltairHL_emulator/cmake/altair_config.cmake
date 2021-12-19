@@ -43,3 +43,29 @@ set(MICRO_SD_CLICK TRUE "MikroE microSD Click for CP/M read/write to SD Card")
 # add_compile_definitions(ENABLE_WEB_TERMINAL)
 #
 ###################################################################################################################
+
+##################################################################################################################
+# IMPORTANT READ
+#
+# You must rebuild the CMakeLists cache if you change any options here.
+# In Visual Studio Code, press F1, select Delete Cache and Reconfigure.
+# Visual Studio will regenerate the CMakeLists when any file prefixed with .cmake is updated
+#
+##################################################################################################################
+
+##################################################################################################################
+# Uncomment if using AZURE SPHERE REMOTE remote peripheral over network access
+add_compile_definitions(AZURE_SPHERE_REMOTEX_IP="192.168.10.118")
+##################################################################################################################
+
+##################################################################################################################
+# Configure Azure IoT Hub conection string
+add_compile_definitions(IOT_HUB_HOST_NAME="HostName=iot-hub-azure-sphere.azure-devices.net")
+add_compile_definitions(IOT_HUB_DEVICE_ID="DeviceId=DesktopDevX")
+add_compile_definitions(IOT_HUB_SHARED_ACCESS_KEY="SharedAccessKey=FrqMj/OivUWvyKlbIdtcodfx4IR0L1MutA6oPDPApPw=")
+##################################################################################################################
+
+##################################################################################################################
+# Comment out to disable performance mode
+add_compile_definitions(AZURE_SPHERE_REMOTEX_PERFORMANCE_MODE)
+##################################################################################################################
