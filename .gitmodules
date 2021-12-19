@@ -7,3 +7,6 @@
 [submodule "AltairHL_emulator/HardwareDefinitions"]
 	path = AltairHL_emulator/HardwareDefinitions
 	url = https://github.com/Azure-Sphere-DevX/AzureSphereDevX.HardwareDefinitions
+[submodule "AltairHL_emulator/wolfMQTT"]
+	path = AltairHL_emulator/wolfMQTT
+	url = https://github.com/wolfSSL/wolfMQTT.git
