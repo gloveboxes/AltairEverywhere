@@ -10,8 +10,26 @@
             "request": "launch",
             "name": "Debug",
             "program": "${workspaceFolder}/build/AltairHL_emulator",
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "args": [
+                "-t",
+                "-h",
+                "test.mosquitto.org",
+                "-A",
+                "mosquitto.org.crt",
+                "-p",
+                "8884",
+                "-K",
+                "client.key",
+                "-c",
+                "client.crt",
+                "-u",
+                "rw",
+                "-w",
+                "readwrite",
+                "-i",
+                "gloveboxes"
+            ],
+            "cwd": "${workspaceFolder}"            
         }
     ]
 }

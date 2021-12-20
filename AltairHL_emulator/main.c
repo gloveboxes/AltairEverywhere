@@ -744,7 +744,7 @@ static void* altair_thread(void* arg) {
 ///  Initialize PeripheralGpios, device twins, direct methods, timers.
 /// </summary>
 /// <returns>0 on success, or -1 on failure</returns>
-static void InitPeripheralAndHandlers(void) {
+static void InitPeripheralAndHandlers(int argc, char* argv[]) {
 	dx_Log_Debug_Init(Log_Debug_Time_buffer, sizeof(Log_Debug_Time_buffer));
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 	dx_gpioSetOpen(gpioSet, NELEMS(gpioSet));
@@ -759,7 +759,7 @@ static void InitPeripheralAndHandlers(void) {
 	dx_azureConnect(&userConfig, NETWORK_INTERFACE, IOT_PLUG_AND_PLAY_MODEL_ID);
     dx_azureRegisterConnectionChangedNotification(azure_connection_changed);
 
-	init_mqtt(publish_callback_wolf, mqtt_connected_cb);   
+	init_mqtt(argc, argv, publish_callback_wolf, mqtt_connected_cb);   
 
 	dx_deviceTwinSubscribe(deviceTwinBindingSet, NELEMS(deviceTwinBindingSet));
 	dx_timerSetStart(timerSet, NELEMS(timerSet));
@@ -793,7 +793,7 @@ int main(int argc, char* argv[]) {
 	if (!dx_configParseCmdLineArguments(argc, argv, &userConfig)) {
 		return dx_getTerminationExitCode();
 	}
-	InitPeripheralAndHandlers();
+	InitPeripheralAndHandlers(argc, argv);
 
 	dx_eventLoopRun();
 

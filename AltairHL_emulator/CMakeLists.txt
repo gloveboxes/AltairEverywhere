@@ -111,6 +111,7 @@ set(wolfMQTT
     "wolfMQTT/src/mqtt_packet.c"
     "wolfMQTT/src/mqtt_socket.c"
     "wolfMQTT/examples/mqttnet.c"
+    "wolfMQTT/examples/mqttexample.c"
 )
 source_group("wolfMQTT" FILES ${wolfMQTT})
 
@@ -123,7 +124,6 @@ set(ALL_FILES
 
 # Create executable
 add_executable(${PROJECT_NAME} ${ALL_FILES})
-add_subdirectory("AzureSphereRemoteX.Client" applibs)
 
 ################################################################################
 # Following lines required for DesktopDevX
@@ -131,10 +131,11 @@ add_subdirectory("DesktopDevX" desktop_devx)
 target_link_libraries(${PROJECT_NAME} "desktop_devx")
 ################################################################################
 
-################################################################################
-# The following line required for the AzureSphereRemoteX.Client library
+# ################################################################################
+# # The following line required for the AzureSphereRemoteX.Client library
+add_subdirectory("AzureSphereRemoteX.Client" applibs)
 target_link_libraries(${PROJECT_NAME} applibs)
-################################################################################
+# ################################################################################
 
 target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
 

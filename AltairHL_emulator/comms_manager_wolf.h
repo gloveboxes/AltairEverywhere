@@ -57,7 +57,7 @@ extern bool dirty_buffer;
 
 bool is_mqtt_connected(void);
 TOPIC_TYPE topic_type(char* topic_name, size_t topic_name_length);
-void init_mqtt(void (*publish_callback)(MqttMessage* msg), void (*mqtt_connected_cb)(void));
+int init_mqtt(int argc, char* argv[], void (*publish_callback)(MqttMessage *msg), void (*mqtt_connected_cb)(void));
 void publish_message(const char* message, size_t message_length);
 void publish_character(char character);
 void vdisk_mqtt_read_sector(uint32_t offset);
