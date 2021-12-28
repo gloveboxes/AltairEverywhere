@@ -496,7 +496,8 @@ static void update_panel_leds(uint8_t status, uint8_t data, uint16_t bus)
 {
     status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
     data = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
-    bus = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
+    bus = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] |
+                     reverse_lut[bus & 0xf] << 4);
 
     update_panel_status_leds(status, data, bus);
 }
@@ -602,8 +603,8 @@ static void *altair_thread(void *arg)
     disk_drive.disk2.sector = 0;
     disk_drive.disk2.track = 0;
 
-    i8080_reset(&cpu, (port_in)altair_read_terminal, (port_out)altair_write_terminal, sense, &disk_controller, (azure_sphere_port_in)sphere_port_in,
-                (azure_sphere_port_out)sphere_port_out);
+    i8080_reset(&cpu, (port_in)altair_read_terminal, (port_out)altair_write_terminal, sense, &disk_controller,
+                (azure_sphere_port_in)sphere_port_in, (azure_sphere_port_out)sphere_port_out);
 
     // load Disk Loader at 0xff00
     if (!loadRomImage("Disks/88dskrom.bin", 0xff00))
@@ -640,7 +641,8 @@ static void *altair_thread(void *arg)
 static void azure_connection_changed(bool connected)
 {
     if (connected) {
-        snprintf(msgBuffer, sizeof(msgBuffer), "Altair emulator version: %s, DevX version: %s", ALTAIR_ON_AZURE_SPHERE_VERSION, AZURE_SPHERE_DEVX_VERSION);
+        snprintf(msgBuffer, sizeof(msgBuffer), "Altair emulator version: %s, DevX version: %s", ALTAIR_ON_AZURE_SPHERE_VERSION,
+                 AZURE_SPHERE_DEVX_VERSION);
         dx_deviceTwinReportValue(&dt_softwareVersion, msgBuffer);
         dx_deviceTwinReportValue(&dt_reportedDeviceStartTime, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
 
