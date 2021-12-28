@@ -155,63 +155,6 @@ static bool load_application(const char *fileName)
 }
 
 /// <summary>
-/// Set the temperature status led.
-/// Red if HVAC needs to be turned on to get to desired temperature.
-/// Blue to turn on cooler.
-/// Green equals just right, no action required.
-/// </summary>
-void set_hvac_operating_mode(int temperature)
-{
-    if (!dt_desiredTemperature.propertyUpdated || !onboard_telemetry.updated) {
-        return;
-    }
-
-    onboard_telemetry.latest_operating_mode = temperature == *(int *)dt_desiredTemperature.propertyValue  ? HVAC_MODE_GREEN
-                                              : temperature > *(int *)dt_desiredTemperature.propertyValue ? HVAC_MODE_COOLING
-                                                                                                          : HVAC_MODE_HEATING;
-
-    if (onboard_telemetry.previous_operating_mode != onboard_telemetry.latest_operating_mode) {
-        // minus one as first item is HVAC_MODE_UNKNOWN
-        if (onboard_telemetry.previous_operating_mode != HVAC_MODE_UNKNOWN) {
-            dx_gpioOff(ledRgb[onboard_telemetry.previous_operating_mode - 1]);
-        }
-        onboard_telemetry.previous_operating_mode = onboard_telemetry.latest_operating_mode;
-        dx_deviceTwinReportValue(&dt_reportedTemperature, &onboard_telemetry.latest.temperature);
-    }
-
-    // minus one as first item is HVAC_MODE_UNKNOWN
-    dx_gpioOn(ledRgb[onboard_telemetry.latest_operating_mode - 1]);
-}
-
-/// <summary>
-/// Device Twin Handler to set the desired temperature value
-/// </summary>
-static void device_twin_set_temperature_handler(DX_DEVICE_TWIN_BINDING *deviceTwinBinding)
-{
-    // validate data is sensible range before applying
-    if (deviceTwinBinding->twinType == DX_DEVICE_TWIN_INT && IN_RANGE(*(int *)deviceTwinBinding->propertyValue, -20, 80)) {
-        // set_hvac_operating_mode(onboard_telemetry.latest.temperature);
-        dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
-    } else {
-        dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_ERROR);
-    }
-}
-
-/// <summary>
-/// Read sensor and send to Azure IoT - called every 60 seconds
-/// </summary>
-static void measure_sensor_handler(EventLoopTimer *eventLoopTimer)
-{
-    if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0) {
-        dx_terminate(DX_ExitCode_ConsumeEventLoopTimeEvent);
-        return;
-    }
-    onboard_sensors_read(&onboard_telemetry.latest);
-    onboard_telemetry.updated = true;
-    // set_hvac_operating_mode(onboard_telemetry.latest.temperature);
-}
-
-/// <summary>
 /// Update device stats - only update device twins if they have changed
 /// </summary>
 static void device_stats_handler(EventLoopTimer *eventLoopTimer)
@@ -737,10 +680,7 @@ static void ClosePeripheralAndHandlers(void)
     dx_azureToDeviceStop();
     dx_deviceTwinUnsubscribe();
     dx_timerEventLoopStop();
-    dx_gpioSetClose(gpioSet, NELEMS(gpioSet));
-    dx_gpioSetClose(ledRgb, NELEMS(ledRgb));
-    dx_i2cSetClose(i2c_bindings, NELEMS(i2c_bindings));
-    onboard_sensors_close();
+
     curl_global_cleanup();
 }
 
