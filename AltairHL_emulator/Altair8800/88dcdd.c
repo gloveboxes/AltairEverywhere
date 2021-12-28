@@ -142,7 +142,7 @@ uint8_t disk_read()
 
     if (!disk_drive.current->haveSectorData) {
         disk_drive.current->sectorPointer = 0;
-
+        memset(disk_drive.current->sectorData, 0x00, 137);
         read(disk_drive.current->fp, disk_drive.current->sectorData, 137);
     }
 

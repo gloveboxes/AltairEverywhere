@@ -9,7 +9,7 @@ include(cmake/altair_config.cmake)
 
 # MQTT BROKER CONFIG ##############################################################################################
 #
-add_compile_definitions(ALTAIR_MQTT_SECURE_PORT_WOLF=8884)
+add_compile_definitions(ALTAIR_MQTT_SECURE_PORT_WOLF=1883)
 add_compile_definitions(MQTT_CA_CERTIFICATE="certs/ca.crt")
 add_compile_definitions(MQTT_CLIENT_PRIVATE_KEY="certs/client.key")
 add_compile_definitions(MQTT_CLIENT_CERTIFICATE="certs/client.crt")
@@ -28,10 +28,10 @@ add_compile_definitions(WOLFMQTT_NO_STDIO)
 add_compile_definitions(WOLFSSL_USER_SETTINGS)
 # add_compile_definitions(WOLFMQTT_V5)
 # add_compile_definitions(__linux__)
-add_compile_definitions(MQTT_USE_WOLFSSL)
-add_compile_definitions(ENABLE_MQTT_TLS)
+# add_compile_definitions(MQTT_USE_WOLFSSL)
+# add_compile_definitions(ENABLE_MQTT_TLS)
 add_compile_definitions(NO_DH)
-add_compile_definitions(AZURE_SPHERE)
+# add_compile_definitions(AZURE_SPHERE)
 add_compile_definitions(WOLFMQTT_USER_SETTINGS)
 
 

@@ -3,11 +3,18 @@
 
 #include "storage.h"
 
+static int channel_id = 8800;
+
 
 /// <summary>
 /// Write an integer to this application's persistent data file
 /// </summary>
 void write_channel_id_to_storage(int value) {
+
+    channel_id = 8800;
+    return;
+
+
     int fd = Storage_OpenMutableFile();
     if (fd == -1) {
         Log_Debug("ERROR: Could not open mutable file:  %s (%d).\n", strerror(errno), errno);
@@ -37,6 +44,10 @@ void write_channel_id_to_storage(int value) {
 /// API fails, this returns -1.
 /// </returns>
 int read_channel_id_from_storage(void) {
+    return 8800;
+
+
+
     int fd = Storage_OpenMutableFile();
     if (fd == -1) {
         Log_Debug("ERROR: Could not open mutable file:  %s (%d).\n", strerror(errno), errno);

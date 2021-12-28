@@ -27,6 +27,7 @@
         "iotc_manager.h": "c",
         "utils.h": "c",
         "intel8080.h": "c",
-        "azure_sphere_learning_path.h": "c"
+        "azure_sphere_learning_path.h": "c",
+        "comms_manager_wolf.h": "c"
     }
 }

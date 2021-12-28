@@ -16,7 +16,7 @@ set(ALTAIR_FRONT_PANEL_NONE TRUE "Altair on Azure Sphere with no panel.")
 
 # MQTT BROKER CONFIG ##############################################################################################
 #
-add_compile_definitions(ALTAIR_MQTT_HOST="test.mosquitto.org")
+add_compile_definitions(ALTAIR_MQTT_HOST="localhost")
 #
 ###################################################################################################################
 
@@ -40,7 +40,7 @@ set(MICRO_SD_CLICK TRUE "MikroE microSD Click for CP/M read/write to SD Card")
 
 # WEB TERMINAL ####################################################################################################
 #
-# add_compile_definitions(ENABLE_WEB_TERMINAL)
+add_compile_definitions(ENABLE_WEB_TERMINAL)
 #
 ###################################################################################################################
 
@@ -55,14 +55,14 @@ set(MICRO_SD_CLICK TRUE "MikroE microSD Click for CP/M read/write to SD Card")
 
 ##################################################################################################################
 # Uncomment if using AZURE SPHERE REMOTE remote peripheral over network access
-add_compile_definitions(AZURE_SPHERE_REMOTEX_IP="192.168.10.118")
+# add_compile_definitions(AZURE_SPHERE_REMOTEX_IP="192.168.10.118")
 ##################################################################################################################
 
 ##################################################################################################################
 # Configure Azure IoT Hub conection string
-add_compile_definitions(IOT_HUB_HOST_NAME="HostName=iot-hub-azure-sphere.azure-devices.net")
-add_compile_definitions(IOT_HUB_DEVICE_ID="DeviceId=DesktopDevX")
-add_compile_definitions(IOT_HUB_SHARED_ACCESS_KEY="SharedAccessKey=FrqMj/OivUWvyKlbIdtcodfx4IR0L1MutA6oPDPApPw=")
+add_compile_definitions(IOT_HUB_HOST_NAME="HostName=iotc-1b7e7c6e-7477-4074-901e-242361cc0b1c.azure-devices.net")
+add_compile_definitions(IOT_HUB_DEVICE_ID="DeviceId=DesktopAltair")
+add_compile_definitions(IOT_HUB_SHARED_ACCESS_KEY="SharedAccessKey=X0+NFivH/PQ1UZqfJciUs31UcsC682rAF4P1u3aWW4o=")
 ##################################################################################################################
 
 ##################################################################################################################
