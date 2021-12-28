@@ -8,7 +8,7 @@ AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 BreakBeforeBraces: WebKit
-ColumnLimit: 180
+ColumnLimit: 140
 DerivePointerAlignment: false
 KeepEmptyLinesAtTheStartOfBlocks: true
 PointerAlignment: Right

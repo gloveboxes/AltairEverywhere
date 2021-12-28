@@ -2,7 +2,7 @@
 #  Licensed under the MIT License.
 
 cmake_minimum_required (VERSION 3.10)
-project (AltairHL_emulator C)
+project (Altair_emulator C)
 
 include(cmake/altair_config.cmake)
 
