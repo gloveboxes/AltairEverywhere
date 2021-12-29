@@ -121,36 +121,48 @@ static bool load_application(const char *fileName)
     // TODO: OPEN FILE
 
     // int GameFd = Storage_OpenFileInImagePackage(filePathAndName);
-    int GameFd = 0;
-    if (GameFd >= 0) {
-        // get length.
-        off_t length = lseek(GameFd, 0, SEEK_END);
-        ptrBasicApp = (uint8_t *)malloc((size_t)length + 9);
-        memset((void *)ptrBasicApp, 0x00, (size_t)length + 9);
-        lseek(GameFd, 0, SEEK_SET);
-        read(GameFd, ptrBasicApp + 5, (size_t)length);
-        close(GameFd);
+    int GameFd = open(filePathAndName, O_RDONLY);
 
-        // wrap loaded app with 2 leading <CR><LF>, and 2 trailing <CR><LF>
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t nread;
 
-        ptrBasicApp[0] = 0x0d;
-        ptrBasicApp[1] = 0x0a;
-        ptrBasicApp[2] = 0x0d;
-        ptrBasicApp[3] = 0x0a;
-        ptrBasicApp[length + 3] = 0x0d;
-        ptrBasicApp[length + 4] = 0x0a;
-        ptrBasicApp[length + 5] = 0x0d;
-        ptrBasicApp[length + 6] = 0x0a;
-
-        terminalInputMessageLen = (int)(length + 4);
-        terminalOutputMessageLen = (int)(length + 4);
-
-        appLoadPtr = 0;
-        basicAppLength = (int)(length + 9); // add extra <CR><LF> * 2
-        haveAppLoad = true;
-    } else {
+    FILE *stream = fopen(filePathAndName, "r");
+    if (stream == NULL) {
         return false;
     }
+
+    while ((nread = getline(&line, &len, stream)) != -1) {
+        printf("Retrieved line of length %zd:\n", nread);
+        fwrite(line, nread, 1, stdout);
+
+        if (line[nread - 1] == '\n') {
+            nread--;
+        }
+
+        if (nread > 0) {
+
+            terminalInputMessageLen = nread;
+            terminalOutputMessageLen = nread;
+
+            appLoadPtr = 0;
+            basicAppLength = nread;
+
+            ptrBasicApp = line;
+            haveAppLoad = true;
+
+            pthread_mutex_lock(&wait_message_processed_mutex);
+            pthread_cond_wait(&wait_message_processed_cond, &wait_message_processed_mutex);
+            pthread_mutex_unlock(&wait_message_processed_mutex);
+        }
+
+        haveCtrlCharacter = 0x0d;
+        haveCtrlPending = true;
+    }
+
+    free(line);
+    fclose(stream);
+
     return true;
 }
 
@@ -423,10 +435,15 @@ static char altair_read_terminal(void)
         retVal = ptrBasicApp[appLoadPtr++];
         publish_character(retVal);
 
-        if (appLoadPtr == basicAppLength) {
+        if (appLoadPtr > basicAppLength) {
             haveAppLoad = false;
-            free(ptrBasicApp);
+            haveTerminalInputMessage = false;
             appLoadPtr = 0;
+            retVal = 0;
+
+            pthread_mutex_lock(&wait_message_processed_mutex);
+            pthread_cond_signal(&wait_message_processed_cond);
+            pthread_mutex_unlock(&wait_message_processed_mutex);
         }
         return retVal;
     }
@@ -434,10 +451,9 @@ static char altair_read_terminal(void)
     return 0;
 }
 
-static void altair_write_terminal(char c)
+static void altair_write_terminal(uint8_t c)
 {
-    if (c > 0x80)
-        c = (char)(c - 0x80);
+    c &= 0x7F;
 
     if (haveTerminalOutputMessage) {
         altairOutputBufReadIndex++;

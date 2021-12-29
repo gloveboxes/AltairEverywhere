@@ -49,6 +49,8 @@ void disk_function(uint8_t b)
             writeSector(disk_drive.current, disk_drive.currentDisk);
         }
 
+        lseek(disk_drive.current->fp, seek_offset, SEEK_SET);
+
         disk_drive.current->diskPointer = seek_offset;
         disk_drive.current->haveSectorData = false;
         disk_drive.current->sectorPointer = 0;
@@ -69,6 +71,8 @@ void disk_function(uint8_t b)
         if (disk_drive.current->sectorDirty) {
             writeSector(disk_drive.current, disk_drive.currentDisk);
         }
+
+        lseek(disk_drive.current->fp, seek_offset, SEEK_SET);
 
         disk_drive.current->diskPointer = seek_offset;
         disk_drive.current->haveSectorData = false;
@@ -115,6 +119,8 @@ uint8_t sector()
     seek_offset = disk_drive.current->track * TRACK + disk_drive.current->sector * (SECTOR_SIZE);
     disk_drive.current->sectorPointer = 0;
 
+    lseek(disk_drive.current->fp, seek_offset, SEEK_SET);
+
     disk_drive.current->diskPointer = seek_offset;
     disk_drive.current->sectorPointer = 0; // needs to be set here for write operation (read fetches sector data and resets the pointer).
     disk_drive.current->haveSectorData = false;
@@ -139,11 +145,11 @@ void disk_write(uint8_t b)
 
 uint8_t disk_read()
 {
-
     if (!disk_drive.current->haveSectorData) {
         disk_drive.current->sectorPointer = 0;
         memset(disk_drive.current->sectorData, 0x00, 137);
         read(disk_drive.current->fp, disk_drive.current->sectorData, 137);
+        disk_drive.current->haveSectorData = true;
     }
 
     return disk_drive.current->sectorData[disk_drive.current->sectorPointer++];

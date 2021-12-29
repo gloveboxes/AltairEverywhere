@@ -34,7 +34,7 @@ set(MICRO_SD_CLICK TRUE "MikroE microSD Click for CP/M read/write to SD Card")
 #
 # Comment out the "add_compile_definitions(BOOT_CPM) line below to boot Altair BASIC 4.0
 #
-# add_compile_definitions(BOOT_CPM)
+add_compile_definitions(BOOT_CPM)
 #
 ###################################################################################################################
 

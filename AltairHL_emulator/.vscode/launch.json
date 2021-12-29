@@ -9,7 +9,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}/build/AltairHL_emulator",
+            "program": "${workspaceFolder}/build/Altair_emulator",
             "args": [
                 // "-t",
                 "-h",
