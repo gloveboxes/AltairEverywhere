@@ -23,7 +23,7 @@ add_compile_definitions(PRINTF=Log_Debug)
 #
 add_compile_definitions(WOLFMQTT_MULTITHREAD)
 add_compile_definitions(WOLFMQTT_DISCONNECT_CB)
-# add_compile_definitions(WOLFMQTT_NONBLOCK)
+add_compile_definitions(WOLFMQTT_NONBLOCK)
 # add_compile_definitions(WOLFMQTT_NO_STDIO)
 add_compile_definitions(WOLFSSL_USER_SETTINGS)
 # add_compile_definitions(WOLFMQTT_V5)
@@ -102,7 +102,7 @@ set(Source
     "onboard_sensors.c"
     "storage.c"
     "utils.c"
-    "weather.c"
+    # "weather.c"
 )
 source_group("Source" FILES ${Source})
 

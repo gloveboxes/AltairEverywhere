@@ -95,14 +95,14 @@ static void mqtt_connected_cb(void)
     if (!connection_initialised) {
         connection_initialised = true;
         int len = snprintf(msgBuffer, sizeof(msgBuffer), connected_message, ALTAIR_ON_AZURE_SPHERE_VERSION, AZURE_SPHERE_DEVX_VERSION);
-        queue_mqtt_message(msgBuffer, (size_t)len);
+        queue_mqtt_message((const uint8_t *)msgBuffer, (size_t)len);
         cpu_operating_mode = CPU_RUNNING;
         // if (dt_desiredCpuState.propertyValue) {
         //	cpu_operating_mode = CPU_RUNNING;
         //}
     } else {
         int len = snprintf(msgBuffer, sizeof(msgBuffer), reconnected_message, ALTAIR_ON_AZURE_SPHERE_VERSION, AZURE_SPHERE_DEVX_VERSION);
-        queue_mqtt_message(msgBuffer, (size_t)len);
+        queue_mqtt_message((const uint8_t *)msgBuffer, (size_t)len);
     }
 }
 
@@ -117,11 +117,6 @@ static bool load_application(const char *fileName)
     snprintf(filePathAndName, sizeof(filePathAndName), "%s/%s", BASIC_SAMPLES_DIRECTORY, fileName);
 
     Log_Debug("LOADING '%s'\n", fileName);
-
-    // TODO: OPEN FILE
-
-    // int GameFd = Storage_OpenFileInImagePackage(filePathAndName);
-    int GameFd = open(filePathAndName, O_RDONLY);
 
     char *line = NULL;
     size_t len = 0;
@@ -148,7 +143,7 @@ static bool load_application(const char *fileName)
             appLoadPtr = 0;
             basicAppLength = nread;
 
-            ptrBasicApp = line;
+            ptrBasicApp = (uint8_t *)line;
             haveAppLoad = true;
 
             pthread_mutex_lock(&wait_message_processed_mutex);
@@ -283,10 +278,10 @@ static void handle_inbound_message(const char *topic_name, size_t topic_name_siz
             if (data[0] == 'M') { // CPU Monitor mode
                 cpu_operating_mode = cpu_operating_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
                 if (cpu_operating_mode == CPU_STOPPED) {
-                    queue_mqtt_message("\r\nCPU MONITOR> ", 15);
+                    queue_mqtt_message((const uint8_t *)"\r\nCPU MONITOR> ", 15);
                     // publish_message("\r\nCPU MONITOR> ", 15, pub_topic_data);
                 } else {
-                    queue_mqtt_message("\r\n", 2);
+                    queue_mqtt_message((const uint8_t *)"\r\n", 2);
                     // publish_message("\r\n", 2, pub_topic_data);
                 }
             } else {
@@ -313,7 +308,7 @@ static void handle_inbound_message(const char *topic_name, size_t topic_name_siz
 /// <param name="msg"></param>
 static void publish_callback_wolf(MqttMessage *msg)
 {
-    handle_inbound_message(msg->topic_name, msg->topic_name_len, msg->buffer, msg->buffer_len);
+    handle_inbound_message(msg->topic_name, msg->topic_name_len, (const char *)msg->buffer, msg->buffer_len);
 }
 
 /// <summary>
@@ -384,8 +379,8 @@ static void sphere_port_out(uint8_t port, uint8_t data)
 
     // get IP and Weather data.
     if (port == 32 && data == 1) {
-        locData = GetLocationData();
-        GetCurrentWeather(locData, &temperature);
+        // locData = GetLocationData();
+        // GetCurrentWeather(locData, &temperature);
     }
 
     // publish the telemetry to IoTC
@@ -583,8 +578,6 @@ static void print_console_banner(void)
     }
 }
 
-#pragma GCC push_options
-#pragma GCC optimize("O0")
 static void *altair_thread(void *arg)
 {
     Log_Debug("Altair Thread starting...\n");
@@ -648,7 +641,6 @@ static void *altair_thread(void *arg)
 
     return NULL;
 }
-#pragma GCC pop_options
 
 /// <summary>
 /// Report on first connect the software version and device startup UTC time

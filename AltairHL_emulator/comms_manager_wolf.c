@@ -8,8 +8,6 @@
 static bool mqtt_connected = false;
 static bool got_disconnected = true;
 
-static void ping_handler(EventLoopTimer *eventLoopTimer);
-
 //#define QUEUE_BUFFER_SIZE 256 // this is small buffer to decouple sends from the MQTT-C message received callback
 // uint8_t queued_buffer[QUEUE_BUFFER_SIZE];
 // size_t queued_buffer_length = 0;
@@ -36,28 +34,12 @@ static size_t output_buffer_length = 0;
 
 static MQTTCtx gMqttCtx;
 
-static DX_TIMER_BINDING ping_timer = {.period = {30, 0}, .handler = ping_handler, .name = "ping_timer"};
-
 /* locals */
 static word16 mPacketIdLast;
 
 /* argument parsing */
 // static int myoptind = 0;
 // static char* myoptarg = NULL;
-
-static void ping_handler(EventLoopTimer *eventLoopTimer)
-{
-    int rc;
-    if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0) {
-        dx_terminate(DX_ExitCode_ConsumeEventLoopTimeEvent);
-        return;
-    }
-    if (mqtt_connected) {
-        if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
-            Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
-        }
-    }
-}
 
 TOPIC_TYPE topic_type(char *topic_name, size_t topic_name_length)
 {
@@ -82,12 +64,21 @@ bool is_mqtt_connected(void)
 /* callback indicates a network error occurred */
 static int mqtt_disconnect_cb(MqttClient *client, int error_code, void *ctx)
 {
-    Log_Debug("Network Error Callback: %s (error %d)\n", MqttClient_ReturnCodeToString(error_code), error_code);
+    int rc;
 
     if (error_code == MQTT_CODE_ERROR_NETWORK) {
+        Log_Debug("Network Error Callback: %s (error %d)\n", MqttClient_ReturnCodeToString(error_code), error_code);
+
         mqtt_connected = false;
         got_disconnected = true;
     }
+
+    if (mqtt_connected) {
+        if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
+            Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
+        }
+    }
+
     return 0;
 }
 #endif
@@ -146,7 +137,8 @@ static int init_mqtt_connection(MQTTCtx *mqttCtx)
     mqttCtx->rx_buf = rx_buf;
 
     /* Initialize MqttClient structure */
-    rc = MqttClient_Init(&mqttCtx->client, &mqttCtx->net, mqtt_message_cb, mqttCtx->tx_buf, MAX_BUFFER_SIZE, mqttCtx->rx_buf, MAX_BUFFER_SIZE, (int)mqttCtx->cmd_timeout_ms);
+    rc = MqttClient_Init(&mqttCtx->client, &mqttCtx->net, mqtt_message_cb, mqttCtx->tx_buf, MAX_BUFFER_SIZE, mqttCtx->rx_buf,
+                         MAX_BUFFER_SIZE, (int)mqttCtx->cmd_timeout_ms);
 
     Log_Debug("MQTT Init: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
 
@@ -189,7 +181,8 @@ static int init_mqtt_connection(MQTTCtx *mqttCtx)
         rc = MqttClient_Connect(&mqttCtx->client, &mqttCtx->connect);
     } while (rc == MQTT_CODE_CONTINUE || rc == MQTT_CODE_STDIN_WAKE);
 
-    Log_Debug("MQTT Connect: Proto (%s), %s (%d)\n", MqttClient_GetProtocolVersionString(&mqttCtx->client), MqttClient_ReturnCodeToString(rc), rc);
+    Log_Debug("MQTT Connect: Proto (%s), %s (%d)\n", MqttClient_GetProtocolVersionString(&mqttCtx->client),
+              MqttClient_ReturnCodeToString(rc), rc);
 
     if (rc != MQTT_CODE_SUCCESS) {
         client_disconnect(mqttCtx);
@@ -262,7 +255,8 @@ static void *waitMessage_task(void *args)
                 client_disconnect(&gMqttCtx);
             }
         } else {
-            if (got_disconnected && ((channel_id = read_channel_id_from_storage()) != -1 || dt_channelId.propertyUpdated) && dx_isNetworkReady()) {
+            if (got_disconnected && ((channel_id = read_channel_id_from_storage()) != -1 || dt_channelId.propertyUpdated) &&
+                dx_isNetworkReady()) {
                 // if channel id is -1 then channel id was not in storage
                 if (channel_id == -1) {
                     channel_id = *(int *)(dt_channelId.propertyValue);
@@ -409,7 +403,7 @@ void vdisk_mqtt_write_sector(vdisk_mqtt_write_sector_t *write_sector)
 /**
  * init MQTT connection and subscribe desired topics
  */
-int init_mqtt(int argc, char* argv[], void (*publish_callback)(MqttMessage *msg), void (*mqtt_connected_cb)(void))
+int init_mqtt(int argc, char *argv[], void (*publish_callback)(MqttMessage *msg), void (*mqtt_connected_cb)(void))
 {
     _publish_callback = publish_callback;
     _mqtt_connected_cb = mqtt_connected_cb;
@@ -417,27 +411,27 @@ int init_mqtt(int argc, char* argv[], void (*publish_callback)(MqttMessage *msg)
     mqtt_init_ctx(&gMqttCtx);
     gMqttCtx.app_name = "Altair on Azure Sphere";
 
-	/* parse arguments */
+    /* parse arguments */
     int rc = mqtt_parse_args(&gMqttCtx, argc, argv);
     if (rc != 0) {
         if (rc == MY_EX_USAGE) {
             /* return success, so make check passes with TLS disabled */
             return 0;
         }
-        return rc;
     }
 
 #ifdef ENABLE_WEB_TERMINAL
     dx_startThreadDetached(waitMessage_task, NULL, "wait for message");
-    dx_timerStart(&ping_timer);
 #else
     mqtt_connected_cb();
 #endif // ENABLE_WEB_TERMINAL
+
+    return rc;
 }
 
 void queue_mqtt_message(const uint8_t *data, size_t data_length)
 {
-    publish_message(data, data_length);
+    publish_message((const char *)data, data_length);
 }
 
 void send_partial_message(void)
