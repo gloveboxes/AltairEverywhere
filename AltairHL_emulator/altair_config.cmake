@@ -7,21 +7,6 @@ set(ALTAIR_FRONT_PANEL_NONE TRUE "Altair on Azure Sphere with no panel.")
 #
 ###################################################################################################################
 
-# MQTT BROKER CONFIG ##############################################################################################
-#
-add_compile_definitions(ALTAIR_MQTT_HOST="localhost")
-#
-###################################################################################################################
-
-# ENABLE SD CARD ##################################################################################################
-#
-# The MikroE microSD Click works with the Avnet Azure Sphere Starter Kit Rev 1 and Rev 2 when in Socket 1.
-# The MikroE microSD Click works with the Mikroe 8800 Retro Click in Socket 2
-# Uncomment the "set(MICRO_SD_CLICK" line below to enable the MikroE microSD Click
-#
-set(MICRO_SD_CLICK TRUE "MikroE microSD Click for CP/M read/write to SD Card")
-#
-###################################################################################################################
 
 # BOOT CONFIG #####################################################################################################
 #

@@ -84,7 +84,7 @@ target_link_libraries(${PROJECT_NAME} applibs)
 target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC AZURE_IOT_HUB_CONFIGURED)
-target_link_libraries(${PROJECT_NAME} applibs pthread c desktop_devx wolfssl curl)
+target_link_libraries(${PROJECT_NAME} applibs pthread c desktop_devx curl)
 
 target_link_options(${PROJECT_NAME} PUBLIC "-L/usr/local/lib")
 

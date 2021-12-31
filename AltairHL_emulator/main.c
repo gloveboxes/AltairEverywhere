@@ -571,12 +571,19 @@ static void *altair_thread(void *arg)
     disk_controller.write = disk_write;
     disk_controller.sector = sector;
 
-    disk_drive.disk1.fp = open("Disks/cpm63k.dsk", O_RDWR);
+    if ((disk_drive.disk1.fp = open("Disks/cpm63k.dsk", O_RDWR)) == -1) {
+        Log_Debug("Failed to open CPM disk image\\n");
+        exit(-1);
+    }
+    
     disk_drive.disk1.diskPointer = 0;
     disk_drive.disk1.sector = 0;
     disk_drive.disk1.track = 0;
 
-    disk_drive.disk2.fp = open("Disks/blank.dsk", O_RDWR);
+    if ((disk_drive.disk2.fp = open("Disks/blank.dsk", O_RDWR)) == -1){
+        Log_Debug("Failed to open blank disk image\n");
+        exit(-1);
+    }
     disk_drive.disk2.diskPointer = 0;
     disk_drive.disk2.sector = 0;
     disk_drive.disk2.track = 0;
