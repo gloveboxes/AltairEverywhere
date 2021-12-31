@@ -9,12 +9,12 @@ static const char* invalid_switches = "\r\nError: Input switches must be either 
 static bool validate_input_data(const char* command) {
 	size_t len = strlen(command);
 	if (len > 16) {
-		queue_mqtt_message(too_many_switches, strlen(too_many_switches));
+		queue_mqtt_message((const uint8_t*)too_many_switches, strlen(too_many_switches));
 		return false;
 	}
 	for (size_t i = 0; i < len; i++) {
 		if (!(command[i] == '1' || command[i] == '0')) {
-			queue_mqtt_message(invalid_switches, strlen(invalid_switches));
+			queue_mqtt_message((const uint8_t*)invalid_switches, strlen(invalid_switches));
 			return false;
 		}
 	}
@@ -32,7 +32,7 @@ static void publish_virtual_input_data(void) {
 	snprintf(msgBuffer, sizeof(msgBuffer), "\r\n%15s: %s %s (0x%04x), %s (%d byte instruction)", "Input",
 		address_bus_high_byte, address_bus_low_byte, bus_switches,
 		get_i8080_instruction_name((uint8_t)bus_switches, &i8080_instruction_size), i8080_instruction_size);
-	queue_mqtt_message(msgBuffer, strlen(msgBuffer));
+	queue_mqtt_message((const uint8_t*)msgBuffer, strlen(msgBuffer));
 }
 
 static void process_virtual_switches(const char* command, void (*process_control_panel_commands)(void)) {
@@ -70,7 +70,7 @@ void process_virtual_input(const char* command, void (*process_control_panel_com
 		process_virtual_switches(command, process_control_panel_commands);
 	}
 
-	queue_mqtt_message("\r\nCPU MONITOR> ", 15);
+	queue_mqtt_message((const uint8_t*)"\r\nCPU MONITOR> ", 15);
 }
 
 void publish_cpu_state(char* command, uint16_t address_bus, uint8_t data_bus) {
@@ -88,7 +88,7 @@ void publish_cpu_state(char* command, uint16_t address_bus, uint8_t data_bus) {
 		command, address_bus_high_byte, address_bus_low_byte, address_bus, data_bus_binary, data_bus,
 		get_i8080_instruction_name(data_bus, &instruction_length), instruction_length);
 
-	queue_mqtt_message(panel_info, msg_length);
+	queue_mqtt_message((const uint8_t*)panel_info, msg_length);
 	//publish_message(msgBuffer, strlen(msgBuffer), pub_topic_data);
 
 	//if (consoleFd != -1) {
