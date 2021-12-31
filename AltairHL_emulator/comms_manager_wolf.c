@@ -408,14 +408,18 @@ int init_mqtt(int argc, char *argv[], void (*publish_callback)(MqttMessage *msg)
     mqtt_init_ctx(&gMqttCtx);
     gMqttCtx.app_name = "Altair on Azure Sphere";
 
+    gMqttCtx.host = ALTAIR_MQTT_BROKER;
+    gMqttCtx.port = ALTAIR_MQTT_BROKER_PORT;
+    gMqttCtx.client_id = ALTAIR_MQTT_IDENTITY;
+
     /* parse arguments */
-    int rc = mqtt_parse_args(&gMqttCtx, argc, argv);
-    if (rc != 0) {
-        if (rc == MY_EX_USAGE) {
-            /* return success, so make check passes with TLS disabled */
-            return 0;
-        }
-    }
+    // int rc = mqtt_parse_args(&gMqttCtx, argc, argv);
+    // if (rc != 0) {
+    //     if (rc == MY_EX_USAGE) {
+    //         /* return success, so make check passes with TLS disabled */
+    //         return 0;
+    //     }
+    // }
 
 #ifdef ENABLE_WEB_TERMINAL
     dx_startThreadDetached(waitMessage_task, NULL, "wait for message");
@@ -423,7 +427,7 @@ int init_mqtt(int argc, char *argv[], void (*publish_callback)(MqttMessage *msg)
     mqtt_connected_cb();
 #endif // ENABLE_WEB_TERMINAL
 
-    return rc;
+    return 0;
 }
 
 void queue_mqtt_message(const uint8_t *data, size_t data_length)

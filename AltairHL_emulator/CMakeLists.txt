@@ -8,8 +8,14 @@ include(altair_config.cmake)
 
 
 add_compile_definitions(PRINTF=Log_Debug)
-set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO MOCKING IN AzureSphereRemoteX.Client" FORCE )
 
+# Uncomment the following to overide
+# add_compile_definitions(ALTAIR_MQTT_BROKER="localhost")
+# add_compile_definitions(ALTAIR_MQTT_BROKER_PORT=1883)
+# add_compile_definitions(ALTAIR_MQTT_IDENTITY="altair")
+
+
+set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO MOCKING IN AzureSphereRemoteX.Client" FORCE )
 
 
 # wolfMQTT Settings ###############################################################################################

@@ -29,6 +29,8 @@
         "intel8080.h": "c",
         "azure_sphere_learning_path.h": "c",
         "comms_manager_wolf.h": "c",
-        "stack": "c"
+        "stack": "c",
+        "mqtt_client.h": "c",
+        "mqttnet.h": "c"
     }
 }
