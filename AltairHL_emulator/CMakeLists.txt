@@ -8,6 +8,8 @@ include(altair_config.cmake)
 
 
 add_compile_definitions(PRINTF=Log_Debug)
+set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO MOCKING IN AzureSphereRemoteX.Client" FORCE )
+
 
 
 # wolfMQTT Settings ###############################################################################################
@@ -21,6 +23,10 @@ add_compile_definitions(NO_DH)
 add_compile_definitions(WOLFMQTT_USER_SETTINGS)
 ###################################################################################################################
 
+
+if(DISABLE_IO_MOCKING)
+    add_compile_definitions(DISABLE_IO_MOCKING=TRUE)
+endif(DISABLE_IO_MOCKING)
 
 set(Source
     "Altair8800/88dcdd.c"
