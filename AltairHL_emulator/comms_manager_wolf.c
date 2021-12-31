@@ -8,10 +8,6 @@
 static bool mqtt_connected = false;
 static bool got_disconnected = true;
 
-//#define QUEUE_BUFFER_SIZE 256 // this is small buffer to decouple sends from the MQTT-C message received callback
-// uint8_t queued_buffer[QUEUE_BUFFER_SIZE];
-// size_t queued_buffer_length = 0;
-
 MqttTopic topics[4];
 
 static char mqtt_client_id[30] = {0};
