@@ -1,7 +1,5 @@
 #pragma once
 
-#include "hw/azure_sphere_learning_path.h"
-
 // DevX Libraries
 #include "dx_config.h"
 #include "dx_device_twins.h"
@@ -12,7 +10,6 @@
 #include "dx_terminate.h"
 #include "dx_timer.h"
 #include "dx_version.h"
-#include "onboard_sensors.h"
 
 #ifdef ALTAIR_FRONT_PANEL_CLICK
 #include "front_panel_click.h"
@@ -45,18 +42,6 @@ static void panel_refresh_handler(EventLoopTimer *eventLoopTimer);
 static void process_control_panel_commands(void);
 
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
-
-typedef enum { HVAC_MODE_UNKNOWN, HVAC_MODE_HEATING, HVAC_MODE_GREEN, HVAC_MODE_COOLING } HVAC_OPERATING_MODE;
-
-typedef struct {
-    ONBOARD_TELEMETRY latest;
-    ONBOARD_TELEMETRY previous;
-    bool updated;
-    HVAC_OPERATING_MODE latest_operating_mode;
-    HVAC_OPERATING_MODE previous_operating_mode;
-} ENVIRONMENT;
-
-ENVIRONMENT onboard_telemetry;
 
 #ifdef ALTAIR_FRONT_PANEL_CLICK
 
@@ -117,13 +102,6 @@ static DX_GPIO_BINDING led_output_enable = {.pin = LED_OUTPUT_ENABLE,
 
 #endif // ALTAIR_FRONT_PANEL_KIT
 
-static DX_GPIO_BINDING buttonA = {.pin = BUTTON_A, .direction = DX_INPUT, .detect = DX_GPIO_DETECT_LOW, .name = "buttonA"};
-static DX_GPIO_BINDING azure_iot_connected_led = {.pin = NETWORK_CONNECTED_LED,
-                                                  .direction = DX_OUTPUT,
-                                                  .initialState = GPIO_Value_Low,
-                                                  .invertPin = true,
-                                                  .name = "azure_iot_connected_led"};
-
 // Common Timers
 static DX_TIMER_BINDING device_stats_timer = {.period = {45, 0}, .name = "memory_diagnostics_timer", .handler = device_stats_handler};
 static DX_TIMER_BINDING mqtt_do_work_timer = {.name = "mqtt_do_work_timer", .handler = mqtt_dowork_handler};
@@ -145,30 +123,6 @@ static DX_DEVICE_TWIN_BINDING dt_desiredLocalSerial = {
 static DX_DEVICE_TWIN_BINDING dt_reportedDeviceStartTime = {.propertyName = "ReportedDeviceStartTime", .twinType = DX_DEVICE_TWIN_STRING};
 static DX_DEVICE_TWIN_BINDING dt_reportedTemperature = {.propertyName = "ReportedTemperature", .twinType = DX_DEVICE_TWIN_INT};
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
-
-// Initialize Sets
-static DX_GPIO_BINDING *ledRgb[] = {
-    &(DX_GPIO_BINDING){.pin = LED_RED, .direction = DX_OUTPUT, .initialState = GPIO_Value_Low, .invertPin = true, .name = "red led"},
-    &(DX_GPIO_BINDING){.pin = LED_GREEN, .direction = DX_OUTPUT, .initialState = GPIO_Value_Low, .invertPin = true, .name = "green led"},
-    &(DX_GPIO_BINDING){.pin = LED_BLUE, .direction = DX_OUTPUT, .initialState = GPIO_Value_Low, .invertPin = true, .name = "blue led"}};
-
-static DX_GPIO_BINDING *gpioSet[] = {&azure_iot_connected_led,
-                                     &buttonA
-#if defined(ALTAIR_FRONT_PANEL_CLICK) || defined(ALTAIR_FRONT_PANEL_RETRO_CLICK)
-                                     ,
-                                     &buttonB
-#endif // ALTAIR_FRONT_PANEL_CLICK
-
-#ifdef ALTAIR_FRONT_PANEL_KIT
-                                     ,
-                                     &switches_load,
-                                     &switches_chip_select,
-                                     &led_master_reset,
-                                     &led_store,
-                                     &led_output_enable
-//&memoryCS, &sdCS
-#endif // ALTAIR_FRONT_PANEL_KIT
-};
 
 #ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
 DX_I2C_BINDING i2c_as1115_retro = {.interfaceId = ISU2, .speedInHz = I2C_BUS_SPEED_FAST_PLUS, .name = "i2c_as1115_retro"};

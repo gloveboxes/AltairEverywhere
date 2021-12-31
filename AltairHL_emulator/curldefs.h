@@ -12,7 +12,7 @@ struct url_data {
 	char* data;
 };
 
-struct url_data data;
+// struct url_data data;
 
 //CURL *curl;
-CURLcode res;
+// CURLcode res;

@@ -1,9 +1,6 @@
 ﻿/* Copyright (c) Microsoft Corporation. All rights reserved.
    Licensed under the MIT License. */
 
-// Hardware definition
-#include "hw/azure_sphere_learning_path.h"
-
 // System Libraries
 #include "applibs_versions.h"
 #include <applibs/log.h>
@@ -341,8 +338,8 @@ static uint8_t sphere_port_in(uint8_t port)
     if (port == 43) {
         if (!reading_data) {
             readPtr = 0;
-            snprintf(data, 10, "%d", onboard_telemetry.latest.temperature);
-            publish_telemetry(onboard_telemetry.latest.temperature, onboard_telemetry.latest.pressure);
+            snprintf(data, 10, "%d", 25);
+            publish_telemetry(25, 1050);
             reading_data = true;
         }
 
@@ -355,7 +352,7 @@ static uint8_t sphere_port_in(uint8_t port)
     if (port == 44) {
         if (!reading_data) {
             readPtr = 0;
-            snprintf(data, 10, "%d", onboard_telemetry.latest.pressure);
+            snprintf(data, 10, "%d", 25);
             reading_data = true;
         }
 
@@ -379,8 +376,8 @@ static void sphere_port_out(uint8_t port, uint8_t data)
 
     // get IP and Weather data.
     if (port == 32 && data == 1) {
-        // locData = GetLocationData();
-        // GetCurrentWeather(locData, &temperature);
+        locData = GetLocationData();
+        GetCurrentWeather(locData, &temperature);
     }
 
     // publish the telemetry to IoTC
@@ -510,32 +507,12 @@ static void update_panel_leds(uint8_t status, uint8_t data, uint16_t bus)
     bus = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] |
                      reverse_lut[bus & 0xf] << 4);
 
-    update_panel_status_leds(status, data, bus);
-}
-
-static void read_panel_input(void)
-{
-
-    return;
-
-    static GPIO_Value_Type buttonAState = GPIO_Value_High;
-
-    if (dx_gpioStateGet(&buttonA, &buttonAState)) { // Button A shortcut to start CPM on the device
-        cpu_operating_mode = CPU_STOPPED;
-        process_control_panel_commands();
-        bus_switches = 0xff00;
-        cmd_switches = EXAMINE;
-        process_control_panel_commands();
-        cpu_operating_mode = CPU_RUNNING;
-        process_control_panel_commands();
-    }
-    read_altair_panel_switches(process_control_panel_commands);
+    // update_panel_status_leds(status, data, bus);
 }
 
 static DX_TIMER_HANDLER(panel_refresh_handler)
 {
     update_panel_leds(cpu.cpuStatus, cpu.data_bus, cpu.address_bus);
-    read_panel_input();
 }
 DX_TIMER_HANDLER_END
 
@@ -594,19 +571,11 @@ static void *altair_thread(void *arg)
     disk_controller.write = disk_write;
     disk_controller.sector = sector;
 
-#ifndef SD_CARD_ENABLED
-    disk_drive.disk1.fp = Storage_OpenFileInImagePackage("Disks/cpm63k.dsk");
-    if (disk_drive.disk1.fp == -1) {
-        Log_Debug("Failed to load CPM Disk\n");
-    }
-#else
     disk_drive.disk1.fp = open("Disks/cpm63k.dsk", O_RDWR);
     disk_drive.disk1.diskPointer = 0;
     disk_drive.disk1.sector = 0;
     disk_drive.disk1.track = 0;
-#endif
 
-    // drive 2 is virtual (Python Server or MQTT Server) or microSD Card
     disk_drive.disk2.fp = open("Disks/blank.dsk", O_RDWR);
     disk_drive.disk2.diskPointer = 0;
     disk_drive.disk2.sector = 0;

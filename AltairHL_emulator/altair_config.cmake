@@ -1,10 +1,3 @@
-# SELECT DEVELOPER BOARD ##########################################################################################
-#
-# set(AVNET TRUE "AVNET Azure Sphere Starter Kit Revision 1 ")   
-# set(AVNET_REV_2 TRUE "AVNET Azure Sphere Starter Kit Revision 2 ")  
-set(SEEED_STUDIO_RDB TRUE "Seeed Studio Azure Sphere MT3620 Development Kit (aka Reference Design Board or rdb)")
-#
-###################################################################################################################
 
 # SELECT FRONT PANEL CONFIG #######################################################################################
 #
@@ -44,28 +37,10 @@ add_compile_definitions(ENABLE_WEB_TERMINAL)
 #
 ###################################################################################################################
 
-##################################################################################################################
-# IMPORTANT READ
-#
-# You must rebuild the CMakeLists cache if you change any options here.
-# In Visual Studio Code, press F1, select Delete Cache and Reconfigure.
-# Visual Studio will regenerate the CMakeLists when any file prefixed with .cmake is updated
-#
-##################################################################################################################
-
-##################################################################################################################
-# Uncomment if using AZURE SPHERE REMOTE remote peripheral over network access
-# add_compile_definitions(AZURE_SPHERE_REMOTEX_IP="192.168.10.118")
-##################################################################################################################
 
 ##################################################################################################################
 # Configure Azure IoT Hub conection string
 add_compile_definitions(IOT_HUB_HOST_NAME="HostName=iotc-1b7e7c6e-7477-4074-901e-242361cc0b1c.azure-devices.net")
 add_compile_definitions(IOT_HUB_DEVICE_ID="DeviceId=DesktopAltair")
 add_compile_definitions(IOT_HUB_SHARED_ACCESS_KEY="SharedAccessKey=X0+NFivH/PQ1UZqfJciUs31UcsC682rAF4P1u3aWW4o=")
-##################################################################################################################
-
-##################################################################################################################
-# Comment out to disable performance mode
-add_compile_definitions(AZURE_SPHERE_REMOTEX_PERFORMANCE_MODE)
 ##################################################################################################################
