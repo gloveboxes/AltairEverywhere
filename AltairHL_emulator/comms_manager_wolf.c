@@ -3,7 +3,7 @@
 
 #include "comms_manager_wolf.h"
 
-#define MAX_BUFFER_SIZE 2048
+#define MAX_BUFFER_SIZE 4096
 
 static bool mqtt_connected = false;
 static bool got_disconnected = true;
@@ -25,8 +25,7 @@ static void (*_mqtt_connected_cb)(void);
 static byte tx_buf[MAX_BUFFER_SIZE];
 static byte rx_buf[MAX_BUFFER_SIZE];
 
-// a bit arbitary - but reduce output buffer by 256 bytes
-static char output_buffer[MAX_BUFFER_SIZE - 256];
+static char output_buffer[MAX_BUFFER_SIZE / 4];
 static size_t output_buffer_length = 0;
 
 static MQTTCtx gMqttCtx;
