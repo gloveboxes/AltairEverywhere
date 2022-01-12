@@ -11,21 +11,19 @@ git clone --recurse-submodules https://github.com/gloveboxes/Altair8800Linux.git
 sudo apt-get install -y libuv1.dev unzip cmake build-essential gdb curl libcurl4-openssl-dev libssl-dev uuid-dev ca-certificates git mosquitto libi2c-dev
 ```bash
 
-*  
- *
- *  sudo apt install libi2c-dev
-
 ## Enable Raspberry I2C Interface
 
 ```bash
 sudo raspi-config --> interfacing options --> enable i2c
 ```
 
-## Mosquitto broker configuration
+## Mosquitto MQTT broker configuration
 
 ```bash
 sudo nano /etc/mosquitto/conf.d/altair.conf
 ```
+
+Paste in the following text.
 
 ```text
 listener 1883 localhost
@@ -36,6 +34,8 @@ allow_anonymous true
 protocol websockets
 
 ```
+
+### Restart Mosquitto MQTT broker
 
 ```bash
 sudo systemctl restart mosquitto.service
