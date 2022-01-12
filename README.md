@@ -8,5 +8,32 @@ git clone --recurse-submodules https://github.com/gloveboxes/Altair8800Linux.git
 
 
 ```bash
-sudo apt-get install libuv1.dev unzip cmake build-essential gdb curl libcurl4-openssl-dev libssl-dev uuid-dev ca-certificates git mosquitto
-bash
+sudo apt-get install -y libuv1.dev unzip cmake build-essential gdb curl libcurl4-openssl-dev libssl-dev uuid-dev ca-certificates git mosquitto libi2c-dev
+```bash
+
+*  sudo raspi-config --> interfacing options --> enable i2c
+ *
+ *  sudo apt install libi2c-dev
+
+
+
+
+## Mosquitto broker configuration
+
+```bash
+sudo nano /etc/mosquitto/conf.d/altair.conf
+```
+
+```text
+listener 1883 localhost
+allow_anonymous true
+
+listener 8080
+allow_anonymous true
+protocol websockets
+
+```
+
+```bash
+sudo systemctl restart mosquitto.service
+```
