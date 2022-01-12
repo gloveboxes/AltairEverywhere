@@ -37,3 +37,10 @@ protocol websockets
 ```bash
 sudo systemctl restart mosquitto.service
 ```
+
+
+## Start Web Server on Raspberry Pi
+
+```bash
+python3 -m http.server --cgi 8081
+```
