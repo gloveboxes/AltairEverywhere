@@ -11,12 +11,15 @@ git clone --recurse-submodules https://github.com/gloveboxes/Altair8800Linux.git
 sudo apt-get install -y libuv1.dev unzip cmake build-essential gdb curl libcurl4-openssl-dev libssl-dev uuid-dev ca-certificates git mosquitto libi2c-dev
 ```bash
 
-*  sudo raspi-config --> interfacing options --> enable i2c
+*  
  *
  *  sudo apt install libi2c-dev
 
+## Enable Raspberry I2C Interface
 
-
+```bash
+sudo raspi-config --> interfacing options --> enable i2c
+```
 
 ## Mosquitto broker configuration
 
@@ -44,3 +47,9 @@ sudo systemctl restart mosquitto.service
 ```bash
 python3 -m http.server --cgi 8081
 ```
+
+## Replacing char in c
+
+https://stackoverflow.com/questions/32496497/standard-function-to-replace-character-or-substring-in-a-char-array/32496721
+
+
