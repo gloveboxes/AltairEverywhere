@@ -30,6 +30,9 @@ add_compile_definitions(WOLFMQTT_USER_SETTINGS)
 ###################################################################################################################
 
 
+add_compile_definitions(ALTAIR_FRONT_PANEL_PI_SENSE)
+
+
 if(DISABLE_IO_MOCKING)
     add_compile_definitions(DISABLE_IO_MOCKING=TRUE)
 endif(DISABLE_IO_MOCKING)
@@ -40,6 +43,7 @@ set(Source
     "Altair8800/memory.c"
     "comms_manager_wolf.c"
     "FrontPanels/front_panel_virtual.c"
+    "FrontPanels/pi_sense_hat.c"
     "iotc_manager.c"
     "location_from_ip.c"
     "main.c"

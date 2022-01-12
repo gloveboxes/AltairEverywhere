@@ -16,6 +16,7 @@
 #include "comms_manager_wolf.h"
 #include "front_panel_virtual.h"
 #include "iotc_manager.h"
+#include "pi_sense_hat.h"
 
 #include "intel8080.h"
 #include "88dcdd.h"
@@ -507,7 +508,7 @@ static void update_panel_leds(uint8_t status, uint8_t data, uint16_t bus)
     bus = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] |
                      reverse_lut[bus & 0xf] << 4);
 
-    // update_panel_status_leds(status, data, bus);
+    update_panel_status_leds(status, data, bus);
 }
 
 static DX_TIMER_HANDLER(panel_refresh_handler)
@@ -641,6 +642,8 @@ static void azure_connection_changed(bool connected)
 static void InitPeripheralAndHandlers(int argc, char *argv[])
 {
     dx_Log_Debug_Init(Log_Debug_Time_buffer, sizeof(Log_Debug_Time_buffer));
+
+    init_altair_hardware();
 
 #ifndef ALTAIR_FRONT_PANEL_NONE
     // dx_startThreadDetached(panel_thread, NULL, "panel_thread");
