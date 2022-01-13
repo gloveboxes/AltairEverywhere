@@ -513,8 +513,9 @@ static void update_panel_leds(uint8_t status, uint8_t data, uint16_t bus)
 static void *update_panel_thread(void *arg)
 {
     while (true) {
+        // Panel update takes 10 milliseconds, plus 10 ms delay = 20ms update cycle
         update_panel_leds(cpu.cpuStatus, cpu.data_bus, cpu.address_bus);
-        nanosleep(&(struct timespec){0, 20 * ONE_MS}, NULL);
+        nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
     }
 }
 
