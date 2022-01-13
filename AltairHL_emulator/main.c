@@ -510,11 +510,13 @@ static void update_panel_leds(uint8_t status, uint8_t data, uint16_t bus)
     update_panel_status_leds(status, data, bus);
 }
 
-static DX_TIMER_HANDLER(panel_refresh_handler)
+static void *update_panel_thread(void *arg)
 {
-    update_panel_leds(cpu.cpuStatus, cpu.data_bus, cpu.address_bus);
+    while (true) {
+        update_panel_leds(cpu.cpuStatus, cpu.data_bus, cpu.address_bus);
+        nanosleep(&(struct timespec){0, 20 * ONE_MS}, NULL);
+    }
 }
-DX_TIMER_HANDLER_END
 
 static inline uint8_t sense(void)
 {
@@ -577,12 +579,12 @@ static void *altair_thread(void *arg)
         Log_Debug("Failed to open CPM disk image\\n");
         exit(-1);
     }
-    
+
     disk_drive.disk1.diskPointer = 0;
     disk_drive.disk1.sector = 0;
     disk_drive.disk1.track = 0;
 
-    if ((disk_drive.disk2.fp = open("Disks/blank.dsk", O_RDWR)) == -1){
+    if ((disk_drive.disk2.fp = open("Disks/blank.dsk", O_RDWR)) == -1) {
         Log_Debug("Failed to open blank disk image\n");
         exit(-1);
     }
@@ -661,6 +663,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     dx_timerOneShotSet(&mqtt_do_work_timer, &(struct timespec){1, 0});
     dx_startThreadDetached(altair_thread, NULL, "altair_thread");
+    dx_startThreadDetached(update_panel_thread, NULL, "update_panel_thread");
 }
 
 /// <summary>
