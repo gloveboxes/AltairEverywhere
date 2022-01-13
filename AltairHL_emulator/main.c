@@ -10,17 +10,16 @@
 #include <stdlib.h>
 #include <applibs/storage.h>
 
-#include "curldefs.h"
-#include "weather.h"
-#include "utils.h"
 #include "comms_manager_wolf.h"
+#include "curldefs.h"
 #include "front_panel_virtual.h"
 #include "iotc_manager.h"
-#include "pi_sense_hat.h"
+#include "sphere_panel.h"
+#include "utils.h"
+#include "weather.h"
 
 #include "intel8080.h"
 #include "88dcdd.h"
-#include "sphere_panel.h"
 #include "memory.h"
 
 #include "main.h"
@@ -556,6 +555,8 @@ static void print_console_banner(void)
     }
 }
 
+#pragma GCC push_options
+#pragma GCC optimize("O0")
 static void *altair_thread(void *arg)
 {
     Log_Debug("Altair Thread starting...\n");
@@ -618,6 +619,7 @@ static void *altair_thread(void *arg)
 
     return NULL;
 }
+#pragma GCC pop_options
 
 /// <summary>
 /// Report on first connect the software version and device startup UTC time

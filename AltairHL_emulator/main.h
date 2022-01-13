@@ -11,17 +11,9 @@
 #include "dx_timer.h"
 #include "dx_version.h"
 
-#ifdef ALTAIR_FRONT_PANEL_CLICK
-#include "front_panel_click.h"
-#endif
-
-#ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
-#include "front_panel_retro_click.h"
-#endif
-
-#ifdef ALTAIR_FRONT_PANEL_KIT
-#include "front_panel_kit.h"
-#endif // ALTAIR_FRONT_PANEL_KIT
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+#include "front_panel_pi_sense_hat.h"
+#endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 #ifdef ALTAIR_FRONT_PANEL_NONE
 #include "front_panel_none.h"

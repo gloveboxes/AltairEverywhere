@@ -7,16 +7,20 @@ project (Altair_emulator C)
 include(altair_config.cmake)
 
 
-add_compile_definitions(PRINTF=Log_Debug)
+# WEB TERMINAL ####################################################################################################
+#
+add_compile_definitions(ENABLE_WEB_TERMINAL)
+#
+###################################################################################################################
 
-# Uncomment the following to overide
-# add_compile_definitions(ALTAIR_MQTT_BROKER="localhost")
-# add_compile_definitions(ALTAIR_MQTT_BROKER_PORT=1883)
-# add_compile_definitions(ALTAIR_MQTT_IDENTITY="altair")
 
-
-set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO MOCKING IN AzureSphereRemoteX.Client" FORCE )
-
+# BOOT CONFIG #####################################################################################################
+#
+# Comment out the "add_compile_definitions(BOOT_CPM) line below to boot Altair BASIC 4.0
+#
+add_compile_definitions(BOOT_CPM)
+#
+###################################################################################################################
 
 # wolfMQTT Settings ###############################################################################################
 #
@@ -29,13 +33,35 @@ add_compile_definitions(NO_DH)
 add_compile_definitions(WOLFMQTT_USER_SETTINGS)
 ###################################################################################################################
 
+add_compile_definitions(PRINTF=Log_Debug)
 
-add_compile_definitions(ALTAIR_FRONT_PANEL_PI_SENSE)
-
+set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO MOCKING IN AzureSphereRemoteX.Client" FORCE )
 
 if(DISABLE_IO_MOCKING)
     add_compile_definitions(DISABLE_IO_MOCKING=TRUE)
 endif(DISABLE_IO_MOCKING)
+
+if (ALTAIR_FRONT_PI_SENSE_HAT)
+
+    add_compile_definitions(ALTAIR_FRONT_PANEL_PI_SENSE)
+
+    set(Oem
+        "FrontPanels/front_panel_pi_sense_hat.c"
+    )
+    source_group("Oem" FILES ${Oem})
+
+endif(ALTAIR_FRONT_PI_SENSE_HAT)
+
+if (ALTAIR_FRONT_PANEL_NONE)
+
+    add_compile_definitions(ALTAIR_FRONT_PANEL_NONE)
+
+    set(Oem
+        "FrontPanels/front_panel_none.c"
+    )
+    source_group("Oem" FILES ${Oem})
+
+endif(ALTAIR_FRONT_PANEL_NONE)
 
 set(Source
     "Altair8800/88dcdd.c"
@@ -43,7 +69,6 @@ set(Source
     "Altair8800/memory.c"
     "comms_manager_wolf.c"
     "FrontPanels/front_panel_virtual.c"
-    "FrontPanels/pi_sense_hat.c"
     "iotc_manager.c"
     "location_from_ip.c"
     "main.c"
@@ -51,6 +76,7 @@ set(Source
     "storage.c"
     "utils.c"
     "weather.c"
+    "Drivers/pi_sense_hat/led_panel.c"
 )
 source_group("Source" FILES ${Source})
 
@@ -96,13 +122,9 @@ target_link_options(${PROJECT_NAME} PUBLIC "-L/usr/local/lib")
 target_include_directories(${PROJECT_NAME} PUBLIC AzureSphereDevX/include )
 target_include_directories(${PROJECT_NAME} PUBLIC ../IntercoreContract)
 target_include_directories(${PROJECT_NAME} PUBLIC wolfMQTT wolfMQTT/wolfmqtt ./ )
+target_include_directories(${PROJECT_NAME} PUBLIC Drivers/pi_sense_hat)
 include_directories(${CMAKE_SOURCE_DIR} FrontPanels)
 include_directories(${CMAKE_SOURCE_DIR} Altair8800)
-
-if(AVNET OR AVNET_REV_2)
-    target_link_libraries (${PROJECT_NAME} avnet_drivers)
-    target_include_directories(${PROJECT_NAME} PUBLIC Drivers/AVNET/HL)
-endif(AVNET OR AVNET_REV_2)
 
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wno-unknown-pragmas)
@@ -110,7 +132,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wno-unknown-pragmas)
 set_source_files_properties(Altair8800/intel8080.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
 set_source_files_properties(Altair8800/intel8080.h PROPERTIES COMPILE_FLAGS -Wno-conversion)
 set_source_files_properties(Altair8800/memory.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
-set_source_files_properties(comms_manager.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
+set_source_files_properties(comms_manager_wolf.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
 set_source_files_properties(FrontPanels/front_panel_virtual.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
 set_source_files_properties(wolfMQTT/examples/mqttnet.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
 set_source_files_properties(wolfMQTT/src/mqtt_client.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
