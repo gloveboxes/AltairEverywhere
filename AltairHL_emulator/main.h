@@ -106,11 +106,11 @@ static DX_TIMER_BINDING tmr_panel_refresh = {.name = "tmr_panel_refresh", .handl
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 // Azure IoT Central Properties (Device Twins)
-DX_DEVICE_TWIN_BINDING dt_channelId = {.propertyName = "DesiredChannelId", .twinType = DX_DEVICE_TWIN_INT, .handler = device_twin_set_channel_id_handler};
-static DX_DEVICE_TWIN_BINDING dt_cpuState = {.propertyName = "DesiredCpuState", .twinType = DX_DEVICE_TWIN_BOOL, .handler = device_twin_set_cpu_state_handler};
+DX_DEVICE_TWIN_BINDING dt_channelId = {.propertyName = "DesiredChannelId", .twinType = DX_DEVICE_TWIN_INT, .handler = set_channel_id_handler};
+DX_DEVICE_TWIN_BINDING dt_ledBrightness = {.propertyName = "DesiredLedBrightness", .twinType = DX_DEVICE_TWIN_INT, .handler = set_led_brightness_handler};
 static DX_DEVICE_TWIN_BINDING dt_deviceStartTime = {.propertyName = "ReportedDeviceStartTime", .twinType = DX_DEVICE_TWIN_STRING};
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
 
-static DX_TIMER_BINDING *timerSet[] = {&tmr_mqtt_do_work, &tmr_panel_refresh};
-
-static DX_DEVICE_TWIN_BINDING *deviceTwinBindingSet[] = {&dt_deviceStartTime, &dt_channelId, &dt_cpuState};
+// initialize bindings
+static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_do_work, &tmr_panel_refresh};
+static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {&dt_deviceStartTime, &dt_channelId, &dt_ledBrightness};

@@ -509,17 +509,13 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     init_altair_hardware();
 
-#ifndef ALTAIR_FRONT_PANEL_NONE
-    // dx_startThreadDetached(panel_thread, NULL, "panel_thread");
-#endif // !ALTAIR_FRONT_PANEL_NONE
-
     dx_azureConnect(&userConfig, NETWORK_INTERFACE, IOT_PLUG_AND_PLAY_MODEL_ID);
     dx_azureRegisterConnectionChangedNotification(azure_connection_changed);
 
     init_mqtt(argc, argv, publish_callback_wolf, mqtt_connected_cb);
 
-    dx_deviceTwinSubscribe(deviceTwinBindingSet, NELEMS(deviceTwinBindingSet));
-    dx_timerSetStart(timerSet, NELEMS(timerSet));
+    dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));
+    dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 
     dx_startThreadDetached(altair_thread, NULL, "altair_thread");
 }

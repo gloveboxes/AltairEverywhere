@@ -1,10 +1,23 @@
 #include "front_panel_pi_sense_hat.h"
 
 static uint16_t panel_buffer[NUM_OF_LEDS];
+static int rgb_color = 19 << 1;
 
 void init_altair_hardware(void)
 {
     pi_sense_hat_init();
+}
+
+void set_led_panel_color(int color)
+{
+    if (color < 3) {
+        color = 3;
+    }
+    if (color > 15) {
+        color = 15;
+    }
+
+    rgb_color = (color + 16) << 1;
 }
 
 static uint16_t *uint8_to_uint16_t(uint8_t bitmap, uint16_t *buffer)
@@ -14,7 +27,7 @@ static uint16_t *uint8_to_uint16_t(uint8_t bitmap, uint16_t *buffer)
     uint8_t pixel_number = 0;
 
     while (pixel_number < 8) {
-        buffer[pixel_number++] = bitmap & mask ? RGB565_RED : 0x0000;
+        buffer[pixel_number++] = bitmap & mask ? rgb_color : 0x0000;
         mask = (uint16_t)(mask << 1);
     }
 }

@@ -4,49 +4,37 @@
 #include "iotc_manager.h"
 
 /// <summary>
-/// Device Twin Handler to set the desired temperature value
+/// Device Twin Handler to set the brightness of panel LEDs
 /// </summary>
-void device_twin_set_cpu_state_handler(DX_DEVICE_TWIN_BINDING* deviceTwinBinding) {
-#ifdef ENABLE_WEB_TERMINAL
-	if (is_mqtt_connected()) {
-		cpu_operating_mode = *(bool*)deviceTwinBinding->propertyValue ? CPU_RUNNING : CPU_STOPPED;
-	}
-#else
-	cpu_operating_mode = *(bool*)deviceTwinBinding->propertyValue ? CPU_RUNNING : CPU_STOPPED;
-#endif // ENABLE_WEB_TERMINAL
-	dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
-}
-
-/// <summary>
-/// Device Twin Handler to set the brightness of MAX7219 8x8 LED panel8x8
-/// </summary>
-void device_twin_set_led_brightness_handler(DX_DEVICE_TWIN_BINDING* deviceTwinBinding) {
+DX_DEVICE_TWIN_HANDLER(set_led_brightness_handler, deviceTwinBinding)
+{
     if (!IN_RANGE(*(int *)deviceTwinBinding->propertyValue, 0, 15)) {
-		dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_ERROR);
-	} else {
-#ifdef ALTAIR_FRONT_PANEL_CLICK
-		max7219_set_brightness(&panel8x8, (unsigned char)*(int*)deviceTwinBinding->propertyValue);
-#elif ALTAIR_FRONT_PANEL_RETRO_CLICK
-		as1115_set_brightness(&retro_click, (unsigned char)*(int *)deviceTwinBinding->propertyValue);
-#endif // ALTAIR_FRONT_PANEL_CLICK
-		dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
-	}
+        dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_ERROR);
+    } else {
+
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+		set_led_panel_color(*(int *)deviceTwinBinding->propertyValue);
+#endif	// ALTAIR_FRONT_PANEL_PI_SENSE
+
+        dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
+    }
 }
+DX_DEVICE_TWIN_HANDLER_END
 
 /// <summary>
 /// Device Twin Handler to set the mqtt channel id
 /// </summary>
-void device_twin_set_channel_id_handler(DX_DEVICE_TWIN_BINDING* deviceTwinBinding) {
-	write_channel_id_to_storage(*(int*)deviceTwinBinding->propertyValue);
-	dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
+DX_DEVICE_TWIN_HANDLER(set_channel_id_handler, deviceTwinBinding)
+{
+    write_channel_id_to_storage(*(int *)deviceTwinBinding->propertyValue);
+    dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
 }
+DX_DEVICE_TWIN_HANDLER_END
 
-void publish_telemetry(int temperature, int pressure) {
-	if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2,
-		DX_JSON_INT, "Temperature", temperature, 
-		DX_JSON_INT, "Pressure", pressure))
-	{
-		dx_azurePublish(msgBuffer, strlen(msgBuffer), NULL, 0, NULL);
-	}
+void publish_telemetry(int temperature, int pressure)
+{
+    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2, DX_JSON_INT, "Temperature", temperature, DX_JSON_INT, "Pressure", pressure)) {
+        dx_azurePublish(msgBuffer, strlen(msgBuffer), NULL, 0, NULL);
+    }
 }
 
