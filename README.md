@@ -4,18 +4,18 @@
 
 ## Install required libraries
 
-### Raspberry Pi
+### Raspberry Pi running Raspberry Pi OS (Bullseye)
 
 ```bash
 sudo apt-get install -y libuv1.dev unzip cmake build-essential gdb curl libcurl4-openssl-dev libssl-dev uuid-dev ca-certificates git mosquitto libi2c-dev
 ```
 
-### macOS
+### macOS Monterey 12.1
 
 
-### Desktop Linux including WSL 2
+### Windows 10 & 11 with Windows Subsystem for Linux (WSL) 2
 
-
+### Desktop Linux
 
 ## Clone Altair 8800 repo
 
