@@ -47,6 +47,7 @@ if (ALTAIR_FRONT_PI_SENSE_HAT)
 
     set(Oem
         "FrontPanels/front_panel_pi_sense_hat.c"
+        "Drivers/pi_sense_hat/led_panel.c"
     )
     source_group("Oem" FILES ${Oem})
 
@@ -75,8 +76,7 @@ set(Source
     # "onboard_sensors.c"
     "storage.c"
     "utils.c"
-    "weather.c"
-    "Drivers/pi_sense_hat/led_panel.c"
+    "weather.c"    
 )
 source_group("Source" FILES ${Source})
 

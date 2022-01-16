@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef ALTAIR_FRONT_PI_SENSE_HAT
+
 #include <fcntl.h>
 #include <linux/fb.h>
 #include <stdbool.h>
@@ -17,3 +19,6 @@
 
 void pi_sense_hat_init(void);
 bool pi_sense_8x8_panel_update(uint16_t *panel_buffer, size_t buffer_len);
+
+
+#endif
