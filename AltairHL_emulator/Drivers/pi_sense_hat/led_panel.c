@@ -1,7 +1,5 @@
 #include "led_panel.h"
 
-#ifdef ALTAIR_FRONT_PI_SENSE_HAT
-
 static const char *FILEPATH_FB_0 = "/dev/fb0";
 static const char *FILEPATH_FB_1 = "/dev/fb1";
 static const int NUM_WORDS = 64;
@@ -77,5 +75,3 @@ bool pi_sense_8x8_panel_update(uint16_t *panel_buffer, size_t buffer_len)
 
     return true;
 }
-
-#endif
