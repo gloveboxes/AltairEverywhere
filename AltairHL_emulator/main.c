@@ -16,9 +16,6 @@ static void mqtt_connected_cb(void)
         int len = snprintf(msgBuffer, sizeof(msgBuffer), connected_message, ALTAIR_ON_AZURE_SPHERE_VERSION, AZURE_SPHERE_DEVX_VERSION);
         queue_mqtt_message((const uint8_t *)msgBuffer, (size_t)len);
         cpu_operating_mode = CPU_RUNNING;
-        // if (dt_cpuState.propertyValue) {
-        //	cpu_operating_mode = CPU_RUNNING;
-        //}
     } else {
         int len = snprintf(msgBuffer, sizeof(msgBuffer), reconnected_message, ALTAIR_ON_AZURE_SPHERE_VERSION, AZURE_SPHERE_DEVX_VERSION);
         queue_mqtt_message((const uint8_t *)msgBuffer, (size_t)len);
@@ -142,10 +139,6 @@ static void handle_inbound_message(const char *topic_name, size_t topic_name_siz
             if (send_cr) {
                 haveCtrlCharacter = 0x0d;
                 haveCtrlPending = true;
-
-                // pthread_mutex_lock(&wait_message_processed_mutex);
-                // pthread_cond_wait(&wait_message_processed_cond, &wait_message_processed_mutex);
-                // pthread_mutex_unlock(&wait_message_processed_mutex);
             }
             break;
         case CPU_STOPPED:
@@ -172,14 +165,8 @@ static void handle_inbound_message(const char *topic_name, size_t topic_name_siz
 
                 haveCtrlCharacter = data[0] & 31; // https://en.wikipedia.org/wiki/Control_character
                 haveCtrlPending = true;
-                // pthread_mutex_lock(&wait_message_processed_mutex);
-                // pthread_cond_wait(&wait_message_processed_cond, &wait_message_processed_mutex);
-                // pthread_mutex_unlock(&wait_message_processed_mutex);
             }
         }
-        break;
-    case TOPIC_VDISK_SUB: // vdisk response
-        // vdisk_mqtt_response_cb(data);
         break;
     default:
         break;
@@ -299,7 +286,6 @@ static char altair_read_terminal(void)
             pthread_mutex_unlock(&wait_message_processed_mutex);
         }
         return retVal;
-
     } else if (haveAppLoad) {
         retVal = ptrBasicApp[appLoadPtr++];
         publish_character(retVal);
