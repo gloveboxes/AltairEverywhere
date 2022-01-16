@@ -17,11 +17,6 @@ void device_twin_set_cpu_state_handler(DX_DEVICE_TWIN_BINDING* deviceTwinBinding
 	dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
 }
 
-void device_twin_set_local_serial_handler(DX_DEVICE_TWIN_BINDING* deviceTwinBinding) {
-	local_serial = *(bool*)deviceTwinBinding->propertyValue;
-	dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
-}
-
 /// <summary>
 /// Device Twin Handler to set the brightness of MAX7219 8x8 LED panel8x8
 /// </summary>

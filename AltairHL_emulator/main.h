@@ -3,13 +3,32 @@
 // DevX Libraries
 #include "dx_config.h"
 #include "dx_device_twins.h"
-#include "dx_direct_methods.h"
 #include "dx_exit_codes.h"
-#include "dx_gpio.h"
-#include "dx_i2c.h"
 #include "dx_terminate.h"
 #include "dx_timer.h"
 #include "dx_version.h"
+
+// System Libraries
+#include "applibs_versions.h"
+#include <applibs/log.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+// Altair app
+#include "comms_manager_wolf.h"
+#include "curldefs.h"
+#include "front_panel_virtual.h"
+#include "iotc_manager.h"
+#include "sphere_panel.h"
+#include "utils.h"
+#include "weather.h"
+
+// Intel 8080 emulator
+#include "intel8080.h"
+#include "88dcdd.h"
+#include "memory.h"
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 #include "front_panel_pi_sense_hat.h"
@@ -19,121 +38,79 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_NONE
 
-#define CORE_ENVIRONMENT_COMPONENT_ID "2e319eae-7be5-4a0c-ba47-9353aa6ca96a"
-#define CORE_DISK_CACHE_COMPONENT_ID "9b684af8-21b9-42aa-91e4-621d5428e497"
-#define CORE_SD_CARD_COMPONENT_ID "005180bc-402f-4cb3-a662-72937dbcde47"
+#define ALTAIR_ON_AZURE_SPHERE_VERSION "3.0"
+#define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
+#define DX_LOGGING_ENABLED FALSE
 
+// https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play
+#define IOT_PLUG_AND_PLAY_MODEL_ID "dtmi:com:example:azuresphere:altair;1"
+#define NETWORK_INTERFACE "wlan0"
+DX_USER_CONFIG userConfig;
+
+#define BASIC_SAMPLES_DIRECTORY "BasicSamples"
+
+static const char *AltairMsg = "\x1b[2J\r\nAzure Sphere - Altair 8800 Emulator\r\n";
+
+// local variables
+
+char msgBuffer[MSG_BUFFER_BYTES] = {0};
+
+// CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
+CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
+
+static intel8080_t cpu;
+uint8_t memory[64 * 1024]; // Altair system memory.
+
+ALTAIR_COMMAND cmd_switches;
+uint16_t bus_switches = 0x00;
+
+// basic app load helpers.
+static bool haveCtrlPending = false;
+static char haveCtrlCharacter = 0x00;
+static bool haveAppLoad = false;
+static int basicAppLength = 0;
+static int appLoadPtr = 0;
+static uint8_t *ptrBasicApp = NULL;
+
+static bool haveTerminalInputMessage = false;
+static bool haveTerminalOutputMessage = false;
+static int terminalInputMessageLen = 0;
+static int terminalOutputMessageLen = 0;
+static int altairInputBufReadIndex = 0;
+static int altairOutputBufReadIndex = 0;
+
+static pthread_cond_t wait_message_processed_cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t wait_message_processed_mutex = PTHREAD_MUTEX_INITIALIZER;
+static char *input_data = NULL;
+
+bool dirty_buffer = false;
+bool send_messages = false;
+bool renderText = false;
+
+static char Log_Debug_Time_buffer[64];
+
+static DX_DECLARE_TIMER_HANDLER(mqtt_dowork_handler);
+static DX_DECLARE_TIMER_HANDLER(panel_refresh_handler);
 static void *altair_thread(void *arg);
-static void connection_status_led_off_handler(EventLoopTimer *eventLoopTimer);
-static void connection_status_led_on_handler(EventLoopTimer *eventLoopTimer);
-static void device_stats_handler(EventLoopTimer *eventLoopTimer);
-static void device_twin_set_temperature_handler(DX_DEVICE_TWIN_BINDING *deviceTwinBinding);
-static void measure_sensor_handler(EventLoopTimer *eventLoopTimer);
-static void mqtt_dowork_handler(EventLoopTimer *eventLoopTimer);
 static void process_control_panel_commands(void);
 
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
-#ifdef ALTAIR_FRONT_PANEL_CLICK
-
-CLICK_4X4_BUTTON_MODE click_4x4_key_mode = CONTROL_MODE;
-
-matrix8x8_t panel8x8 = {.interfaceId = MT3620_ISU1_SPI, .chipSelectId = MT3620_SPI_CS_B, .busSpeed = 10000000, .handle = -1, .bitmap = {0}};
-
-key4x4_t key4x4 = {.interfaceId = MT3620_ISU1_SPI,
-                   .chipSelectId = MT3620_SPI_CS_A,
-                   .busSpeed = 10000000,
-                   .handle = -1,
-                   .bitmap = 0,
-                   .debouncePeriodMilliseconds = 500};
-
-DX_GPIO_BINDING buttonB = {.pin = BUTTON_B, .direction = DX_INPUT, .detect = DX_GPIO_DETECT_LOW, .name = "buttonB"};
-
-// turn off notifications
-DX_TIMER_BINDING turnOffNotificationsTimer = {
-    .period = {0, 0}, .name = "turnOffNotificationsTimer", .handler = turn_off_notifications_handler};
-
-#endif //  ALTAIR_FRONT_PANEL_CLICK
-
-#ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
-
-CLICK_4X4_BUTTON_MODE click_4x4_key_mode = CONTROL_MODE;
-DX_GPIO_BINDING buttonB = {.pin = BUTTON_B, .direction = DX_INPUT, .detect = DX_GPIO_DETECT_LOW, .name = "buttonB"};
-as1115_t retro_click = {.interfaceId = ISU2, .handle = -1, .bitmap64 = 0, .keymap = 0, .debouncePeriodMilliseconds = 500};
-
-// turn off notifications
-DX_TIMER_BINDING turnOffNotificationsTimer = {
-    .period = {0, 0}, .name = "turnOffNotificationsTimer", .handler = turn_off_notifications_handler};
-
-#endif //  ALTAIR_FRONT_PANEL_RETRO_CLICK
-
-#ifdef ALTAIR_FRONT_PANEL_KIT
-
-// static DX_GPIO memoryCS = { .pin = MEMORY_CS, .direction = DX_OUTPUT, .initialState =
-// GPIO_Value_High, .invertPin = false, .name = "memory CS" }; static DX_GPIO sdCS = { .pin = SD_CS,
-// .direction = DX_OUTPUT, .initialState = GPIO_Value_High, .invertPin = false, .name = "SD_CS" };
-
-DX_GPIO_BINDING switches_chip_select = {
-    .pin = SWITCHES_CHIP_SELECT, .direction = DX_OUTPUT, .initialState = GPIO_Value_High, .invertPin = false, .name = "switches CS"};
-
-DX_GPIO_BINDING switches_load = {
-    .pin = SWITCHES_LOAD, .direction = DX_OUTPUT, .initialState = GPIO_Value_High, .invertPin = false, .name = "switchs Load"};
-
-DX_GPIO_BINDING led_store = {
-    .pin = LED_STORE, .direction = DX_OUTPUT, .initialState = GPIO_Value_High, .invertPin = false, .name = "LED store"};
-
-static DX_GPIO_BINDING led_master_reset = {
-    .pin = LED_MASTER_RESET, .direction = DX_OUTPUT, .initialState = GPIO_Value_High, .invertPin = false, .name = "LED master reset"};
-
-static DX_GPIO_BINDING led_output_enable = {.pin = LED_OUTPUT_ENABLE,
-                                            .direction = DX_OUTPUT,
-                                            .initialState = GPIO_Value_Low,
-                                            .invertPin = false,
-                                            .name = "LED output enable"}; // set OE initial state low
-
-#endif // ALTAIR_FRONT_PANEL_KIT
-
 // Common Timers
-static DX_TIMER_BINDING device_stats_timer = {.period = {45, 0}, .name = "memory_diagnostics_timer", .handler = device_stats_handler};
-static DX_TIMER_BINDING mqtt_do_work_timer = {.name = "mqtt_do_work_timer", .handler = mqtt_dowork_handler};
+static DX_TIMER_BINDING tmr_mqtt_do_work = {.repeat = &(struct timespec){0, 250 * OneMS}, .name = "tmr_mqtt_do_work", .handler = mqtt_dowork_handler};
+
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+static DX_TIMER_BINDING tmr_panel_refresh = {.delay = &(timespec){0, 10 * OneMS}, .name = "tmr_panel_refresh", .handler = panel_refresh_handler};
+#else  // else create a disabled timer
+static DX_TIMER_BINDING tmr_panel_refresh = {.name = "tmr_panel_refresh", .handler = panel_refresh_handler};
+#endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 // Azure IoT Central Properties (Device Twins)
-DX_DEVICE_TWIN_BINDING dt_channelId = {
-    .propertyName = "DesiredChannelId", .twinType = DX_DEVICE_TWIN_INT, .handler = device_twin_set_channel_id_handler};
-DX_DEVICE_TWIN_BINDING dt_diskCacheHits = {.propertyName = "DiskCacheHits", .twinType = DX_DEVICE_TWIN_INT};
-DX_DEVICE_TWIN_BINDING dt_diskCacheMisses = {.propertyName = "DiskCacheMisses", .twinType = DX_DEVICE_TWIN_INT};
-DX_DEVICE_TWIN_BINDING dt_diskTotalErrors = {.propertyName = "DiskTotalErrors", .twinType = DX_DEVICE_TWIN_INT};
-DX_DEVICE_TWIN_BINDING dt_diskTotalWrites = {.propertyName = "DiskTotalWrites", .twinType = DX_DEVICE_TWIN_INT};
-static DX_DEVICE_TWIN_BINDING dt_desiredCpuState = {
-    .propertyName = "DesiredCpuState", .twinType = DX_DEVICE_TWIN_BOOL, .handler = device_twin_set_cpu_state_handler};
-static DX_DEVICE_TWIN_BINDING dt_desiredLedBrightness = {
-    .propertyName = "DesiredLedBrightness", .twinType = DX_DEVICE_TWIN_INT, .handler = device_twin_set_led_brightness_handler};
-static DX_DEVICE_TWIN_BINDING dt_desiredLocalSerial = {
-    .propertyName = "DesiredLocalSerial", .twinType = DX_DEVICE_TWIN_BOOL, .handler = device_twin_set_local_serial_handler};
-static DX_DEVICE_TWIN_BINDING dt_reportedDeviceStartTime = {.propertyName = "ReportedDeviceStartTime", .twinType = DX_DEVICE_TWIN_STRING};
-static DX_DEVICE_TWIN_BINDING dt_reportedTemperature = {.propertyName = "ReportedTemperature", .twinType = DX_DEVICE_TWIN_INT};
+DX_DEVICE_TWIN_BINDING dt_channelId = {.propertyName = "DesiredChannelId", .twinType = DX_DEVICE_TWIN_INT, .handler = device_twin_set_channel_id_handler};
+static DX_DEVICE_TWIN_BINDING dt_cpuState = {.propertyName = "DesiredCpuState", .twinType = DX_DEVICE_TWIN_BOOL, .handler = device_twin_set_cpu_state_handler};
+static DX_DEVICE_TWIN_BINDING dt_deviceStartTime = {.propertyName = "ReportedDeviceStartTime", .twinType = DX_DEVICE_TWIN_STRING};
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
 
-#ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
-DX_I2C_BINDING i2c_as1115_retro = {.interfaceId = ISU2, .speedInHz = I2C_BUS_SPEED_FAST_PLUS, .name = "i2c_as1115_retro"};
-DX_I2C_BINDING i2c_onboard_sensors = {.interfaceId = ISU2, .speedInHz = I2C_BUS_SPEED_FAST_PLUS, .name = "i2c_onboard_sensors"};
-static DX_I2C_BINDING *i2c_bindings[] = {&i2c_as1115_retro, &i2c_onboard_sensors};
-#else
-#ifdef OEM_AVNET
-DX_I2C_BINDING i2c_onboard_sensors = {.interfaceId = ISU2, .speedInHz = I2C_BUS_SPEED_FAST_PLUS, .name = "i2c_onboard_sensors"};
-static DX_I2C_BINDING *i2c_bindings[] = {&i2c_onboard_sensors};
-#else
-static DX_I2C_BINDING *i2c_bindings[] = {};
-#endif
-#endif // ALTAIR_FRONT_PANEL_RETRO_CLICK
+static DX_TIMER_BINDING *timerSet[] = {&tmr_mqtt_do_work, &tmr_panel_refresh};
 
-static DX_TIMER_BINDING *timerSet[] = {&device_stats_timer, &mqtt_do_work_timer
-#if defined(ALTAIR_FRONT_PANEL_CLICK) || defined(ALTAIR_FRONT_PANEL_RETRO_CLICK)
-                                       ,
-                                       &turnOffNotificationsTimer
-#endif // ALTAIR_FRONT_PANEL_CLICK
-};
-
-static DX_DEVICE_TWIN_BINDING *deviceTwinBindingSet[] = {
-    &dt_reportedDeviceStartTime, &dt_channelId,     &dt_desiredCpuState, &dt_desiredLedBrightness, &dt_desiredLocalSerial,
-    &dt_reportedTemperature,     &dt_diskCacheHits, &dt_diskCacheMisses, &dt_diskTotalWrites,      &dt_diskTotalErrors};
+static DX_DEVICE_TWIN_BINDING *deviceTwinBindingSet[] = {&dt_deviceStartTime, &dt_channelId, &dt_cpuState};

@@ -304,9 +304,6 @@ static void *waitMessage_task(void *args)
 
 void publish_message(const char *message, size_t message_length)
 {
-    if (console_fd != -1 && local_serial) {
-        write(console_fd, message, message_length);
-    }
 
 #ifdef ENABLE_WEB_TERMINAL
     if (!mqtt_connected) {

@@ -1,83 +1,9 @@
 ﻿/* Copyright (c) Microsoft Corporation. All rights reserved.
    Licensed under the MIT License. */
 
-// System Libraries
-#include "applibs_versions.h"
-#include <applibs/log.h>
-#include <pthread.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <applibs/storage.h>
-
-#include "comms_manager_wolf.h"
-#include "curldefs.h"
-#include "front_panel_virtual.h"
-#include "iotc_manager.h"
-#include "sphere_panel.h"
-#include "utils.h"
-#include "weather.h"
-
-#include "intel8080.h"
-#include "88dcdd.h"
-#include "memory.h"
-
 #include "main.h"
 
-#define ALTAIR_ON_AZURE_SPHERE_VERSION "3.0"
 
-#define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
-#define DX_LOGGING_ENABLED FALSE
-
-// https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play
-#define IOT_PLUG_AND_PLAY_MODEL_ID "dtmi:com:example:azuresphere:altair;1"
-#define NETWORK_INTERFACE "wlan0"
-DX_USER_CONFIG userConfig;
-
-#define BASIC_SAMPLES_DIRECTORY "BasicSamples"
-
-static const char *AltairMsg = "\x1b[2J\r\nAzure Sphere - Altair 8800 Emulator\r\n";
-
-char msgBuffer[MSG_BUFFER_BYTES] = {0};
-
-// CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
-CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
-
-static intel8080_t cpu;
-uint8_t memory[64 * 1024]; // Altair system memory.
-
-ALTAIR_COMMAND cmd_switches;
-uint16_t bus_switches = 0x00;
-
-int altair_spi_fd = -1;
-int console_fd = -1;
-
-// basic app load helpers.
-static bool haveCtrlPending = false;
-static char haveCtrlCharacter = 0x00;
-static bool haveAppLoad = false;
-static int basicAppLength = 0;
-static int appLoadPtr = 0;
-static uint8_t *ptrBasicApp = NULL;
-
-static bool haveTerminalInputMessage = false;
-static bool haveTerminalOutputMessage = false;
-static int terminalInputMessageLen = 0;
-static int terminalOutputMessageLen = 0;
-static int altairInputBufReadIndex = 0;
-static int altairOutputBufReadIndex = 0;
-
-static pthread_cond_t wait_message_processed_cond = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t wait_message_processed_mutex = PTHREAD_MUTEX_INITIALIZER;
-static char *input_data = NULL;
-
-bool local_serial = true;
-bool dirty_buffer = false;
-bool send_messages = false;
-bool invoke_mqtt_sync = false;
-bool renderText = false;
-
-static char Log_Debug_Time_buffer[64];
 
 // End of variable declarations
 
@@ -94,7 +20,7 @@ static void mqtt_connected_cb(void)
         int len = snprintf(msgBuffer, sizeof(msgBuffer), connected_message, ALTAIR_ON_AZURE_SPHERE_VERSION, AZURE_SPHERE_DEVX_VERSION);
         queue_mqtt_message((const uint8_t *)msgBuffer, (size_t)len);
         cpu_operating_mode = CPU_RUNNING;
-        // if (dt_desiredCpuState.propertyValue) {
+        // if (dt_cpuState.propertyValue) {
         //	cpu_operating_mode = CPU_RUNNING;
         //}
     } else {
@@ -156,41 +82,6 @@ static bool load_application(const char *fileName)
     fclose(stream);
 
     return true;
-}
-
-/// <summary>
-/// Update device stats - only update device twins if they have changed
-/// </summary>
-static void device_stats_handler(EventLoopTimer *eventLoopTimer)
-{
-    if (ConsumeEventLoopTimerEvent(eventLoopTimer) != 0) {
-        dx_terminate(DX_ExitCode_ConsumeEventLoopTimeEvent);
-        return;
-    }
-    static int32_t previous_diskCacheHits = INT32_MAX;
-    static int32_t previous_diskCacheMisses = INT32_MAX;
-    static int32_t previous_diskTotalErrors = INT32_MAX;
-    static int32_t previous_diskTotalWrites = INT32_MAX;
-
-    if (previous_diskCacheHits != *(int *)dt_diskCacheHits.propertyValue) {
-        previous_diskCacheHits = *(int *)dt_diskCacheHits.propertyValue;
-        dx_deviceTwinReportValue(&dt_diskCacheHits, dt_diskCacheHits.propertyValue);
-    }
-
-    if (previous_diskCacheMisses != *(int *)dt_diskCacheMisses.propertyValue) {
-        previous_diskCacheMisses = *(int *)dt_diskCacheMisses.propertyValue;
-        dx_deviceTwinReportValue(&dt_diskCacheMisses, dt_diskCacheMisses.propertyValue);
-    }
-
-    if (previous_diskTotalErrors != *(int *)dt_diskTotalErrors.propertyValue) {
-        previous_diskTotalErrors = *(int *)dt_diskTotalErrors.propertyValue;
-        dx_deviceTwinReportValue(&dt_diskTotalErrors, dt_diskTotalErrors.propertyValue);
-    }
-
-    if (previous_diskTotalWrites != *(int *)dt_diskTotalWrites.propertyValue) {
-        previous_diskTotalWrites = *(int *)dt_diskTotalWrites.propertyValue;
-        dx_deviceTwinReportValue(&dt_diskTotalWrites, dt_diskTotalWrites.propertyValue);
-    }
 }
 
 /// <summary>
@@ -317,8 +208,6 @@ static DX_TIMER_HANDLER(mqtt_dowork_handler)
     if (dirty_buffer) {
         send_messages = true;
     }
-
-    dx_timerOneShotSet(&mqtt_do_work_timer, &(struct timespec){0, 300 * OneMS});
 }
 DX_TIMER_HANDLER_END
 
@@ -399,14 +288,6 @@ static char altair_read_terminal(void)
         // pthread_mutex_unlock(&wait_message_processed_mutex);
 
         return haveCtrlCharacter;
-    }
-
-    if (console_fd != -1) {
-        ssize_t iRead = read(console_fd, rxBuffer, 1);
-        if (iRead > 0) {
-            // Log_Debug("Rx: 0x%02x (%c)\n", rxBuffer[0], rxBuffer[0] >= 0x20 ? rxBuffer[0] : '.');
-            return (rxBuffer[0]);
-        }
     }
 
     if (haveTerminalInputMessage) {
@@ -510,14 +391,12 @@ static void update_panel_leds(uint8_t status, uint8_t data, uint16_t bus)
     update_panel_status_leds(status, data, bus);
 }
 
-static void *update_panel_thread(void *arg)
+static DX_TIMER_HANDLER(panel_refresh_handler)
 {
-    while (true) {
-        // Panel update takes 10 milliseconds, plus 10 ms delay = 20ms update cycle
-        update_panel_leds(cpu.cpuStatus, cpu.data_bus, cpu.address_bus);
-        nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
-    }
+    update_panel_leds(cpu.cpuStatus, cpu.data_bus, cpu.address_bus);
+    dx_timerOneShotSet(&tmr_panel_refresh, &(struct timespec){0, 10 * ONE_MS});
 }
+DX_TIMER_HANDLER_END
 
 static inline uint8_t sense(void)
 {
@@ -634,7 +513,7 @@ static void azure_connection_changed(bool connected)
         snprintf(msgBuffer, sizeof(msgBuffer), "Altair emulator version: %s, DevX version: %s", ALTAIR_ON_AZURE_SPHERE_VERSION,
                  AZURE_SPHERE_DEVX_VERSION);
         dx_deviceTwinReportValue(&dt_softwareVersion, msgBuffer);
-        dx_deviceTwinReportValue(&dt_reportedDeviceStartTime, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
+        dx_deviceTwinReportValue(&dt_deviceStartTime, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
 
         dx_azureUnregisterConnectionChangedNotification(azure_connection_changed);
     }
@@ -662,9 +541,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
     dx_deviceTwinSubscribe(deviceTwinBindingSet, NELEMS(deviceTwinBindingSet));
     dx_timerSetStart(timerSet, NELEMS(timerSet));
 
-    dx_timerOneShotSet(&mqtt_do_work_timer, &(struct timespec){1, 0});
     dx_startThreadDetached(altair_thread, NULL, "altair_thread");
-    dx_startThreadDetached(update_panel_thread, NULL, "update_panel_thread");
 }
 
 /// <summary>
