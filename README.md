@@ -10,6 +10,13 @@
 sudo apt-get install -y libuv1.dev unzip cmake build-essential gdb curl libcurl4-openssl-dev libssl-dev uuid-dev ca-certificates git mosquitto libi2c-dev
 ```
 
+### macOS
+
+
+### Desktop Linux including WSL 2
+
+
+
 ## Clone Altair 8800 repo
 
 ```bash
