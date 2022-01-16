@@ -9,9 +9,7 @@ static void mqtt_connected_cb(void)
 {
     static bool connection_initialised = false;
     static const char *connected_message = "\r\nCONNECTED TO AZURE SPHERE ALTAIR 8800 EMULATOR VERSION: %s, DevX VERSION: %s.\r\n\r\n";
-    static const char *reconnected_message =
-        "\r\nRECONNECTED TO AZURE SPHERE ALTAIR 8800 EMULATOR VERSION: %s, DevX VERSION: "
-        "%s.\r\n\r\n";
+    static const char *reconnected_message = "\r\nRECONNECTED TO AZURE SPHERE ALTAIR 8800 EMULATOR VERSION: %s, DevX VERSION: %s.\r\n\r\n";
 
     if (!connection_initialised) {
         connection_initialised = true;
