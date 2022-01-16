@@ -16,6 +16,16 @@ sudo apt-get install -y libuv1.dev unzip cmake build-essential gdb curl libcurl4
 git clone --recurse-submodules https://github.com/gloveboxes/Altair8800Linux.git
 ```
 
+
+## Build project
+
+```bash
+cd Altair8800Linux/AltairHL_emulator
+mkdir build
+cmake -B build
+cmake --build build --config release --target all 
+```
+
 ## Enable Raspberry I2C Interface
 
 ```bash
