@@ -32,8 +32,6 @@ static bool load_application(const char *fileName)
     char filePathAndName[50];
     snprintf(filePathAndName, sizeof(filePathAndName), "%s/%s", BASIC_SAMPLES_DIRECTORY, fileName);
 
-    Log_Debug("LOADING '%s'\n", fileName);
-
     char *line = NULL;
     size_t len = 0;
     ssize_t nread;
@@ -44,11 +42,10 @@ static bool load_application(const char *fileName)
     }
 
     while ((nread = getline(&line, &len, stream)) != -1) {
-        printf("Retrieved line of length %zd:\n", nread);
         fwrite(line, nread, 1, stdout);
 
         if (line[nread - 1] == '\n') {
-            nread--;
+            line[nread - 1] = 0x0d;
         }
 
         if (nread > 0) {
