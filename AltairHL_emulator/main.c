@@ -41,17 +41,19 @@ static bool load_application(const char *fileName)
         return false;
     }
 
-    while ((nread = getline(&line, &len, stream)) != -1) {
-        fwrite(line, nread, 1, stdout);
+    altairInputBufReadIndex = 0;
+    altairOutputBufReadIndex = 0;
+    terminalInputMessageLen = 0;
+    terminalOutputMessageLen = 0;
+    haveTerminalInputMessage = false;
 
-        if (line[nread - 1] == '\n') {
-            line[nread - 1] = 0x0d;
-        }
+    while ((nread = getline(&line, &len, stream)) != -1) {
 
         if (nread > 0) {
 
-            terminalInputMessageLen = nread;
-            terminalOutputMessageLen = nread;
+            if (line[nread - 1] == '\n') {
+                line[nread - 1] = 0x0d;
+            }
 
             appLoadPtr = 0;
             basicAppLength = nread;
@@ -63,9 +65,6 @@ static bool load_application(const char *fileName)
             pthread_cond_wait(&wait_message_processed_cond, &wait_message_processed_mutex);
             pthread_mutex_unlock(&wait_message_processed_mutex);
         }
-
-        haveCtrlCharacter = 0x0d;
-        haveCtrlPending = true;
     }
 
     free(line);
@@ -262,11 +261,6 @@ static char altair_read_terminal(void)
 
     if (haveCtrlPending) {
         haveCtrlPending = false;
-
-        // pthread_mutex_lock(&wait_message_processed_mutex);
-        // pthread_cond_signal(&wait_message_processed_cond);
-        // pthread_mutex_unlock(&wait_message_processed_mutex);
-
         return haveCtrlCharacter;
     }
 
@@ -285,7 +279,7 @@ static char altair_read_terminal(void)
         return retVal;
     } else if (haveAppLoad) {
         retVal = ptrBasicApp[appLoadPtr++];
-        publish_character(retVal);
+        // publish_character(retVal);
 
         if (appLoadPtr > basicAppLength) {
             haveAppLoad = false;
