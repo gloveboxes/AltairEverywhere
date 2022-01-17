@@ -41,12 +41,6 @@ static bool load_application(const char *fileName)
         return false;
     }
 
-    altairInputBufReadIndex = 0;
-    altairOutputBufReadIndex = 0;
-    terminalInputMessageLen = 0;
-    terminalOutputMessageLen = 0;
-    haveTerminalInputMessage = false;
-
     while ((nread = getline(&line, &len, stream)) != -1) {
 
         if (nread > 0) {
