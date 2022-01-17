@@ -1,8 +1,8 @@
 
 # SELECT FRONT PANEL CONFIG #######################################################################################
 #
-# set(ALTAIR_FRONT_PANEL_NONE TRUE "Altair on Azure Sphere with no panel.")
-set(ALTAIR_FRONT_PI_SENSE_HAT TRUE "Avnet with the MikroE 8800 Retro Click")
+set(ALTAIR_FRONT_PANEL_NONE TRUE "Altair on Azure Sphere with no panel.")
+# set(ALTAIR_FRONT_PI_SENSE_HAT TRUE "Avnet with the MikroE 8800 Retro Click")
 #
 ###################################################################################################################
 
