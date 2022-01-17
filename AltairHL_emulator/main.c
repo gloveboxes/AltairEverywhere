@@ -308,7 +308,7 @@ static void altair_write_terminal(uint8_t c)
             haveTerminalOutputMessage = false;
     }
 
-    if (!haveTerminalOutputMessage && !haveAppLoad) {
+    if (!haveTerminalOutputMessage) {
         publish_character(c);
     }
 }
