@@ -1,0 +1,15 @@
+[Unit]
+Description=Altair Emulator daemon
+After=multi-user.target
+
+[Service]
+Type=idle
+User=pi
+WorkingDirectory=/home/pi/altair
+ExecStart=/home/pi/altair/Altair_emulator
+Restart=always
+
+
+[Install]
+WantedBy=multi-user.target
+
