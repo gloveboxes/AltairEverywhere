@@ -4,14 +4,20 @@
 cmake_minimum_required (VERSION 3.10)
 project (Altair_emulator C)
 
-include(altair_config.cmake)
-
-
-# WEB TERMINAL ####################################################################################################
+# SELECT FRONT PANEL CONFIG #######################################################################################
 #
-add_compile_definitions(ENABLE_WEB_TERMINAL)
+set(ALTAIR_FRONT_PANEL_NONE TRUE "Altair on Azure Sphere with no panel.")
+# set(ALTAIR_FRONT_PI_SENSE_HAT TRUE "Avnet with the MikroE 8800 Retro Click")
 #
 ###################################################################################################################
+
+
+##################################################################################################################
+# Configure Azure IoT Hub conection string
+add_compile_definitions(IOT_HUB_HOST_NAME="HostName=<YOUR_IOT_CENTRAL_HOST>")
+add_compile_definitions(IOT_HUB_DEVICE_ID="DeviceId=<YOUR_DEVICE_ID>")
+add_compile_definitions(IOT_HUB_SHARED_ACCESS_KEY="SharedAccessKey=<YOUR_SHARED_KEY>")
+##################################################################################################################
 
 
 # BOOT CONFIG #####################################################################################################

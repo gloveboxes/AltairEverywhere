@@ -5,7 +5,7 @@ After=multi-user.target
 [Service]
 Type=idle
 User=pi
-WorkingDirectory=/home/pi/altair/Terminal
+WorkingDirectory=/home/pi/Altair8800Linux/Terminal
 ExecStart=/usr/bin/python3 -m http.server 8081
 Restart=always
 

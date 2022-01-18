@@ -304,8 +304,6 @@ static void *waitMessage_task(void *args)
 
 void publish_message(const char *message, size_t message_length)
 {
-
-#ifdef ENABLE_WEB_TERMINAL
     if (!mqtt_connected) {
         return;
     }
@@ -325,8 +323,6 @@ void publish_message(const char *message, size_t message_length)
     publish.total_len = message_length;
 
     MqttClient_Publish(&mqttCtx->client, &publish);
-
-#endif // ENABLE_WEB_TERMINAL
 }
 
 void vdisk_mqtt_read_sector(uint32_t offset)
@@ -417,11 +413,7 @@ int init_mqtt(int argc, char *argv[], void (*publish_callback)(MqttMessage *msg)
     //     }
     // }
 
-#ifdef ENABLE_WEB_TERMINAL
     dx_startThreadDetached(waitMessage_task, NULL, "wait for message");
-#else
-    mqtt_connected_cb();
-#endif // ENABLE_WEB_TERMINAL
 
     return 0;
 }
