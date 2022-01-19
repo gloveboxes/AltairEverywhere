@@ -39,6 +39,7 @@ The Altair project requires the following packages:
 
 1. [libuv](http://docs.libuv.org/en/v1.x/design.html) event loop library.
 1. SSL Development.
+1. [OSSP uuid](http://www.ossp.org/pkg/lib/uuid/)
 1. [Mosquitto](https://mosquitto.org/) MQTT broker.
 1. C build, compiler, and debugger tools.
 
