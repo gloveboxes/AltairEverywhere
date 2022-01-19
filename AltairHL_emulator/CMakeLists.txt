@@ -11,15 +11,6 @@ set(ALTAIR_FRONT_PANEL_NONE TRUE "Altair on Azure Sphere with no panel.")
 #
 ###################################################################################################################
 
-
-##################################################################################################################
-# Configure Azure IoT Hub conection string
-add_compile_definitions(IOT_HUB_HOST_NAME="HostName=<YOUR_IOT_CENTRAL_HOST>")
-add_compile_definitions(IOT_HUB_DEVICE_ID="DeviceId=<YOUR_DEVICE_ID>")
-add_compile_definitions(IOT_HUB_SHARED_ACCESS_KEY="SharedAccessKey=<YOUR_SHARED_KEY>")
-##################################################################################################################
-
-
 # BOOT CONFIG #####################################################################################################
 #
 # Comment out the "add_compile_definitions(BOOT_CPM) line below to boot Altair BASIC 4.0
@@ -153,3 +144,6 @@ set_source_files_properties(wolfMQTT/wolfmqtt/mqtt_client.c PROPERTIES COMPILE_F
 set_source_files_properties(wolfMQTT/wolfmqtt/mqtt_packet.h PROPERTIES COMPILE_FLAGS -Wno-conversion)
 
 
+set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+include(CPack)
