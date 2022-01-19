@@ -249,6 +249,20 @@ mosquitto -c /opt/homebrew/etc/mosquitto/altair.conf &
     ```
 
 
+## IoT Central
+
+### Load PnP Template
+
+### Create a device
+
+### Create IoT Central device connection string
+
+The initial release of the Altair on Linux project does not support Azure Device Provisioning which is a requirement for IoT Plug and Play and IoT Central.
+
+Instead you will manually create a device connection string for an IoT Central device.
+
+
+
 <!-- ## Appendix
 
 ## Autostart Web Terminal Service on Raspberry Pi
