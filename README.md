@@ -80,6 +80,14 @@ Clone the Altair 8800 project repo to your desktop computer.
     git clone --recurse-submodules https://github.com/gloveboxes/Altair8800Linux.git
     ```
 
+## Configure the Altair project
+
+If you are building the project on a Raspberry Pi with a Pi Sense HAT then you must enable Pi Sense HAT support.
+
+```bash
+tbd
+```
+
 ## Build the Altair project
 
 Next, build the Altair project.
