@@ -32,11 +32,9 @@
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 #include "front_panel_pi_sense_hat.h"
-#endif // ALTAIR_FRONT_PANEL_PI_SENSE
-
-#ifdef ALTAIR_FRONT_PANEL_NONE
+#else
 #include "front_panel_none.h"
-#endif // ALTAIR_FRONT_PANEL_NONE
+#endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 #define ALTAIR_ON_AZURE_SPHERE_VERSION "3.0"
 #define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)

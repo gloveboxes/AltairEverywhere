@@ -6,7 +6,6 @@ project (Altair_emulator C)
 
 # SELECT FRONT PANEL CONFIG #######################################################################################
 #
-set(ALTAIR_FRONT_PANEL_NONE TRUE "Altair on Azure Sphere with no panel.")
 # set(ALTAIR_FRONT_PI_SENSE_HAT TRUE "Avnet with the MikroE 8800 Retro Click")
 #
 ###################################################################################################################
@@ -40,6 +39,8 @@ endif(DISABLE_IO_MOCKING)
 
 if (ALTAIR_FRONT_PI_SENSE_HAT)
 
+    message(STATUS, "ALTAIR PROJECT CONFIGURATION SELECTED: RASPBERRY PI SENSE HAT FRONT PANEL")
+
     add_compile_definitions(ALTAIR_FRONT_PANEL_PI_SENSE)
 
     set(Oem
@@ -48,18 +49,17 @@ if (ALTAIR_FRONT_PI_SENSE_HAT)
     )
     source_group("Oem" FILES ${Oem})
 
-endif(ALTAIR_FRONT_PI_SENSE_HAT)
+else()
 
-if (ALTAIR_FRONT_PANEL_NONE)
-
-    add_compile_definitions(ALTAIR_FRONT_PANEL_NONE)
+    message(STATUS, "ALTAIR PROJECT CONFIGURATION SELECTED: NO FRONT PANEL")
 
     set(Oem
-        "FrontPanels/front_panel_none.c"
+    "FrontPanels/front_panel_none.c"
     )
     source_group("Oem" FILES ${Oem})
 
-endif(ALTAIR_FRONT_PANEL_NONE)
+endif(ALTAIR_FRONT_PI_SENSE_HAT)
+
 
 set(Source
     "Altair8800/88dcdd.c"
