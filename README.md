@@ -13,7 +13,7 @@ The Altair project has been tested on the following *NIX style operating systems
 
 ## Windows computers
 
-You can build and run the Altair 8800 project from Windows Subsystem for Linux (WSL2).
+On Windows, you can build and run the Altair 8800 project from Windows Subsystem for Linux (WSL2).
 
 1. If you have not done so already, then [install WSL2](https://docs.microsoft.com/windows/wsl/install).
 1. Optional, but recommended, install the [Windows Terminal](https://docs.microsoft.com/windows/terminal/install)
