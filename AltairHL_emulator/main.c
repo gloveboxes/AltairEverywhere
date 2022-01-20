@@ -3,14 +3,14 @@
 
 #include "main.h"
 
-// End of variable declarations
-
 static DX_TIMER_HANDLER(report_memory_usage)
 {
     struct rusage r_usage;
     getrusage(RUSAGE_SELF, &r_usage);
-    // Print the maximum resident set size used (in kilobytes).
-    printf("Memory usage: %ld kilobytes\n", r_usage.ru_maxrss);
+
+    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2, DX_JSON_INT, "TotalMemoryUsage", r_usage.ru_maxrss, DX_JSON_INT, "PeakUserModeMemoryUsage", r_usage.ru_maxrss)) {
+        dx_azurePublish(msgBuffer, strlen(msgBuffer), NULL, 0, NULL);
+    }
 }
 DX_TIMER_HANDLER_END
 
