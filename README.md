@@ -50,7 +50,7 @@ For Linux based systems, including Raspberry Pi OS, Windows Subsystem for Linux,
 1. Open a Terminal window and run the following command.
 
     ```bash
-    sudo apt-get install -y libuv1.dev cmake build-essential gdb curl libcurl4-openssl-dev libssl-dev uuid-dev ca-certificates git mosquitto libi2c-dev
+    sudo apt-get install -y libuv1.dev cmake build-essential gdb curl libcurl4-openssl-dev libssl-dev uuid-dev ca-certificates git mosquitto libi2c-dev clang
     ```
 
 ### macOS
@@ -181,7 +181,7 @@ Restart the Mosquitto broker.
 1. Run the following command to start Mosquitto as a background process.
 
     ```bash
-    mosquitto -c /etc/mosquitto/mosquitto.conf &
+    sudo mosquitto -c /etc/mosquitto/mosquitto.conf &
     ```
 
 ## Linux systems
