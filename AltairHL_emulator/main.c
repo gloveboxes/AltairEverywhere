@@ -5,6 +5,15 @@
 
 // End of variable declarations
 
+static DX_TIMER_HANDLER(report_memory_usage)
+{
+    struct rusage r_usage;
+    getrusage(RUSAGE_SELF, &r_usage);
+    // Print the maximum resident set size used (in kilobytes).
+    printf("Memory usage: %ld kilobytes\n", r_usage.ru_maxrss);
+}
+DX_TIMER_HANDLER_END
+
 static void mqtt_connected_cb(void)
 {
     static bool connection_initialised = false;
