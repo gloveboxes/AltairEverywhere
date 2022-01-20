@@ -1,5 +1,5 @@
 10 PRINT
-20 PRINT "Avnet onboard temperature and pressure sensor App"
+20 PRINT "Onboard temperature and pressure sensor App"
 30 PRINT
 70 A$=""
 80 C=INP(43)
