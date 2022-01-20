@@ -3,6 +3,21 @@
 
 #include "main.h"
 
+
+/// <summary>
+/// Read sensor and send to Azure IoT - called every 60 seconds
+/// </summary>
+static DX_TIMER_HANDLER(measure_sensor_handler)
+{
+    int rnd = (rand() % 10) - 5;
+    telemetry.temperature = 25 + rnd;
+    rnd = (rand() % 50) - 25;
+    telemetry.pressure = 1000 + rnd;
+    telemetry.humidity = 20 + (rand() % 60);   
+}
+DX_TIMER_HANDLER_END
+
+
 static DX_TIMER_HANDLER(report_memory_usage)
 {
     struct rusage r_usage;
@@ -209,8 +224,8 @@ static uint8_t sphere_port_in(uint8_t port)
     if (port == 43) {
         if (!reading_data) {
             readPtr = 0;
-            snprintf(data, 10, "%d", 25);
-            publish_telemetry(25, 1050);
+            snprintf(data, 10, "%d", telemetry.temperature);
+            publish_telemetry(telemetry.temperature, telemetry.pressure);
             reading_data = true;
         }
 
@@ -223,7 +238,7 @@ static uint8_t sphere_port_in(uint8_t port)
     if (port == 44) {
         if (!reading_data) {
             readPtr = 0;
-            snprintf(data, 10, "%d", 25);
+            snprintf(data, 10, "%d", telemetry.pressure);
             reading_data = true;
         }
 
@@ -499,6 +514,8 @@ static void azure_connection_changed(bool connected)
 /// <returns>0 on success, or -1 on failure</returns>
 static void InitPeripheralAndHandlers(int argc, char *argv[])
 {
+    srand((unsigned int)time(NULL)); // seed the random number generator for fake telemetry
+
     dx_Log_Debug_Init(Log_Debug_Time_buffer, sizeof(Log_Debug_Time_buffer));
 
     init_altair_hardware();

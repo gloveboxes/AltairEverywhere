@@ -86,11 +86,20 @@ bool dirty_buffer = false;
 bool send_messages = false;
 bool renderText = false;
 
+typedef struct {
+    int temperature;
+    int humidity;
+    int pressure;
+} ONBOARD_TELEMETRY;
+
+static ONBOARD_TELEMETRY telemetry = {.humidity = 60, .pressure = 1012, .temperature = 22};
+
 static char Log_Debug_Time_buffer[64];
 
 static DX_DECLARE_TIMER_HANDLER(mqtt_dowork_handler);
 static DX_DECLARE_TIMER_HANDLER(panel_refresh_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
+static DX_DECLARE_TIMER_HANDLER(measure_sensor_handler);
 static void *altair_thread(void *arg);
 static void process_control_panel_commands(void);
 
@@ -99,6 +108,8 @@ const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x
 // Common Timers
 static DX_TIMER_BINDING tmr_mqtt_do_work = {.repeat = &(struct timespec){0, 250 * OneMS}, .name = "tmr_mqtt_do_work", .handler = mqtt_dowork_handler};
 static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){10, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
+static DX_TIMER_BINDING tmr_measure_sensor = {.repeat = &(struct timespec){5, 0}, .name = "tmr_measure_sensor", .handler = measure_sensor_handler};
+
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 static DX_TIMER_BINDING tmr_panel_refresh = {.delay = &(timespec){0, 10 * OneMS}, .name = "tmr_panel_refresh", .handler = panel_refresh_handler};
@@ -113,5 +124,5 @@ static DX_DEVICE_TWIN_BINDING dt_deviceStartTime = {.propertyName = "ReportedDev
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
 
 // initialize bindings
-static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_do_work, &tmr_panel_refresh, &tmr_report_memory_usage};
+static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_do_work, &tmr_panel_refresh, &tmr_report_memory_usage, &tmr_measure_sensor};
 static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {&dt_deviceStartTime, &dt_channelId, &dt_ledBrightness};
