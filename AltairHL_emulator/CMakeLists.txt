@@ -31,7 +31,8 @@ add_compile_definitions(WOLFMQTT_USER_SETTINGS)
 
 add_compile_definitions(PRINTF=Log_Debug)
 
-set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO MOCKING IN AzureSphereRemoteX.Client" FORCE )
+set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO mocking for AzureSphereRemoteX.Client" FORCE )
+set(ENABLE_DESKTOP_DEVX_REMOTEX OFF CACHE  BOOL "DISABLE DesktopDevX RemoteX peripheral support" FORCE )
 
 if(DISABLE_IO_MOCKING)
     add_compile_definitions(DISABLE_IO_MOCKING=TRUE)
