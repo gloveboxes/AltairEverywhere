@@ -110,7 +110,7 @@ Next, build the Altair project.
 
 ## Raspberry Pi Sense HAT support
 
-If you are building the Altair project in a Raspberry Pi with a PI Sense HAT then you need to enable I2C support.
+If you are building the Altair project on a Raspberry Pi with a PI Sense HAT then you need to enable I2C support.
 
 1. Open a Terminal window
 1. Run the following command to start the Raspberry Pi config utility.
