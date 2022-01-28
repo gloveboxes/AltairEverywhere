@@ -1,0 +1,26 @@
+FROM ubuntu
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update && apt-get install -y --no-install-recommends \
+                    libuv1.dev \
+                    cmake \
+                    build-essential \
+                    gdb \
+                    curl \
+                    libcurl4-openssl-dev \
+                    libssl-dev \
+                    uuid-dev \
+                    ca-certificates \
+                    git \
+                    mosquitto \
+                    libi2c-dev \
+                    clang \
+                && rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/gloveboxes/Altair8800Linux.git \
+    && cd Altair8800Linux && git submodule update --init --recursive \
+    && cd AltairHL_emulator \
+    && mkdir -p build \
+    && cmake -B build \
+    && cmake --build build --config release --target all
