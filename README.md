@@ -1,4 +1,4 @@
-# Cloud Enabled Altair 8800 Emulator in C for Unix-like operating systems
+# Cloud Enabled Altair 8800 Emulator in C
 
 The Cloud Enabled Altair 8800 Emulator in C for Unix-like operating systems:
 
