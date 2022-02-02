@@ -2,7 +2,7 @@
 
 The Altair 8800 is considered to be the computer that kick-started the personal computer revolution. You can learn more about the Altair on the [Altair 8800 Wikipedia page](https://en.wikipedia.org/wiki/Altair_8800?azure-portal=true).
 
-The Cloud Enabled Altair 8800 Emulator in C for Unix-like operating systems:
+The Cloud Enabled Altair 8800 Emulator:
 
 1. Runs on Unix-like operating systems, including Linux, Windows Subsystem for Linux (WSL2), macOS, and Raspberry Pi OS.
 1. Is a subset of the sister project [Azure Sphere Cloud Enabled Altair 8800](https://github.com/AzureSphereCloudEnabledAltair8800).
