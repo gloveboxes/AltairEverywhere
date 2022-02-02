@@ -5,12 +5,13 @@ The Altair 8800 is considered to be the computer that kick-started the personal 
 The Cloud Enabled Altair 8800 Emulator in C for Unix-like operating systems:
 
 1. Runs on Unix-like operating systems, including Linux, Windows Subsystem for Linux (WSL2), macOS, and Raspberry Pi OS.
-1. Is a sister project to the [Azure Sphere Cloud Enabled Altair 8800](https://github.com/AzureSphereCloudEnabledAltair8800).
+1. Is a subset of the sister project [Azure Sphere Cloud Enabled Altair 8800](https://github.com/AzureSphereCloudEnabledAltair8800).
 
-## Altair Emulator on Unix-like operating systems documentation
+## Documentation
 
 The Altair 8800 Emulator on Linux documentation is maintained on the [project wiki](https://github.com/gloveboxes/Altair8800Linux/wiki)
 
+## Altair History
 
 ![](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki/media/altair-8800-smithsonian-museum.png)
 
