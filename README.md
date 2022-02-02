@@ -1,6 +1,6 @@
-# Cloud Enabled Altair 8800 on POSIX C
+# Cloud Enabled Altair 8800 Emulator in C for Unix-like operating systems
 
-The Cloud Enabled Altair 8800 Emulator on [POSIX C](https://en.wikipedia.org/wiki/C_POSIX_library):
+The Cloud Enabled Altair 8800 Emulator in C for Unix-like operating systems:
 
 1. Documentation is maintained in the [project wiki](https://github.com/gloveboxes/Altair8800Linux/wiki)
 1. Runs on Unix-like operating systems, including Linux, Windows Subsystem for Linux (WSL2), macOS, and Raspberry Pi OS.
