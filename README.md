@@ -1,4 +1,4 @@
-# Cloud Enabled Altair 8800 on Azure Sphere
+# Cloud Enabled Altair 8800 for Unix-like operating systems
 
 The Altair 8800 is considered to be the computer that kick-started the personal computer revolution. You can learn more about the Altair on the [Altair 8800 Wikipedia page](https://en.wikipedia.org/wiki/Altair_8800?azure-portal=true).
 
