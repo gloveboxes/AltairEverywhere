@@ -247,6 +247,58 @@ static uint8_t sphere_port_in(uint8_t port)
             reading_data = false;
         }
     }
+
+    if (port == 45 && weather.valid) {
+        if (!reading_data) {
+            readPtr = 0;
+            snprintf(data, 10, "%d", weather.latest.temperature);
+            reading_data = true;
+        }
+
+        retVal = data[readPtr++];
+        if (retVal == 0x00) {
+            reading_data = false;
+        }
+    }
+
+    if (port == 46 && weather.valid) {
+        if (!reading_data) {
+            readPtr = 0;
+            snprintf(data, 10, "%d", weather.latest.pressure);
+            reading_data = true;
+        }
+
+        retVal = data[readPtr++];
+        if (retVal == 0x00) {
+            reading_data = false;
+        }
+    }
+
+    if (port == 47 && weather.valid) {
+        if (!reading_data) {
+            readPtr = 0;
+            snprintf(data, 10, "%d", weather.latest.humidity);
+            reading_data = true;
+        }
+
+        retVal = data[readPtr++];
+        if (retVal == 0x00) {
+            reading_data = false;
+        }
+    }
+
+    if (port == 48 && weather.valid) {
+        if (!reading_data) {
+            readPtr = 0;
+            reading_data = true;
+        }
+
+        retVal = weather.latest.description[readPtr++];
+        if (retVal == 0x00) {
+            reading_data = false;
+        }
+    }
+
     return retVal;
 }
 
@@ -259,7 +311,6 @@ static void sphere_port_out(uint8_t port, uint8_t data)
 {
     static float temperature = 0.0;
     struct location_info *locData;
-    static WEATHER_TELEMETRY weather;
 
     // get IP and Weather data.
     if (port == 32 && data == 1) {

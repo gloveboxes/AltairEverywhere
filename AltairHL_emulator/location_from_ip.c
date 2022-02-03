@@ -32,8 +32,6 @@ struct location_info *GetLocationData(void)
 
     if (data != NULL) {
 
-        Log_Debug("%s\n", data);
-
         rootProperties = json_parse_string(data);
         if (rootProperties == NULL) {
             goto cleanup;
@@ -57,9 +55,9 @@ struct location_info *GetLocationData(void)
         double lat = atof(latitude);
         double lng = atof(longitude);
 
-        Log_Debug("Country Code %s\n", countryCode);
-        Log_Debug("Lat %f\n", lat);
-        Log_Debug("Lng %f\n", lng);
+        // Log_Debug("Country Code %s\n", countryCode);
+        // Log_Debug("Lat %f\n", lat);
+        // Log_Debug("Lng %f\n", lng);
 
         snprintf(locationInfo.countryCode, sizeof(locationInfo.countryCode), "%s", countryCode);
         locationInfo.lat = lat;

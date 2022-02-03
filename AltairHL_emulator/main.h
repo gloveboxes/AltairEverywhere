@@ -88,6 +88,7 @@ bool send_messages = false;
 bool renderText = false;
 
 static WEATHER_TELEMETRY onboard_telemetry;
+static WEATHER_TELEMETRY weather;
 
 static char Log_Debug_Time_buffer[128];
 

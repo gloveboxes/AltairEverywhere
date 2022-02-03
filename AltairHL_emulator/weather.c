@@ -23,7 +23,7 @@ void GetCurrentWeather(struct location_info *locationInfo, WEATHER_TELEMETRY *te
 {
 	int64_t now = dx_getNowMilliseconds();
 
-	if (now < previous_request_milliseconds + 10000){
+	if (now < previous_request_milliseconds + 60000){
 		return;
 	}
 
