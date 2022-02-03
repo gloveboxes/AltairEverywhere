@@ -32,5 +32,6 @@
 280 A$=A$+CHR$(C)
 290 GOTO 260
 300 PRINT "Observation: ";A$
-350 FOR J = 1 to 300000: NEXT J
+340 REM 1000000 iterations makes for about 6 second delay when Altair built in release mode
+350 FOR J = 1 to 1000000: NEXT J
 400 NEXT I
