@@ -62,8 +62,6 @@ typedef struct  __attribute__((packed)) {
 
 extern DX_TIMER_BINDING mqttConnectTimer;
 extern int console_fd;
-extern DX_DEVICE_TWIN_BINDING dt_channelId;
-//extern bool dirty_queue;
 extern bool dirty_buffer;
 
 bool is_mqtt_connected(void);

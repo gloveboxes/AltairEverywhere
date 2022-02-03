@@ -251,12 +251,8 @@ static void *waitMessage_task(void *args)
                 client_disconnect(&gMqttCtx);
             }
         } else {
-            if (got_disconnected && ((channel_id = read_channel_id_from_storage()) != -1 || dt_channelId.propertyUpdated) &&
+            if (got_disconnected && ((channel_id = read_channel_id_from_storage()) != -1 ) &&
                 dx_isNetworkReady()) {
-                // if channel id is -1 then channel id was not in storage
-                if (channel_id == -1) {
-                    channel_id = *(int *)(dt_channelId.propertyValue);
-                }
 
                 memset(mqtt_client_id, 0, sizeof(mqtt_client_id));
                 memset(pub_topic_data, 0, sizeof(pub_topic_data));
