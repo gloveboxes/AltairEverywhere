@@ -2,7 +2,7 @@
 10 PRINT "Open Weather Map IoT App"
 20 REM FETCH THE LOCATION AND WEATHER DATA
 25 FOR I = 1 to 1000000
-26 PRINT "========================"
+26 PRINT "==================================="
 27 PRINT "Reading:";I
 30 OUT 32,1
 40 REM PUBLISH THE TEMPERATURE
