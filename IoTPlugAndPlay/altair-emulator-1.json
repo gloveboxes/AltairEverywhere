@@ -1,0 +1,153 @@
+{
+  "@context": "dtmi:dtdl:context;2",
+  "@id": "dtmi:com:example:emulator:altair;1",
+  "@type": "Interface",
+  "displayName": "Altair Emulator",
+  "contents": [
+    {
+      "@type": [
+        "Telemetry",
+        "Temperature"
+      ],
+      "displayName": {
+        "en": "Temperature"
+      },
+      "name": "temperature",
+      "schema": "integer",
+      "unit": "degreeCelsius"
+    },
+    {
+      "@type": [
+        "Telemetry",
+        "Pressure"
+      ],
+      "displayName": {
+        "en": "Pressure"
+      },
+      "name": "pressure",
+      "schema": "integer",
+      "unit": "millibar"
+    },
+    {
+      "@type": [
+        "Telemetry",
+        "Humidity"
+      ],
+      "displayName": {
+        "en": "Humidity"
+      },
+      "name": "humidity",
+      "schema": "integer",
+      "unit": "kilogramPerCubicMetre"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": {
+        "en": "memory usage"
+      },
+      "name": "memoryUsage",
+      "schema": "integer"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": {
+        "en": "Latitude"
+      },
+      "name": "latitude",
+      "schema": "double"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": {
+        "en": "Longitude"
+      },
+      "name": "longitude",
+      "schema": "double"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": {
+        "en": "Country Code"
+      },
+      "name": "countryCode",
+      "schema": "string"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Start time",
+      "name": "StartTime",
+      "schema": "dateTime"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Software version"
+      },
+      "name": "SoftwareVersion",
+      "schema": "string"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Temperature"
+      },
+      "name": "Temperature",
+      "schema": "integer"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Pressure"
+      },
+      "name": "Pressure",
+      "schema": "integer"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Humidity",
+      "name": "Humidity",
+      "schema": "integer"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Weather"
+      },
+      "name": "Weather",
+      "schema": "string"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Latitude"
+      },
+      "name": "Latitude",
+      "schema": "double"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Longitude"
+      },
+      "name": "Longitude",
+      "schema": "double"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Country Code"
+      },
+      "name": "CountryCode",
+      "schema": "string"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "LED brightness"
+      },
+      "name": "LedBrightness",
+      "schema": "integer",
+      "writable": true
+    }
+  ]
+}
