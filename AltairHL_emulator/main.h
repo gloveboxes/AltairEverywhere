@@ -19,7 +19,8 @@
 
 // Altair app
 #include "comms_manager_wolf.h"
-#include "curldefs.h"
+#include <curl/curl.h>
+#include <curl/easy.h>
 #include "front_panel_virtual.h"
 #include "iotc_manager.h"
 #include "sphere_panel.h"
@@ -42,7 +43,7 @@
 #define DX_LOGGING_ENABLED FALSE
 
 // https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play
-#define IOT_PLUG_AND_PLAY_MODEL_ID "dtmi:com:example:azuresphere:altair;1"
+#define IOT_PLUG_AND_PLAY_MODEL_ID "dtmi:com:example:emulator:altair;1"
 #define NETWORK_INTERFACE "wlan0"
 DX_USER_CONFIG userConfig;
 
@@ -86,15 +87,9 @@ bool dirty_buffer = false;
 bool send_messages = false;
 bool renderText = false;
 
-typedef struct {
-    int temperature;
-    int humidity;
-    int pressure;
-} ONBOARD_TELEMETRY;
+static WEATHER_TELEMETRY onboard_telemetry;
 
-static ONBOARD_TELEMETRY telemetry = {.humidity = 60, .pressure = 1012, .temperature = 22};
-
-static char Log_Debug_Time_buffer[64];
+static char Log_Debug_Time_buffer[128];
 
 static DX_DECLARE_TIMER_HANDLER(mqtt_dowork_handler);
 static DX_DECLARE_TIMER_HANDLER(panel_refresh_handler);
@@ -107,7 +102,7 @@ const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x
 
 // Common Timers
 static DX_TIMER_BINDING tmr_mqtt_do_work = {.repeat = &(struct timespec){0, 250 * OneMS}, .name = "tmr_mqtt_do_work", .handler = mqtt_dowork_handler};
-static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){10, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
+static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){30, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
 static DX_TIMER_BINDING tmr_measure_sensor = {.repeat = &(struct timespec){5, 0}, .name = "tmr_measure_sensor", .handler = measure_sensor_handler};
 
 
@@ -118,11 +113,28 @@ static DX_TIMER_BINDING tmr_panel_refresh = {.name = "tmr_panel_refresh", .handl
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 // Azure IoT Central Properties (Device Twins)
-DX_DEVICE_TWIN_BINDING dt_channelId = {.propertyName = "DesiredChannelId", .twinType = DX_DEVICE_TWIN_INT, .handler = set_channel_id_handler};
-DX_DEVICE_TWIN_BINDING dt_ledBrightness = {.propertyName = "DesiredLedBrightness", .twinType = DX_DEVICE_TWIN_INT, .handler = set_led_brightness_handler};
-static DX_DEVICE_TWIN_BINDING dt_deviceStartTime = {.propertyName = "ReportedDeviceStartTime", .twinType = DX_DEVICE_TWIN_STRING};
+DX_DEVICE_TWIN_BINDING dt_countryCode = {.propertyName = "CountryCode", .twinType = DX_DEVICE_TWIN_STRING};
+DX_DEVICE_TWIN_BINDING dt_humidity = {.propertyName = "Humidity", .twinType = DX_DEVICE_TWIN_INT};
+DX_DEVICE_TWIN_BINDING dt_latitude = {.propertyName = "Latitude", .twinType = DX_DEVICE_TWIN_DOUBLE};
+DX_DEVICE_TWIN_BINDING dt_ledBrightness = {.propertyName = "LedBrightness", .twinType = DX_DEVICE_TWIN_INT, .handler = set_led_brightness_handler};
+DX_DEVICE_TWIN_BINDING dt_longitude = {.propertyName = "Longitude", .twinType = DX_DEVICE_TWIN_DOUBLE};
+DX_DEVICE_TWIN_BINDING dt_pressure = {.propertyName = "Pressure", .twinType = DX_DEVICE_TWIN_INT};
+DX_DEVICE_TWIN_BINDING dt_temperature = {.propertyName = "Temperature", .twinType = DX_DEVICE_TWIN_INT};
+DX_DEVICE_TWIN_BINDING dt_weather = {.propertyName = "Weather", .twinType = DX_DEVICE_TWIN_STRING};
+static DX_DEVICE_TWIN_BINDING dt_deviceStartTime = {.propertyName = "StartTime", .twinType = DX_DEVICE_TWIN_STRING};
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
+
 
 // initialize bindings
 static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_do_work, &tmr_panel_refresh, &tmr_report_memory_usage, &tmr_measure_sensor};
-static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {&dt_deviceStartTime, &dt_channelId, &dt_ledBrightness};
+static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {
+                &dt_deviceStartTime, 
+                &dt_softwareVersion, 
+                &dt_ledBrightness, 
+                &dt_temperature,
+                &dt_pressure,
+                &dt_humidity,
+                &dt_weather,
+                &dt_latitude,
+                &dt_longitude,
+                &dt_countryCode };

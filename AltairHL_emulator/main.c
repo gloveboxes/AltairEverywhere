@@ -3,27 +3,27 @@
 
 #include "main.h"
 
-
 /// <summary>
 /// Read sensor and send to Azure IoT - called every 60 seconds
 /// </summary>
 static DX_TIMER_HANDLER(measure_sensor_handler)
 {
     int rnd = (rand() % 10) - 5;
-    telemetry.temperature = 25 + rnd;
+    onboard_telemetry.latest.temperature = 25 + rnd;
     rnd = (rand() % 50) - 25;
-    telemetry.pressure = 1000 + rnd;
-    telemetry.humidity = 20 + (rand() % 60);   
+    onboard_telemetry.latest.pressure = 1000 + rnd;
+    onboard_telemetry.latest.humidity = 20 + (rand() % 60);
 }
 DX_TIMER_HANDLER_END
-
 
 static DX_TIMER_HANDLER(report_memory_usage)
 {
     struct rusage r_usage;
     getrusage(RUSAGE_SELF, &r_usage);
 
-    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2, DX_JSON_INT, "TotalMemoryUsage", r_usage.ru_maxrss, DX_JSON_INT, "PeakUserModeMemoryUsage", r_usage.ru_maxrss)) {
+    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1, 
+        DX_JSON_INT, "memoryUsage", r_usage.ru_maxrss))
+    {
         dx_azurePublish(msgBuffer, strlen(msgBuffer), NULL, 0, NULL);
     }
 }
@@ -58,7 +58,7 @@ static bool load_application(const char *fileName)
 
     char *line = NULL;
     size_t len = 0;
-    ssize_t nread;
+    ssize_t nread;    
 
     FILE *stream = fopen(filePathAndName, "r");
     if (stream == NULL) {
@@ -224,8 +224,8 @@ static uint8_t sphere_port_in(uint8_t port)
     if (port == 43) {
         if (!reading_data) {
             readPtr = 0;
-            snprintf(data, 10, "%d", telemetry.temperature);
-            publish_telemetry(telemetry.temperature, telemetry.pressure);
+            snprintf(data, 10, "%d", onboard_telemetry.latest.temperature);
+            publish_telemetry(&onboard_telemetry);
             reading_data = true;
         }
 
@@ -238,7 +238,7 @@ static uint8_t sphere_port_in(uint8_t port)
     if (port == 44) {
         if (!reading_data) {
             readPtr = 0;
-            snprintf(data, 10, "%d", telemetry.pressure);
+            snprintf(data, 10, "%d", onboard_telemetry.latest.pressure);
             reading_data = true;
         }
 
@@ -259,16 +259,21 @@ static void sphere_port_out(uint8_t port, uint8_t data)
 {
     static float temperature = 0.0;
     struct location_info *locData;
+    static WEATHER_TELEMETRY weather;
 
     // get IP and Weather data.
     if (port == 32 && data == 1) {
         locData = GetLocationData();
-        GetCurrentWeather(locData, &temperature);
+        if (locData != NULL && locData->updated){
+            GetCurrentWeather(locData, &weather);
+        }
     }
 
     // publish the telemetry to IoTC
     if (port == 32 && data == 2) {
-        publish_telemetry((int)temperature, 1010);
+        if (weather.valid){
+            publish_telemetry(&weather);
+        }
     }
 }
 

@@ -31,10 +31,63 @@ DX_DEVICE_TWIN_HANDLER(set_channel_id_handler, deviceTwinBinding)
 }
 DX_DEVICE_TWIN_HANDLER_END
 
-void publish_telemetry(int temperature, int pressure)
+/// <summary>
+/// Determine if environment value changed. If so, update it's device twin
+/// </summary>
+/// <param name="new_value"></param>
+/// <param name="previous_value"></param>
+/// <param name="device_twin"></param>
+static void device_twin_update_int(int *latest_value, int *previous_value, DX_DEVICE_TWIN_BINDING *device_twin)
 {
-    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2, DX_JSON_INT, "Temperature", temperature, DX_JSON_INT, "Pressure", pressure)) {
-        dx_azurePublish(msgBuffer, strlen(msgBuffer), NULL, 0, NULL);
+    if (*latest_value != *previous_value)
+    {
+        *previous_value = *latest_value;
+        dx_deviceTwinReportValue(device_twin, latest_value);
     }
 }
 
+static void device_twin_update_double(double *latest_value, double *previous_value, DX_DEVICE_TWIN_BINDING *device_twin)
+{
+    if (*latest_value != *previous_value)
+    {
+        *previous_value = *latest_value;
+        dx_deviceTwinReportValue(device_twin, latest_value);
+    }
+}
+
+static void device_twin_update_string(char *latest_value, char *previous_value, size_t length, DX_DEVICE_TWIN_BINDING *device_twin)
+{
+    if (strncmp(latest_value, previous_value, length) != 0)
+    {
+        strncpy(previous_value, latest_value, length);
+        dx_deviceTwinReportValue(device_twin, latest_value);
+    }
+}
+
+void publish_telemetry(WEATHER_TELEMETRY *weather)
+{
+    if (!dx_isAzureConnected()){
+        return;
+    }
+
+    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 6, 
+        DX_JSON_INT, "temperature", weather->latest.temperature, 
+        DX_JSON_INT, "pressure", weather->latest.pressure,
+        DX_JSON_INT, "humidity", weather->latest.humidity,
+        DX_JSON_DOUBLE, "latitude", weather->latest.latitude,
+        DX_JSON_DOUBLE, "longitude", weather->latest.longitude,
+        DX_JSON_STRING, "countryCode", weather->latest.country_code)) 
+    {
+        dx_azurePublish(msgBuffer, strlen(msgBuffer), NULL, 0, NULL);
+    }
+
+    device_twin_update_int(&weather->latest.temperature, &weather->previous.temperature, &dt_temperature);
+    device_twin_update_int(&weather->latest.pressure, &weather->previous.pressure, &dt_pressure);
+    device_twin_update_int(&weather->latest.humidity, &weather->previous.humidity, &dt_humidity);
+
+    device_twin_update_double(&weather->latest.latitude, &weather->previous.latitude, &dt_latitude);
+    device_twin_update_double(&weather->latest.longitude, &weather->previous.longitude, &dt_longitude);
+
+    device_twin_update_string(weather->latest.description, weather->previous.description, 80, &dt_weather);
+    device_twin_update_string(weather->latest.country_code, weather->previous.country_code, 10, &dt_countryCode);
+}

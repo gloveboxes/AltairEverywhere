@@ -6,7 +6,7 @@
 
 #include "types.h"
 
-#define MSG_BUFFER_BYTES 128 // Number of bytes to allocate for the JSON telemetry message for IoT Central
+#define MSG_BUFFER_BYTES 256 // Number of bytes to allocate for the JSON telemetry message for IoT Central
 #define OneMS 1000000		// used to simplify timer defn.
 
 #define LOW false

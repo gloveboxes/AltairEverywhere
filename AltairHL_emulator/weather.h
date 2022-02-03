@@ -7,6 +7,29 @@
 #include "location_from_ip.h"
 #include <float.h>
 
+typedef struct {
+    int temperature;
+    int humidity;
+    int pressure;
+    double latitude;
+    double longitude;
+    char country_code[10];
+    char description[80];
+} SENSOR_T;
+
+typedef struct {
+    SENSOR_T latest;
+    SENSOR_T previous;
+    bool validated;
+} ENVIRONMENT_T;
+
+typedef struct {
+    SENSOR_T latest;
+    SENSOR_T previous;
+
+    bool valid;
+} WEATHER_TELEMETRY;
+
 // /*************************************************************
 // * Description
 // *    Get the current weather
@@ -17,4 +40,4 @@
 // *    char *: current weather description
 // *************************************************************/
 // TODO: allow for location customization.
-char* GetCurrentWeather(struct location_info* locationInfo, float* Temperature);
+void GetCurrentWeather(struct location_info *locationInfo, WEATHER_TELEMETRY *telemetry);
