@@ -70,6 +70,7 @@ set(Source
     "Altair8800/memory.c"
     "comms_manager_wolf.c"
     "FrontPanels/front_panel_virtual.c"
+    "httpGet.c"
     "iotc_manager.c"
     "location_from_ip.c"
     "main.c"
