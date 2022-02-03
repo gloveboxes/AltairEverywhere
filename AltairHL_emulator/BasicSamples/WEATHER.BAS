@@ -19,7 +19,7 @@
 150 IF C = 0 THEN GOTO 180
 160 A$=A$+CHR$(C)
 170 GOTO 140
-180 PRINT "Air pressure: ";A$;" hPa/millibars"
+180 PRINT "Air pressure: ";A$;" millibars"
 190 A$=""
 200 C=INP(47)
 210 IF C = 0 THEN GOTO 240
