@@ -23,8 +23,8 @@ void GetCurrentWeather(struct location_info *locationInfo, WEATHER_TELEMETRY *te
 {
 	int64_t now = dx_getNowMilliseconds();
 
-    // throttle weather requests to no more than once a minute = 60000 milliseconds
-	if (now < previous_request_milliseconds + 60000){
+    // throttle weather requests to no more than once every 10 minutes = 60000 milliseconds * 10
+	if (now < previous_request_milliseconds + (60000 * 10)){
 		return;
 	}
 
