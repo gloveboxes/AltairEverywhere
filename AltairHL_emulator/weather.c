@@ -23,6 +23,7 @@ void GetCurrentWeather(struct location_info *locationInfo, WEATHER_TELEMETRY *te
 {
 	int64_t now = dx_getNowMilliseconds();
 
+    // throttle weather requests to no more than once a minute = 60000 milliseconds
 	if (now < previous_request_milliseconds + 60000){
 		return;
 	}
@@ -65,7 +66,7 @@ void GetCurrentWeather(struct location_info *locationInfo, WEATHER_TELEMETRY *te
         if (!json_object_has_value_of_type(mainProperties, "temp", JSONNumber) || 
 			!json_object_has_value_of_type(mainProperties, "pressure", JSONNumber) ||
             !json_object_has_value_of_type(mainProperties, "humidity", JSONNumber)) {
-            return;
+            goto cleanup;
         }
 
         temp = json_object_get_number(mainProperties, "temp"); // need to do some calc on the returned temperature value to get F or C.

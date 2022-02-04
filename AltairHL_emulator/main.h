@@ -116,9 +116,8 @@ static DX_TIMER_BINDING tmr_panel_refresh = {.name = "tmr_panel_refresh", .handl
 // Azure IoT Central Properties (Device Twins)
 DX_DEVICE_TWIN_BINDING dt_countryCode = {.propertyName = "CountryCode", .twinType = DX_DEVICE_TWIN_STRING};
 DX_DEVICE_TWIN_BINDING dt_humidity = {.propertyName = "Humidity", .twinType = DX_DEVICE_TWIN_INT};
-DX_DEVICE_TWIN_BINDING dt_latitude = {.propertyName = "Latitude", .twinType = DX_DEVICE_TWIN_DOUBLE};
 DX_DEVICE_TWIN_BINDING dt_ledBrightness = {.propertyName = "LedBrightness", .twinType = DX_DEVICE_TWIN_INT, .handler = set_led_brightness_handler};
-DX_DEVICE_TWIN_BINDING dt_longitude = {.propertyName = "Longitude", .twinType = DX_DEVICE_TWIN_DOUBLE};
+DX_DEVICE_TWIN_BINDING dt_location = {.propertyName = "Location", .twinType = DX_DEVICE_TWIN_JSON_OBJECT};
 DX_DEVICE_TWIN_BINDING dt_pressure = {.propertyName = "Pressure", .twinType = DX_DEVICE_TWIN_INT};
 DX_DEVICE_TWIN_BINDING dt_temperature = {.propertyName = "Temperature", .twinType = DX_DEVICE_TWIN_INT};
 DX_DEVICE_TWIN_BINDING dt_weather = {.propertyName = "Weather", .twinType = DX_DEVICE_TWIN_STRING};
@@ -128,14 +127,5 @@ static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVer
 
 // initialize bindings
 static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_do_work, &tmr_panel_refresh, &tmr_report_memory_usage, &tmr_measure_sensor};
-static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {
-                &dt_deviceStartTime, 
-                &dt_softwareVersion, 
-                &dt_ledBrightness, 
-                &dt_temperature,
-                &dt_pressure,
-                &dt_humidity,
-                &dt_weather,
-                &dt_latitude,
-                &dt_longitude,
-                &dt_countryCode };
+static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {&dt_deviceStartTime, &dt_softwareVersion, &dt_ledBrightness, &dt_temperature, &dt_pressure,
+                                                         &dt_humidity,        &dt_weather,         &dt_location,      &dt_countryCode};

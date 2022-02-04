@@ -13,8 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int64_t previous_request = 0;
-
 static struct location_info locationInfo;
 static const char *geoIfyURL = "https://get.geojs.io/v1/ip/geo.json";
 
@@ -45,7 +43,7 @@ struct location_info *GetLocationData(void)
         if (!json_object_has_value_of_type(rootObject, "country_code", JSONString) || 
 			!json_object_has_value_of_type(rootObject, "latitude", JSONString) ||
             !json_object_has_value_of_type(rootObject, "longitude", JSONString)) {
-            return NULL;
+            goto cleanup;
         }
 
         const char *countryCode = json_object_get_string(rootObject, "country_code");
@@ -70,6 +68,11 @@ cleanup:
 
     if (rootProperties != NULL) {
         json_value_free(rootProperties);
+    }
+
+    if (data != NULL) {
+        free(data);
+        data = NULL;
     }
 
     return &locationInfo;

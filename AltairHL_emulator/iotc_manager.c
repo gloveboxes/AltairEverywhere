@@ -64,6 +64,22 @@ static void device_twin_update_string(char *latest_value, char *previous_value, 
     }
 }
 
+static void device_twin_update_location(double latitude, double longitude, DX_DEVICE_TWIN_BINDING *device_twin)
+{
+    char location_buffer[128];
+    static double previous_latitude = 0.0, previous_longitude = 0.0;
+
+    if (latitude == previous_latitude && longitude == previous_longitude){
+        return;
+    }
+    
+    snprintf(location_buffer, sizeof(location_buffer), "{\"lat\":%f,\"lon\":%f,\"alt\":0}", latitude, longitude);
+    dx_deviceTwinReportValue(device_twin, location_buffer);
+
+    previous_latitude = latitude;
+    previous_longitude = longitude;
+}
+
 void publish_telemetry(WEATHER_TELEMETRY *weather)
 {
     if (!dx_isAzureConnected()){
@@ -85,9 +101,7 @@ void publish_telemetry(WEATHER_TELEMETRY *weather)
     device_twin_update_int(&weather->latest.pressure, &weather->previous.pressure, &dt_pressure);
     device_twin_update_int(&weather->latest.humidity, &weather->previous.humidity, &dt_humidity);
 
-    device_twin_update_double(&weather->latest.latitude, &weather->previous.latitude, &dt_latitude);
-    device_twin_update_double(&weather->latest.longitude, &weather->previous.longitude, &dt_longitude);
-
     device_twin_update_string(weather->latest.description, weather->previous.description, 80, &dt_weather);
     device_twin_update_string(weather->latest.country_code, weather->previous.country_code, 10, &dt_countryCode);
+    device_twin_update_location(weather->latest.latitude, weather->latest.longitude, &dt_location);
 }

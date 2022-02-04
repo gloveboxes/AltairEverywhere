@@ -43,26 +43,34 @@
     {
       "@type": "Telemetry",
       "displayName": {
-        "en": "memory usage"
+        "en": "Memory usage"
       },
       "name": "memoryUsage",
       "schema": "integer"
     },
     {
-      "@type": "Telemetry",
+      "@type": [
+        "Telemetry",
+        "Latitude"
+      ],
       "displayName": {
         "en": "Latitude"
       },
       "name": "latitude",
-      "schema": "double"
+      "schema": "double",
+      "unit": "degreeOfArc"
     },
     {
-      "@type": "Telemetry",
+      "@type": [
+        "Telemetry",
+        "Longitude"
+      ],
       "displayName": {
         "en": "Longitude"
       },
       "name": "longitude",
-      "schema": "double"
+      "schema": "double",
+      "unit": "degreeOfArc"
     },
     {
       "@type": "Telemetry",
@@ -117,20 +125,16 @@
       "schema": "string"
     },
     {
-      "@type": "Property",
+      "@type": [
+        "Property",
+        "Location"
+      ],
       "displayName": {
-        "en": "Latitude"
+        "en": "Location"
       },
-      "name": "Latitude",
-      "schema": "double"
-    },
-    {
-      "@type": "Property",
-      "displayName": {
-        "en": "Longitude"
-      },
-      "name": "Longitude",
-      "schema": "double"
+      "name": "Location",
+      "schema": "geopoint",
+      "writable": false
     },
     {
       "@type": "Property",
