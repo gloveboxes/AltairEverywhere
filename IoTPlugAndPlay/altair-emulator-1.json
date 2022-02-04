@@ -9,9 +9,7 @@
         "Telemetry",
         "Temperature"
       ],
-      "displayName": {
-        "en": "Temperature"
-      },
+      "displayName": "Temperature",
       "name": "temperature",
       "schema": "integer",
       "unit": "degreeCelsius"
@@ -21,9 +19,7 @@
         "Telemetry",
         "Pressure"
       ],
-      "displayName": {
-        "en": "Pressure"
-      },
+      "displayName": "Pressure",
       "name": "pressure",
       "schema": "integer",
       "unit": "millibar"
@@ -33,18 +29,14 @@
         "Telemetry",
         "Humidity"
       ],
-      "displayName": {
-        "en": "Humidity"
-      },
+      "displayName": "Humidity",
       "name": "humidity",
       "schema": "integer",
       "unit": "kilogramPerCubicMetre"
     },
     {
       "@type": "Telemetry",
-      "displayName": {
-        "en": "Memory usage"
-      },
+      "displayName": "Memory usage",
       "name": "memoryUsage",
       "schema": "integer"
     },
@@ -53,9 +45,7 @@
         "Telemetry",
         "Latitude"
       ],
-      "displayName": {
-        "en": "Latitude"
-      },
+      "displayName": "Latitude",
       "name": "latitude",
       "schema": "double",
       "unit": "degreeOfArc"
@@ -65,18 +55,14 @@
         "Telemetry",
         "Longitude"
       ],
-      "displayName": {
-        "en": "Longitude"
-      },
+      "displayName": "Longitude",
       "name": "longitude",
       "schema": "double",
       "unit": "degreeOfArc"
     },
     {
       "@type": "Telemetry",
-      "displayName": {
-        "en": "Country Code"
-      },
+      "displayName": "Country Code",
       "name": "countryCode",
       "schema": "string"
     },
@@ -88,25 +74,19 @@
     },
     {
       "@type": "Property",
-      "displayName": {
-        "en": "Software version"
-      },
+      "displayName": "Software version",
       "name": "SoftwareVersion",
       "schema": "string"
     },
     {
       "@type": "Property",
-      "displayName": {
-        "en": "Temperature"
-      },
+      "displayName": "Temperature",
       "name": "Temperature",
       "schema": "integer"
     },
     {
       "@type": "Property",
-      "displayName": {
-        "en": "Pressure"
-      },
+      "displayName": "Pressure",
       "name": "Pressure",
       "schema": "integer"
     },
@@ -118,9 +98,7 @@
     },
     {
       "@type": "Property",
-      "displayName": {
-        "en": "Weather"
-      },
+      "displayName": "Weather",
       "name": "Weather",
       "schema": "string"
     },
@@ -129,26 +107,20 @@
         "Property",
         "Location"
       ],
-      "displayName": {
-        "en": "Location"
-      },
+      "displayName": "Location",
       "name": "Location",
       "schema": "geopoint",
       "writable": false
     },
     {
       "@type": "Property",
-      "displayName": {
-        "en": "Country Code"
-      },
+      "displayName": "Country Code",
       "name": "CountryCode",
       "schema": "string"
     },
     {
       "@type": "Property",
-      "displayName": {
-        "en": "LED brightness"
-      },
+      "displayName": "LED brightness",
       "name": "LedBrightness",
       "schema": "integer",
       "writable": true
