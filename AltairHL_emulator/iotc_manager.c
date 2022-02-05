@@ -84,7 +84,6 @@ static void update_geo_location(WEATHER_TELEMETRY *weather)
 
     if (!updated){
         updated = true;
-        dx_deviceTwinReportValue(&dt_countryCode, weather->locationInfo->countryCode);
         device_twin_update_location(weather->locationInfo->lat, weather->locationInfo->lng, &dt_location);
     }
 }
@@ -109,6 +108,6 @@ void publish_telemetry(WEATHER_TELEMETRY *weather)
     device_twin_update_int(&weather->latest.pressure, &weather->previous.pressure, &dt_pressure);
     device_twin_update_int(&weather->latest.humidity, &weather->previous.humidity, &dt_humidity);
 
-    device_twin_update_string(weather->latest.description, weather->previous.description, 80, &dt_weather);
+    device_twin_update_string(weather->latest.description, weather->previous.description, sizeof(((SENSOR_T*)0)->description), &dt_weather);
     update_geo_location(weather);
 }

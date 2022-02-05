@@ -57,8 +57,7 @@ struct location_info *GetLocationData(void)
             goto cleanup;
         }
 
-        if (!json_object_has_value_of_type(rootObject, "country_code", JSONString) || 
-			!json_object_has_value_of_type(rootObject, "latitude", JSONString) ||
+        if (!json_object_has_value_of_type(rootObject, "latitude", JSONString) ||
             !json_object_has_value_of_type(rootObject, "longitude", JSONString)) {
             goto cleanup;
         }
@@ -69,11 +68,6 @@ struct location_info *GetLocationData(void)
 
         locationInfo.lat = strtod(latitude, NULL);
         locationInfo.lng = strtod(longitude, NULL);
-
-        locationInfo.countryCode = get_value_by_key(rootObject, "country_code");
-        locationInfo.country = get_value_by_key(rootObject, "country");
-        locationInfo.region = get_value_by_key(rootObject, "region");
-        locationInfo.city = get_value_by_key(rootObject, "city");        
         
         locationInfo.updated = true;
     }
