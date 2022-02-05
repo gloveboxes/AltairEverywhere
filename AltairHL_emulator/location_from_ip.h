@@ -6,10 +6,13 @@
 #include "httpGet.h"
 
 struct location_info {
-	char countryCode[10];
-	double lat;
-	double lng;
-	bool updated;
+    char *countryCode;
+    char *country;
+    char *region;
+    char *city;
+    double lat;
+    double lng;
+    bool updated;
 };
 
-struct location_info* GetLocationData(void);
+struct location_info *GetLocationData(void);

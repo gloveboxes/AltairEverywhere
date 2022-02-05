@@ -11,10 +11,8 @@ typedef struct {
     int temperature;
     int humidity;
     int pressure;
-    double latitude;
-    double longitude;
-    char country_code[10];
     char description[80];
+    
 } SENSOR_T;
 
 typedef struct {
@@ -26,7 +24,7 @@ typedef struct {
 typedef struct {
     SENSOR_T latest;
     SENSOR_T previous;
-
+    struct location_info *locationInfo;
     bool valid;
 } WEATHER_TELEMETRY;
 

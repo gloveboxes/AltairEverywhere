@@ -16,6 +16,23 @@
 static struct location_info locationInfo;
 static const char *geoIfyURL = "https://get.geojs.io/v1/ip/geo.json";
 
+static char* get_value_by_key(JSON_Object *rootObject, const char *key)
+{
+    char *value = NULL;
+    if (json_object_has_value_of_type(rootObject, key, JSONString)) {
+        const char *json_value = json_object_get_string(rootObject, key);
+        if (json_value != NULL) {
+            size_t len = strlen(json_value);
+            value = (char *)malloc(len + 1);
+            if (value != NULL) {
+                memset(value, 0x00, len + 1);
+                strncpy(value, json_value, len);
+            }
+        }
+    }
+    return value;
+}
+
 struct location_info *GetLocationData(void)
 {
     if (locationInfo.updated){
@@ -46,20 +63,17 @@ struct location_info *GetLocationData(void)
             goto cleanup;
         }
 
-        const char *countryCode = json_object_get_string(rootObject, "country_code");
+        // const char *countryCode = json_object_get_string(rootObject, "country_code");
         const char *latitude = json_object_get_string(rootObject, "latitude");
         const char *longitude = json_object_get_string(rootObject, "longitude");
 
-        double lat = atof(latitude);
-        double lng = atof(longitude);
+        locationInfo.lat = strtod(latitude, NULL);
+        locationInfo.lng = strtod(longitude, NULL);
 
-        // Log_Debug("Country Code %s\n", countryCode);
-        // Log_Debug("Lat %f\n", lat);
-        // Log_Debug("Lng %f\n", lng);
-
-        snprintf(locationInfo.countryCode, sizeof(locationInfo.countryCode), "%s", countryCode);
-        locationInfo.lat = lat;
-        locationInfo.lng = lng;
+        locationInfo.countryCode = get_value_by_key(rootObject, "country_code");
+        locationInfo.country = get_value_by_key(rootObject, "country");
+        locationInfo.region = get_value_by_key(rootObject, "region");
+        locationInfo.city = get_value_by_key(rootObject, "city");        
         
         locationInfo.updated = true;
     }

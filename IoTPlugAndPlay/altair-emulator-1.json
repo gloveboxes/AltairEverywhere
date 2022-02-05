@@ -61,12 +61,6 @@
       "unit": "degreeOfArc"
     },
     {
-      "@type": "Telemetry",
-      "displayName": "Country Code",
-      "name": "countryCode",
-      "schema": "string"
-    },
-    {
       "@type": "Property",
       "displayName": "Start time",
       "name": "StartTime",

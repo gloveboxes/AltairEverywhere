@@ -76,9 +76,7 @@ void GetCurrentWeather(struct location_info *locationInfo, WEATHER_TELEMETRY *te
         telemetry->latest.temperature = FLOAT_TO_INT(temp);
         telemetry->latest.pressure = FLOAT_TO_INT(json_object_get_number(mainProperties, "pressure"));
         telemetry->latest.humidity = FLOAT_TO_INT(json_object_get_number(mainProperties, "humidity"));
-		telemetry->latest.latitude = locationInfo->lat;
-		telemetry->latest.longitude = locationInfo->lng;
-		strncpy(telemetry->latest.country_code, locationInfo->countryCode, 10);
+        telemetry->locationInfo = locationInfo;
 
         telemetry->valid = true;
 
