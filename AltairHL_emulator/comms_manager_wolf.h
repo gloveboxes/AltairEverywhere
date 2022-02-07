@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "app_exit_codes.h"
 #include "dx_device_twins.h"
 #include "dx_timer.h"
 #include "storage.h"
@@ -75,4 +74,3 @@ void vdisk_mqtt_write_sector(vdisk_mqtt_write_sector_t* write_sector);
 void queue_mqtt_message(const uint8_t* data, size_t data_length);
 void send_partial_message(void);
 void send_queued_messages(void);
-void send_mqtt_ping(void);

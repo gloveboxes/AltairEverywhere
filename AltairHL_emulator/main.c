@@ -200,21 +200,10 @@ static void publish_callback_wolf(MqttMessage *msg)
 /// MQTT Dowork timer callback
 /// </summary>
 /// <param name="eventLoopTimer"></param>
-static DX_TIMER_HANDLER(mqtt_work_scheduler_handler)
+static DX_TIMER_HANDLER(mqtt_dowork_handler)
 {
-    static int mqtt_ping_count = 0;
-
-    mqtt_ping_count++;
-
     if (dirty_buffer) {
         send_messages = true;
-        mqtt_ping_count = 0;
-    }
-
-        // 4 * 250ms period * 15 = 15 seconds
-    if (mqtt_ping_count > 4 * 15) {
-        send_ping = true;
-        mqtt_ping_count = 0;
     }
 }
 DX_TIMER_HANDLER_END
@@ -553,11 +542,6 @@ static void *altair_thread(void *arg)
                 send_partial_message();
             }
             dirty_buffer = send_messages = false;
-        }
-
-        if (send_ping) {
-            send_mqtt_ping();
-            send_ping = false;
         }
     }
 

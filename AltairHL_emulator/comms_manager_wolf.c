@@ -37,16 +37,6 @@ static word16 mPacketIdLast;
 // static int myoptind = 0;
 // static char* myoptarg = NULL;
 
-void send_mqtt_ping(void) {
-    int rc;
-    if (mqtt_connected) {
-        //dx_Log_Debug("Ping\n");
-        if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
-            Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
-        }
-    }
-}
-
 TOPIC_TYPE topic_type(char *topic_name, size_t topic_name_length)
 {
     if (strncmp(topic_name, sub_topic_data, topic_name_length) == 0) {
@@ -77,6 +67,12 @@ static int mqtt_disconnect_cb(MqttClient *client, int error_code, void *ctx)
 
         mqtt_connected = false;
         got_disconnected = true;
+    }
+
+    if (mqtt_connected) {
+        if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
+            Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
+        }
     }
 
     return 0;
@@ -163,8 +159,6 @@ static int init_mqtt_connection(MQTTCtx *mqttCtx)
     Log_Debug("MQTT Socket Connect: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
 
     if (rc != MQTT_CODE_SUCCESS) {
-        Log_Debug("Failed to connect to the MQTT broker. Check the Mosquitto broker is running\n");
-        dx_terminate(APP_EXIT_MQTT_CONNECTION_FAILED);
         return rc;
     }
 
