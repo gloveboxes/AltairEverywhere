@@ -367,24 +367,6 @@ void vdisk_mqtt_write_sector(vdisk_mqtt_write_sector_t *write_sector)
     MqttClient_Publish(&mqttCtx->client, &publish);
 }
 
-// static int unsubscribe_do(MQTTCtx* mqttCtx) {
-//	int rc;
-//
-//	/* Unsubscribe Topics */
-//	XMEMSET(&mqttCtx->unsubscribe, 0, sizeof(MqttUnsubscribe));
-//	mqttCtx->unsubscribe.packet_id = mqtt_get_packetid();
-//
-//	mqttCtx->unsubscribe.topic_count = sizeof(mqttCtx->topics) / sizeof(MqttTopic);
-//	mqttCtx->unsubscribe.topics = mqttCtx->topics;
-//
-//	/* Unsubscribe Topics */
-//	rc = MqttClient_Unsubscribe(&mqttCtx->client, &mqttCtx->unsubscribe);
-//
-//	Log_Debug("MQTT Unsubscribe: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
-//
-//	return rc;
-//}
-
 /**
  * init MQTT connection and subscribe desired topics
  */
@@ -394,20 +376,14 @@ int init_mqtt(int argc, char *argv[], void (*publish_callback)(MqttMessage *msg)
     _mqtt_connected_cb = mqtt_connected_cb;
 
     mqtt_init_ctx(&gMqttCtx);
+    
+    gMqttCtx.useNonBlockMode = true;
+
     gMqttCtx.app_name = "Altair on Azure Sphere";
 
     gMqttCtx.host = ALTAIR_MQTT_BROKER;
     gMqttCtx.port = ALTAIR_MQTT_BROKER_PORT;
     gMqttCtx.client_id = ALTAIR_MQTT_IDENTITY;
-
-    /* parse arguments */
-    // int rc = mqtt_parse_args(&gMqttCtx, argc, argv);
-    // if (rc != 0) {
-    //     if (rc == MY_EX_USAGE) {
-    //         /* return success, so make check passes with TLS disabled */
-    //         return 0;
-    //     }
-    // }
 
     dx_startThreadDetached(waitMessage_task, NULL, "wait for message");
 
