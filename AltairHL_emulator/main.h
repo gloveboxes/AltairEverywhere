@@ -86,6 +86,7 @@ static char *input_data = NULL;
 bool dirty_buffer = false;
 bool send_messages = false;
 bool renderText = false;
+bool send_ping = false;
 
 static WEATHER_TELEMETRY onboard_telemetry;
 static WEATHER_TELEMETRY weather;

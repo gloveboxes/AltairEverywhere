@@ -51,6 +51,16 @@ TOPIC_TYPE topic_type(char *topic_name, size_t topic_name_length)
     return TOPIC_UNKNOWN;
 }
 
+void send_mqtt_ping(void) {
+    int rc;
+    if (mqtt_connected) {
+        dx_Log_Debug("Ping\n");
+        if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
+            Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
+        }
+    }
+}
+
 bool is_mqtt_connected(void)
 {
     return mqtt_connected;
@@ -69,11 +79,11 @@ static int mqtt_disconnect_cb(MqttClient *client, int error_code, void *ctx)
         got_disconnected = true;
     }
 
-    if (mqtt_connected) {
-        if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
-            Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
-        }
-    }
+    // if (mqtt_connected) {
+    //     if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
+    //         Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
+    //     }
+    // }
 
     return 0;
 }
