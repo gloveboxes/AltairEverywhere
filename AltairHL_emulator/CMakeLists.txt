@@ -6,7 +6,7 @@ project (Altair_emulator C)
 
 # SELECT FRONT PANEL CONFIG #######################################################################################
 #
-# set(ALTAIR_FRONT_PI_SENSE_HAT TRUE "Avnet with the MikroE 8800 Retro Click")
+# set(ALTAIR_FRONT_PI_SENSE_HAT TRUE "Enable Raspberry Pi Sense HAT")
 #
 ###################################################################################################################
 
