@@ -208,6 +208,7 @@ static DX_TIMER_HANDLER(mqtt_work_scheduler_handler)
 
     if (dirty_buffer) {
         send_messages = true;
+        mqtt_ping_count = 0;
     }
 
         // 4 * 250ms period * 15 = 15 seconds
