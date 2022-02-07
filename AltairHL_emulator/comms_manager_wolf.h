@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "app_exit_codes.h"
 #include "dx_device_twins.h"
 #include "dx_timer.h"
 #include "storage.h"

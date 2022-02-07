@@ -159,6 +159,8 @@ static int init_mqtt_connection(MQTTCtx *mqttCtx)
     Log_Debug("MQTT Socket Connect: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
 
     if (rc != MQTT_CODE_SUCCESS) {
+        Log_Debug("Failed to connect to the MQTT broker. Check the Mosquitto broker is running\n");
+        dx_terminate(APP_EXIT_MQTT_CONNECTION_FAILED);
         return rc;
     }
 

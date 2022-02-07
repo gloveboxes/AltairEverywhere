@@ -27,6 +27,7 @@ add_compile_definitions(WOLFSSL_USER_SETTINGS)
 # add_compile_definitions(WOLFMQTT_V5)
 add_compile_definitions(NO_DH)
 add_compile_definitions(WOLFMQTT_USER_SETTINGS)
+add_compile_definitions(WOLFMQTT_NO_TIMEOUT)
 ###################################################################################################################
 
 add_compile_definitions(PRINTF=Log_Debug)
