@@ -28,6 +28,10 @@ static byte rx_buf[MAX_BUFFER_SIZE];
 static char output_buffer[MAX_BUFFER_SIZE / 4];
 static size_t output_buffer_length = 0;
 
+static DX_DECLARE_TIMER_HANDLER(mqtt_ping_handler);
+
+static DX_TIMER_BINDING tmr_mqtt_ping = {.delay = &(struct timespec){15, 0}, .name = "tmr_mqtt_ping", .handler = mqtt_ping_handler};
+
 static MQTTCtx gMqttCtx;
 
 /* locals */
@@ -51,7 +55,8 @@ TOPIC_TYPE topic_type(char *topic_name, size_t topic_name_length)
     return TOPIC_UNKNOWN;
 }
 
-void send_mqtt_ping(void) {
+static DX_TIMER_HANDLER(mqtt_ping_handler)
+{
     int rc;
     if (mqtt_connected) {
         dx_Log_Debug("Ping\n");
@@ -59,6 +64,19 @@ void send_mqtt_ping(void) {
             Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
         }
     }
+
+    dx_timerOneShotSet(&tmr_mqtt_ping, &(struct timespec){15, 0});
+}
+DX_TIMER_HANDLER_END
+
+void send_mqtt_ping(void) {
+    // int rc;
+    // if (mqtt_connected) {
+    //     dx_Log_Debug("Ping\n");
+    //     if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
+    //         Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
+    //     }
+    // }
 }
 
 bool is_mqtt_connected(void)
@@ -395,6 +413,7 @@ int init_mqtt(int argc, char *argv[], void (*publish_callback)(MqttMessage *msg)
     gMqttCtx.port = ALTAIR_MQTT_BROKER_PORT;
     gMqttCtx.client_id = ALTAIR_MQTT_IDENTITY;
 
+    dx_timerStart(&tmr_mqtt_ping);
     dx_startThreadDetached(waitMessage_task, NULL, "wait for message");
 
     return 0;
