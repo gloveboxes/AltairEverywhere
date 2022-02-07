@@ -200,7 +200,7 @@ static void publish_callback_wolf(MqttMessage *msg)
 /// MQTT Dowork timer callback
 /// </summary>
 /// <param name="eventLoopTimer"></param>
-static DX_TIMER_HANDLER(mqtt_dowork_handler)
+static DX_TIMER_HANDLER(mqtt_work_scheduler_handler)
 {
     if (dirty_buffer) {
         send_messages = true;
