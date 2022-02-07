@@ -32,6 +32,8 @@ static DX_DECLARE_TIMER_HANDLER(mqtt_ping_handler);
 
 static DX_TIMER_BINDING tmr_mqtt_ping = {.delay = &(struct timespec){15, 0}, .name = "tmr_mqtt_ping", .handler = mqtt_ping_handler};
 
+static wm_Sem mtLock; /* Protect "packetId" and "stop" */
+static wm_Sem pingSignal;
 static MQTTCtx gMqttCtx;
 
 /* locals */
@@ -55,17 +57,28 @@ TOPIC_TYPE topic_type(char *topic_name, size_t topic_name_length)
     return TOPIC_UNKNOWN;
 }
 
+static word16 mqtt_get_packetid_threadsafe(void)
+{
+    word16 packet_id;
+    wm_SemLock(&mtLock);
+    packet_id = mqtt_get_packetid();
+    wm_SemUnlock(&mtLock);
+    return packet_id;
+}
+
 static DX_TIMER_HANDLER(mqtt_ping_handler)
 {
-    int rc;
-    if (mqtt_connected) {
-        dx_Log_Debug("Ping\n");
-        if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
-            Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
-        }
-    }
+    // int rc;
+    // MqttPing ping;
 
-    dx_timerOneShotSet(&tmr_mqtt_ping, &(struct timespec){15, 0});
+    // if (mqtt_connected) {
+    //     dx_Log_Debug("Ping\n");
+    //     if ((rc = MqttClient_Ping_ex(&gMqttCtx.client, &ping)) != MQTT_CODE_SUCCESS) {
+    //         Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
+    //     }
+    // }
+
+    // dx_timerOneShotSet(&tmr_mqtt_ping, &(struct timespec){15, 0});
 }
 DX_TIMER_HANDLER_END
 
@@ -97,11 +110,12 @@ static int mqtt_disconnect_cb(MqttClient *client, int error_code, void *ctx)
         got_disconnected = true;
     }
 
-    // if (mqtt_connected) {
-    //     if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
-    //         Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
-    //     }
-    // }
+    if (mqtt_connected) {
+        dx_Log_Debug("Ping\n");
+        if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
+            Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
+        }
+    }
 
     return 0;
 }
@@ -249,7 +263,7 @@ static void subscribe_task(MQTTCtx *mqttCtx)
 #endif
 
     /* Subscribe Topic */
-    mqttCtx->subscribe.packet_id = mqtt_get_packetid();
+    mqttCtx->subscribe.packet_id = mqtt_get_packetid_threadsafe();
     mqttCtx->subscribe.topic_count = sizeof(topics) / sizeof(MqttTopic);
     mqttCtx->subscribe.topics = topics;
 
@@ -341,7 +355,7 @@ void publish_message(const char *message, size_t message_length)
     publish.qos = 0;
     publish.duplicate = 0;
     publish.topic_name = mqttCtx->topic_name;
-    publish.packet_id = mqtt_get_packetid();
+    publish.packet_id = mqtt_get_packetid_threadsafe();
 
     publish.buffer = (byte *)message;
     publish.total_len = message_length;
@@ -364,7 +378,7 @@ void vdisk_mqtt_read_sector(uint32_t offset)
     publish.qos = 0;
     publish.duplicate = 0;
     publish.topic_name = pub_topic_vdisk_read;
-    publish.packet_id = mqtt_get_packetid();
+    publish.packet_id = mqtt_get_packetid_threadsafe();
 
     publish.buffer = (byte *)&offset;
     publish.total_len = sizeof(offset);
@@ -387,7 +401,7 @@ void vdisk_mqtt_write_sector(vdisk_mqtt_write_sector_t *write_sector)
     publish.qos = mqttCtx->qos;
     publish.duplicate = 0;
     publish.topic_name = pub_topic_vdisk_write;
-    publish.packet_id = mqtt_get_packetid();
+    publish.packet_id = mqtt_get_packetid_threadsafe();
 
     publish.buffer = (byte *)write_sector;
     publish.total_len = sizeof(vdisk_mqtt_write_sector_t);
@@ -400,18 +414,37 @@ void vdisk_mqtt_write_sector(vdisk_mqtt_write_sector_t *write_sector)
  */
 int init_mqtt(int argc, char *argv[], void (*publish_callback)(MqttMessage *msg), void (*mqtt_connected_cb)(void))
 {
+    int rc;
+
     _publish_callback = publish_callback;
     _mqtt_connected_cb = mqtt_connected_cb;
 
     mqtt_init_ctx(&gMqttCtx);
-    
-    gMqttCtx.useNonBlockMode = true;
+
+    #ifdef WOLFMQTT_NONBLOCK
+        gMqttCtx.useNonBlockMode = true; /* set to use non-blocking mode.
+        network callbacks can return MQTT_CODE_CONTINUE to indicate "would block" */
+    #endif
 
     gMqttCtx.app_name = "Altair on Azure Sphere";
 
     gMqttCtx.host = ALTAIR_MQTT_BROKER;
     gMqttCtx.port = ALTAIR_MQTT_BROKER_PORT;
     gMqttCtx.client_id = ALTAIR_MQTT_IDENTITY;
+
+    /* Create a demo mutex for making packet id values */
+    rc = wm_SemInit(&mtLock);
+    if (rc != 0) {
+        return 0;
+        // client_exit(mqttCtx);
+    }
+    rc = wm_SemInit(&pingSignal);
+    if (rc != 0) {
+        wm_SemFree(&mtLock);
+        return 0;
+        // client_exit(mqttCtx);
+    }
+    wm_SemLock(&pingSignal); /* default to locked */
 
     dx_timerStart(&tmr_mqtt_ping);
     dx_startThreadDetached(waitMessage_task, NULL, "wait for message");
