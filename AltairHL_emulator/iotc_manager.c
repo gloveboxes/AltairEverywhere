@@ -88,6 +88,20 @@ static void update_geo_location(WEATHER_TELEMETRY *weather)
     }
 }
 
+void publish_properties(WEATHER_TELEMETRY *weather)
+{
+    if (!azure_connected) {
+        return;
+    }
+
+    device_twin_update_int(&weather->latest.temperature, &weather->previous.temperature, &dt_temperature);
+    device_twin_update_int(&weather->latest.pressure, &weather->previous.pressure, &dt_pressure);
+    device_twin_update_int(&weather->latest.humidity, &weather->previous.humidity, &dt_humidity);
+
+    device_twin_update_string(weather->latest.description, weather->previous.description, sizeof(((SENSOR_T *)0)->description), &dt_weather);
+    update_geo_location(weather);
+}
+
 void publish_telemetry(WEATHER_TELEMETRY *weather)
 {
     if (!azure_connected){
@@ -104,10 +118,5 @@ void publish_telemetry(WEATHER_TELEMETRY *weather)
         dx_azurePublish(msgBuffer, strlen(msgBuffer), messageProperties, NELEMS(messageProperties), NULL);
     }
 
-    device_twin_update_int(&weather->latest.temperature, &weather->previous.temperature, &dt_temperature);
-    device_twin_update_int(&weather->latest.pressure, &weather->previous.pressure, &dt_pressure);
-    device_twin_update_int(&weather->latest.humidity, &weather->previous.humidity, &dt_humidity);
-
-    device_twin_update_string(weather->latest.description, weather->previous.description, sizeof(((SENSOR_T*)0)->description), &dt_weather);
-    update_geo_location(weather);
+    publish_properties(weather);
 }

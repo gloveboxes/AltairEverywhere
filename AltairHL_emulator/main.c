@@ -4,20 +4,29 @@
 #include "main.h"
 
 /// <summary>
-/// Read sensor and send to Azure IoT - called every 60 seconds
+/// Get geo location and weather for geo location from Open Weather Map
+/// Requires Open Weather Map free api key
 /// </summary>
-static DX_TIMER_HANDLER(measure_sensor_handler)
+static DX_TIMER_HANDLER(open_weather_map_handler)
 {
-    int rnd = (rand() % 10) - 5;
-    onboard_telemetry.latest.temperature = 25 + rnd;
-    rnd = (rand() % 50) - 25;
-    onboard_telemetry.latest.pressure = 1000 + rnd;
-    onboard_telemetry.latest.humidity = 20 + (rand() % 60);
-}
-DX_TIMER_HANDLER_END
-
-static DX_TIMER_HANDLER(open_weather_map_handler){
+    static bool twins_updated = false;
     GetCurrentWeather(&weather);
+
+    // Weather might not be valid if no Open Weather Map API key or no internet connection
+    // So create some random weather data;
+    if (!weather.valid) {
+        int rnd = (rand() % 10) - 5;
+        weather.latest.temperature = 25 + rnd;
+        rnd = (rand() % 50) - 25;
+        weather.latest.pressure = 1000 + rnd;
+        weather.latest.humidity = 20 + (rand() % 60);
+    }
+
+    if (azure_connected && !twins_updated && weather.valid) {
+        publish_properties(&weather);
+        twins_updated = true;
+    }
+    dx_timerOneShotSet(&tmr_open_weather_map, &(struct timespec){20, 0});
 }
 DX_TIMER_HANDLER_END
 
@@ -26,7 +35,7 @@ static DX_TIMER_HANDLER(report_memory_usage)
     struct rusage r_usage;
     getrusage(RUSAGE_SELF, &r_usage);
 
-    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1, 
+    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1,
         DX_JSON_INT, "memoryUsage", r_usage.ru_maxrss))
     {
         dx_azurePublish(msgBuffer, strlen(msgBuffer), NULL, 0, NULL);
@@ -51,6 +60,16 @@ static void mqtt_connected_cb(void)
     }
 }
 
+static int replacechar(char *str, char orig, char rep) {
+    char *ix = str;
+    int n = 0;
+    while((ix = strchr(ix, orig)) != NULL) {
+        *ix++ = rep;
+        n++;
+    }
+    return n;
+}
+
 /// <summary>
 /// Load sample BASIC applications
 /// </summary>
@@ -61,39 +80,29 @@ static bool load_application(const char *fileName)
     char filePathAndName[50];
     snprintf(filePathAndName, sizeof(filePathAndName), "%s/%s", BASIC_SAMPLES_DIRECTORY, fileName);
 
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t nread;    
+    int GameFd = open(filePathAndName, O_RDONLY);
+    if (GameFd >= 0) {
 
-    FILE *stream = fopen(filePathAndName, "r");
-    if (stream == NULL) {
-        return false;
+        off_t length = lseek(GameFd, 0, SEEK_END);
+
+        ptrBasicApp = (uint8_t *)malloc((size_t)length);
+        memset((void *)ptrBasicApp, 0x00, (size_t)length);
+
+        lseek(GameFd, 0, SEEK_SET);
+        read(GameFd, ptrBasicApp, (size_t)length);
+        close(GameFd);
+
+        replacechar((char *)ptrBasicApp, '\n', 0x0d);
+
+        appLoadPtr = 0;
+        basicAppLength = (size_t)length;
+        haveTerminalInputMessage = false;
+        haveAppLoad = true;
+
+        return true;
     }
 
-    while ((nread = getline(&line, &len, stream)) != -1) {
-
-        if (nread > 0) {
-
-            if (line[nread - 1] == '\n') {
-                line[nread - 1] = 0x0d;
-            }
-
-            appLoadPtr = 0;
-            basicAppLength = nread;
-
-            ptrBasicApp = (uint8_t *)line;
-            haveAppLoad = true;
-
-            pthread_mutex_lock(&wait_message_processed_mutex);
-            pthread_cond_wait(&wait_message_processed_cond, &wait_message_processed_mutex);
-            pthread_mutex_unlock(&wait_message_processed_mutex);
-        }
-    }
-
-    free(line);
-    fclose(stream);
-
-    return true;
+    return false;
 }
 
 /// <summary>
@@ -193,7 +202,7 @@ static void handle_inbound_message(const char *topic_name, size_t topic_name_siz
 }
 
 /// <summary>
-/// MQTT recieved message callback
+/// MQTT received message callback
 /// </summary>
 /// <param name="msg"></param>
 static void publish_callback_wolf(MqttMessage *msg)
@@ -209,7 +218,7 @@ static DX_TIMER_HANDLER(mqtt_work_scheduler_handler)
 {
     if (dirty_buffer) {
         send_messages = true;
-    }    
+    }
 }
 DX_TIMER_HANDLER_END
 
@@ -226,82 +235,56 @@ static uint8_t sphere_port_in(uint8_t port)
     static int readPtr = 0;
     uint8_t retVal = 0;
 
-    if (port == 43) {
-        if (!reading_data) {
-            readPtr = 0;
-            snprintf(data, 10, "%d", onboard_telemetry.latest.temperature);
-            publish_telemetry(&onboard_telemetry);
-            reading_data = true;
-        }
+    switch (port) {
+    case 45:
+        if (weather.valid) {
+            if (!reading_data) {
+                readPtr = 0;
+                snprintf(data, sizeof(data), "%d", weather.latest.temperature);
+                reading_data = true;
+            }
 
-        retVal = data[readPtr++];
-        if (retVal == 0x00) {
-            reading_data = false;
+            retVal = data[readPtr++];
         }
+        break;
+    case 46:
+        if (weather.valid) {
+            if (!reading_data) {
+                readPtr = 0;
+                snprintf(data, sizeof(data), "%d", weather.latest.pressure);
+                reading_data = true;
+            }
+
+            retVal = data[readPtr++];
+        }
+        break;
+    case 47:
+        if (weather.valid) {
+            if (!reading_data) {
+                readPtr = 0;
+                snprintf(data, sizeof(data), "%d", weather.latest.humidity);
+                reading_data = true;
+            }
+
+            retVal = data[readPtr++];
+        }
+        break;
+    case 48:
+        if (weather.valid) {
+            if (!reading_data) {
+                readPtr = 0;
+                reading_data = true;
+            }
+
+            retVal = weather.latest.description[readPtr++];
+        }
+        break;
+    default:
+        retVal = 0x00;
     }
 
-    if (port == 44) {
-        if (!reading_data) {
-            readPtr = 0;
-            snprintf(data, 10, "%d", onboard_telemetry.latest.pressure);
-            reading_data = true;
-        }
-
-        retVal = data[readPtr++];
-        if (retVal == 0x00) {
-            reading_data = false;
-        }
-    }
-
-    if (port == 45 && weather.valid) {
-        if (!reading_data) {
-            readPtr = 0;
-            snprintf(data, 10, "%d", weather.latest.temperature);
-            reading_data = true;
-        }
-
-        retVal = data[readPtr++];
-        if (retVal == 0x00) {
-            reading_data = false;
-        }
-    }
-
-    if (port == 46 && weather.valid) {
-        if (!reading_data) {
-            readPtr = 0;
-            snprintf(data, 10, "%d", weather.latest.pressure);
-            reading_data = true;
-        }
-
-        retVal = data[readPtr++];
-        if (retVal == 0x00) {
-            reading_data = false;
-        }
-    }
-
-    if (port == 47 && weather.valid) {
-        if (!reading_data) {
-            readPtr = 0;
-            snprintf(data, 10, "%d", weather.latest.humidity);
-            reading_data = true;
-        }
-
-        retVal = data[readPtr++];
-        if (retVal == 0x00) {
-            reading_data = false;
-        }
-    }
-
-    if (port == 48 && weather.valid) {
-        if (!reading_data) {
-            readPtr = 0;
-            reading_data = true;
-        }
-
-        retVal = weather.latest.description[readPtr++];
-        if (retVal == 0x00) {
-            reading_data = false;
-        }
+    if (reading_data && retVal == 0x00) {
+        reading_data = false;
     }
 
     return retVal;
@@ -358,9 +341,10 @@ static char altair_read_terminal(void)
             appLoadPtr = 0;
             retVal = 0;
 
-            pthread_mutex_lock(&wait_message_processed_mutex);
-            pthread_cond_signal(&wait_message_processed_cond);
-            pthread_mutex_unlock(&wait_message_processed_mutex);
+            if (ptrBasicApp != NULL) {
+                free(ptrBasicApp);
+                ptrBasicApp = NULL;
+            }
         }
         return retVal;
     }

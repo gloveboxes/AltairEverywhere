@@ -24,4 +24,5 @@ extern bool azure_connected;
 
 DX_DECLARE_DEVICE_TWIN_HANDLER(set_channel_id_handler);
 DX_DECLARE_DEVICE_TWIN_HANDLER(set_led_brightness_handler);
+void publish_properties(WEATHER_TELEMETRY *weather);
 void publish_telemetry(WEATHER_TELEMETRY *weather);
