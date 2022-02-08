@@ -29,6 +29,7 @@ typedef struct {
     SENSOR_T previous;
     struct location_info *locationInfo;
     bool valid;
+    bool fake;
 } WEATHER_TELEMETRY;
 
 // /*************************************************************

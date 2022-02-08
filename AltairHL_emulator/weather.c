@@ -20,6 +20,28 @@ static char *owm_api_key = NULL;
 static char weatherUrl[128];
 static struct location_info *locationInfo = NULL;
 
+static void generate_fake_telemetry(WEATHER_TELEMETRY *telemetry)
+{
+    static struct location_info greenwich = {.lat = 51.477928, .lng = -0.001545};
+    // So create some random weather data with geo location on Greenwich
+    int rnd = (rand() % 10) - 5;
+
+    telemetry->latest.temperature = 25 + rnd;
+
+    rnd = (rand() % 50) - 25;
+    telemetry->latest.pressure = 1000 + rnd;
+    telemetry->latest.humidity = 20 + (rand() % 60);
+
+    if (locationInfo != NULL && locationInfo->updated) {
+        telemetry->locationInfo = locationInfo;
+    } else {
+        telemetry->locationInfo = &greenwich;
+    }
+
+    telemetry->valid = true;
+    telemetry->fake = true;
+}
+
 void GetCurrentWeather(WEATHER_TELEMETRY *telemetry)
 {
     int64_t now = dx_getNowMilliseconds();
@@ -29,14 +51,18 @@ void GetCurrentWeather(WEATHER_TELEMETRY *telemetry)
         return;
     }
 
-    if (owm_api_key == NULL) {
-        dx_Log_Debug("Missing Open Weather Map API Key\n");
-        return;
-    }
-
     locationInfo = GetLocationData();
     if (!locationInfo->updated) {
         dx_Log_Debug("Geo location request failed\n");
+        generate_fake_telemetry(telemetry);
+        previous_request_milliseconds = now;
+        return;
+    }
+
+    if (dx_isStringNullOrEmpty(owm_api_key)) {
+        dx_Log_Debug("Missing Open Weather Map API Key\n");
+        generate_fake_telemetry(telemetry);
+        previous_request_milliseconds = now;
         return;
     }
 
@@ -49,7 +75,9 @@ void GetCurrentWeather(WEATHER_TELEMETRY *telemetry)
 
     char *data = getHttpData(weatherUrl);
 
-    if (data != NULL) {
+    if (data == NULL) {
+        generate_fake_telemetry(telemetry);
+    } else {
 
         rootProperties = json_parse_string(data);
         if (rootProperties == NULL) {
@@ -90,6 +118,7 @@ void GetCurrentWeather(WEATHER_TELEMETRY *telemetry)
         telemetry->locationInfo = locationInfo;
 
         telemetry->valid = true;
+        telemetry->fake = false;
 
         // if we have a description...
         if (weather != NULL && json_object_has_value_of_type(weather, "description", JSONString)) {

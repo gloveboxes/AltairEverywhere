@@ -55,6 +55,7 @@ static const char *AltairMsg = "\x1b[2J\r\nAzure Sphere - Altair 8800 Emulator\r
 
 char msgBuffer[MSG_BUFFER_BYTES] = {0};
 
+// clang-format off
 static DX_MESSAGE_PROPERTY *diag_msg_properties[] = {
       &(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"}, 
       &(DX_MESSAGE_PROPERTY){.key = "type", .value = "weather"},
@@ -63,6 +64,7 @@ static DX_MESSAGE_PROPERTY *diag_msg_properties[] = {
 static DX_MESSAGE_CONTENT_PROPERTIES diag_content_properties = {
     .contentEncoding = "utf-8", 
     .contentType = "application/json"};
+// clang-format on
 
 // CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
 CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
@@ -113,9 +115,8 @@ const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x
 
 // Common Timers
 static DX_TIMER_BINDING tmr_mqtt_do_work = {.repeat = &(struct timespec){0, 250 * OneMS}, .name = "tmr_mqtt_do_work", .handler = mqtt_work_scheduler_handler};
-static DX_TIMER_BINDING tmr_open_weather_map = {.delay = &(struct timespec){10, 0}, .name = "tmr_open_weather_map", .handler = open_weather_map_handler};
+static DX_TIMER_BINDING tmr_open_weather_map = {.delay = &(struct timespec){5, 0}, .name = "tmr_open_weather_map", .handler = open_weather_map_handler};
 static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){30, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
-
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 static DX_TIMER_BINDING tmr_panel_refresh = {.delay = &(timespec){0, 10 * OneMS}, .name = "tmr_panel_refresh", .handler = panel_refresh_handler};
@@ -133,7 +134,6 @@ DX_DEVICE_TWIN_BINDING dt_temperature = {.propertyName = "Temperature", .twinTyp
 DX_DEVICE_TWIN_BINDING dt_weather = {.propertyName = "Weather", .twinType = DX_DEVICE_TWIN_STRING};
 static DX_DEVICE_TWIN_BINDING dt_deviceStartTime = {.propertyName = "StartTime", .twinType = DX_DEVICE_TWIN_STRING};
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
-
 
 // initialize bindings
 static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_do_work, &tmr_panel_refresh, &tmr_report_memory_usage, &tmr_open_weather_map};

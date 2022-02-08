@@ -3,14 +3,16 @@
 
 #include "iotc_manager.h"
 
+// clang-format off
 static DX_MESSAGE_PROPERTY *weather_msg_properties[] = {
-      &(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"}, 
-      &(DX_MESSAGE_PROPERTY){.key = "type", .value = "weather"},
-      &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
+    &(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"}, 
+    &(DX_MESSAGE_PROPERTY){.key = "type", .value = "weather"},
+    &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
 
 static DX_MESSAGE_CONTENT_PROPERTIES weather_content_properties = {
     .contentEncoding = "utf-8", 
     .contentType = "application/json"};
+// clang-format off
 
 /// <summary>
 /// Device Twin Handler to set the brightness of panel LEDs
@@ -22,8 +24,8 @@ DX_DEVICE_TWIN_HANDLER(set_led_brightness_handler, deviceTwinBinding)
     } else {
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-		set_led_panel_color(*(int *)deviceTwinBinding->propertyValue);
-#endif	// ALTAIR_FRONT_PANEL_PI_SENSE
+        set_led_panel_color(*(int *)deviceTwinBinding->propertyValue);
+#endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
         dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
     }
@@ -48,8 +50,7 @@ DX_DEVICE_TWIN_HANDLER_END
 /// <param name="device_twin"></param>
 static void device_twin_update_int(int *latest_value, int *previous_value, DX_DEVICE_TWIN_BINDING *device_twin)
 {
-    if (*latest_value != *previous_value)
-    {
+    if (*latest_value != *previous_value) {
         *previous_value = *latest_value;
         dx_deviceTwinReportValue(device_twin, latest_value);
     }
@@ -57,8 +58,7 @@ static void device_twin_update_int(int *latest_value, int *previous_value, DX_DE
 
 static void device_twin_update_double(double *latest_value, double *previous_value, DX_DEVICE_TWIN_BINDING *device_twin)
 {
-    if (*latest_value != *previous_value)
-    {
+    if (*latest_value != *previous_value) {
         *previous_value = *latest_value;
         dx_deviceTwinReportValue(device_twin, latest_value);
     }
@@ -66,14 +66,11 @@ static void device_twin_update_double(double *latest_value, double *previous_val
 
 static void device_twin_update_string(char *latest_value, char *previous_value, size_t length, DX_DEVICE_TWIN_BINDING *device_twin)
 {
-    if (strncmp(latest_value, previous_value, length) != 0)
-    {
+    if (strncmp(latest_value, previous_value, length) != 0) {
         strncpy(previous_value, latest_value, length);
         dx_deviceTwinReportValue(device_twin, latest_value);
     }
 }
-
-
 
 static void device_twin_update_location(double latitude, double longitude, DX_DEVICE_TWIN_BINDING *device_twin)
 {
@@ -86,7 +83,7 @@ static void update_geo_location(WEATHER_TELEMETRY *weather)
 {
     static bool updated = false;
 
-    if (!updated){
+    if (!updated) {
         updated = true;
         device_twin_update_location(weather->locationInfo->lat, weather->locationInfo->lng, &dt_location);
     }
@@ -108,19 +105,21 @@ void publish_properties(WEATHER_TELEMETRY *weather)
 
 void publish_telemetry(WEATHER_TELEMETRY *weather)
 {
-    if (!azure_connected){
+    if (!azure_connected || !weather->valid || weather->locationInfo == NULL) {
         return;
     }
 
+    // clang-format off
     if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 5, 
         DX_JSON_INT, "temperature", weather->latest.temperature, 
-        DX_JSON_INT, "pressure", weather->latest.pressure,
-        DX_JSON_INT, "humidity", weather->latest.humidity,
-        DX_JSON_DOUBLE, "latitude", weather->locationInfo->lat,
+        DX_JSON_INT, "pressure", weather->latest.pressure, 
+        DX_JSON_INT, "humidity", weather->latest.humidity, 
+        DX_JSON_DOUBLE, "latitude", weather->locationInfo->lat, 
         DX_JSON_DOUBLE, "longitude", weather->locationInfo->lng)) 
     {
         dx_azurePublish(msgBuffer, strlen(msgBuffer), weather_msg_properties, NELEMS(weather_msg_properties), &weather_content_properties);
     }
+    // clang-format on
 
     publish_properties(weather);
 }

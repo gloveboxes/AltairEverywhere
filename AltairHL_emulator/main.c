@@ -9,24 +9,13 @@
 /// </summary>
 static DX_TIMER_HANDLER(open_weather_map_handler)
 {
-    static bool twins_updated = false;
     GetCurrentWeather(&weather);
 
-    // Weather might not be valid if no Open Weather Map API key or no internet connection
-    // So create some random weather data;
-    if (!weather.valid) {
-        int rnd = (rand() % 10) - 5;
-        weather.latest.temperature = 25 + rnd;
-        rnd = (rand() % 50) - 25;
-        weather.latest.pressure = 1000 + rnd;
-        weather.latest.humidity = 20 + (rand() % 60);
+    if (azure_connected && weather.valid) {
+        publish_properties(&weather);
     }
 
-    if (azure_connected && !twins_updated && weather.valid) {
-        publish_properties(&weather);
-        twins_updated = true;
-    }
-    dx_timerOneShotSet(&tmr_open_weather_map, &(struct timespec){20, 0});
+    dx_timerOneShotSet(&tmr_open_weather_map, &(struct timespec){120, 0});
 }
 DX_TIMER_HANDLER_END
 
@@ -557,19 +546,26 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 {
     srand((unsigned int)time(NULL)); // seed the random number generator for fake telemetry
 
-    dx_Log_Debug_Init(Log_Debug_Time_buffer, sizeof(Log_Debug_Time_buffer));
-
+    dx_configParseCmdLineArguments(argc, argv, &userConfig);
     init_open_weather_map_api_key(argc, argv);
+
+    dx_Log_Debug_Init(Log_Debug_Time_buffer, sizeof(Log_Debug_Time_buffer));
+    
     init_altair_hardware();
 
-    dx_azureConnect(&userConfig, NETWORK_INTERFACE, IOT_PLUG_AND_PLAY_MODEL_ID);
+    // if there is no ID Scope or connection string then don't attempt to start connection to Azure IoT Central
+    if (!dx_isStringNullOrEmpty(userConfig.idScope) || !dx_isStringNullOrEmpty(userConfig.connection_string)) {
 
-    dx_azureRegisterConnectionChangedNotification(azure_connection_state);
-    dx_azureRegisterConnectionChangedNotification(report_software_version);
+        dx_azureConnect(&userConfig, NETWORK_INTERFACE, IOT_PLUG_AND_PLAY_MODEL_ID);
+
+        dx_azureRegisterConnectionChangedNotification(azure_connection_state);
+        dx_azureRegisterConnectionChangedNotification(report_software_version);
+
+        dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));
+    }
 
     init_mqtt(argc, argv, publish_callback_wolf, mqtt_connected_cb);
-
-    dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));
+    
     dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 
     dx_startThreadDetached(altair_thread, NULL, "altair_thread");
@@ -590,9 +586,6 @@ static void ClosePeripheralAndHandlers(void)
 int main(int argc, char *argv[])
 {
     dx_registerTerminationHandler();
-    if (!dx_configParseCmdLineArguments(argc, argv, &userConfig)) {
-        return dx_getTerminationExitCode();
-    }
     InitPeripheralAndHandlers(argc, argv);
 
     dx_eventLoopRun();
