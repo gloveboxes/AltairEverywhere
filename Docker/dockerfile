@@ -16,10 +16,12 @@ RUN apt update && apt-get install -y --no-install-recommends \
                     mosquitto \
                     libi2c-dev \
                     clang \
+                    python3 \
+                    htop \
                 && rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/gloveboxes/Altair8800Linux.git \
-    && cd Altair8800Linux && git submodule update --init --recursive \
+RUN git clone https://github.com/gloveboxes/Altair8800.Emulator.UN-X.git \
+    && cd Altair8800.Emulator.UN-X && git submodule update --init --recursive \
     && cd AltairHL_emulator \
     && mkdir -p build \
     && cmake -B build \
