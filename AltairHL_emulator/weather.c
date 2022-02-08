@@ -14,26 +14,38 @@
 #include <string.h>
 
 // api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}
-static const char *weatherURLTemplate = "http://api.openweathermap.org/data/2.5/weather?lat=%3.2f&lon=%3.2f&appid=b9f4fa1afb274c817ccd909027bd049d";
+static const char *weatherURLTemplate = "http://api.openweathermap.org/data/2.5/weather?lat=%3.2f&lon=%3.2f&appid=%s";
 static int64_t previous_request_milliseconds;
-
+static char *owm_api_key = NULL;
 static char weatherUrl[128];
+static struct location_info *locationInfo = NULL;
 
-void GetCurrentWeather(struct location_info *locationInfo, WEATHER_TELEMETRY *telemetry)
+void GetCurrentWeather(WEATHER_TELEMETRY *telemetry)
 {
-	int64_t now = dx_getNowMilliseconds();
+    int64_t now = dx_getNowMilliseconds();
 
     // throttle weather requests to no more than once every 15 minutes = 60000 milliseconds * 15
-	if (now < previous_request_milliseconds + (60000 * 15)){
-		return;
-	}
+    if (now < previous_request_milliseconds + (60000 * 15)) {
+        return;
+    }
+
+    if (owm_api_key == NULL) {
+        dx_Log_Debug("Missing Open Weather Map API Key\n");
+        return;
+    }
+
+    locationInfo = GetLocationData();
+    if (!locationInfo->updated) {
+        dx_Log_Debug("Geo location request failed\n");
+        return;
+    }
 
     JSON_Value *rootProperties = NULL;
     double temp = 0.0;
 
     telemetry->valid = false;
 
-    snprintf(weatherUrl, sizeof(weatherUrl), weatherURLTemplate, locationInfo->lat, locationInfo->lng);
+    snprintf(weatherUrl, sizeof(weatherUrl), weatherURLTemplate, locationInfo->lat, locationInfo->lng, owm_api_key);
 
     char *data = getHttpData(weatherUrl);
 
@@ -63,8 +75,7 @@ void GetCurrentWeather(struct location_info *locationInfo, WEATHER_TELEMETRY *te
             goto cleanup;
         }
 
-        if (!json_object_has_value_of_type(mainProperties, "temp", JSONNumber) || 
-			!json_object_has_value_of_type(mainProperties, "pressure", JSONNumber) ||
+        if (!json_object_has_value_of_type(mainProperties, "temp", JSONNumber) || !json_object_has_value_of_type(mainProperties, "pressure", JSONNumber) ||
             !json_object_has_value_of_type(mainProperties, "humidity", JSONNumber)) {
             goto cleanup;
         }
@@ -88,7 +99,7 @@ void GetCurrentWeather(struct location_info *locationInfo, WEATHER_TELEMETRY *te
             snprintf(telemetry->latest.description, 80, "%d%c", telemetry->latest.temperature, 'F');
         }
 
-		previous_request_milliseconds = now;
+        previous_request_milliseconds = now;
     }
 
 cleanup:
@@ -101,5 +112,44 @@ cleanup:
     if (data != NULL) {
         free(data);
         data = NULL;
+    }
+}
+
+void init_open_weather_map_api_key(int argc, char *argv[])
+{
+    static bool initialized = false;
+    extern int optind;
+
+    if (!initialized) {
+
+        initialized = true;
+
+        int option = 0;
+        static const struct option cmdLineOptions[] = {
+            {.name = "OpenWeatherMapKey", .has_arg = required_argument, .flag = NULL, .val = 'o'}
+        };
+
+        // reset the options index to 1
+        // https://pubs.opengroup.org/onlinepubs/9699919799/functions/getopt.html
+        optind = 1;
+
+        // option = getopt_long(argc, argv, "o:", cmdLineOptions, NULL);
+
+        // Loop over all of the options.
+        while ((option = getopt_long(argc, argv, "o:", cmdLineOptions, NULL)) != -1) {
+            // Check if arguments are missing. Every option requires an argument.
+            if (optarg != NULL && optarg[0] == '-') {
+                printf("WARNING: Option %c requires an argument\n", option);
+                continue;
+            }
+            switch (option) {
+            case 'o':
+                owm_api_key = optarg;
+                break;
+            default:
+                // Unknown options are ignored.
+                break;
+            }
+        }
     }
 }

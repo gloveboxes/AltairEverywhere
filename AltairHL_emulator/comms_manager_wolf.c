@@ -312,7 +312,6 @@ static bool send_ping_new(void)
     MqttPing ping;
     word32 startSec;
 
-    dx_Log_Debug("ping\n");
     wm_SemLock(&mtLock);
 
     startSec = 0;

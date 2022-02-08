@@ -86,25 +86,28 @@ static char *input_data = NULL;
 bool dirty_buffer = false;
 bool send_messages = false;
 bool renderText = false;
+bool azure_connected = false;
 
 static WEATHER_TELEMETRY onboard_telemetry;
 static WEATHER_TELEMETRY weather;
 
 static char Log_Debug_Time_buffer[128];
 
+static DX_DECLARE_TIMER_HANDLER(measure_sensor_handler);
 static DX_DECLARE_TIMER_HANDLER(mqtt_work_scheduler_handler);
+static DX_DECLARE_TIMER_HANDLER(open_weather_map_handler);
 static DX_DECLARE_TIMER_HANDLER(panel_refresh_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
-static DX_DECLARE_TIMER_HANDLER(measure_sensor_handler);
 static void *altair_thread(void *arg);
 static void process_control_panel_commands(void);
 
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
 // Common Timers
+static DX_TIMER_BINDING tmr_measure_sensor = {.repeat = &(struct timespec){10, 0}, .name = "tmr_measure_sensor", .handler = measure_sensor_handler};
 static DX_TIMER_BINDING tmr_mqtt_do_work = {.repeat = &(struct timespec){0, 250 * OneMS}, .name = "tmr_mqtt_do_work", .handler = mqtt_work_scheduler_handler};
+static DX_TIMER_BINDING tmr_open_weather_map = {.repeat = &(struct timespec){10, 0}, .name = "tmr_open_weather_map", .handler = open_weather_map_handler};
 static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){30, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
-static DX_TIMER_BINDING tmr_measure_sensor = {.repeat = &(struct timespec){5, 0}, .name = "tmr_measure_sensor", .handler = measure_sensor_handler};
 
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
@@ -126,6 +129,6 @@ static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVer
 
 
 // initialize bindings
-static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_do_work, &tmr_panel_refresh, &tmr_report_memory_usage, &tmr_measure_sensor};
+static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_do_work, &tmr_panel_refresh, &tmr_report_memory_usage, &tmr_measure_sensor, &tmr_open_weather_map};
 static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {&dt_deviceStartTime, &dt_softwareVersion, &dt_ledBrightness, &dt_temperature, &dt_pressure,
                                                          &dt_humidity,        &dt_weather,         &dt_location,      &dt_countryCode};

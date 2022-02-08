@@ -90,7 +90,7 @@ static void update_geo_location(WEATHER_TELEMETRY *weather)
 
 void publish_telemetry(WEATHER_TELEMETRY *weather)
 {
-    if (!dx_isAzureConnected()){
+    if (!azure_connected){
         return;
     }
 

@@ -20,6 +20,7 @@ extern DX_DEVICE_TWIN_BINDING dt_pressure;
 extern DX_DEVICE_TWIN_BINDING dt_temperature;
 extern DX_DEVICE_TWIN_BINDING dt_weather;
 extern char msgBuffer[MSG_BUFFER_BYTES];
+extern bool azure_connected;
 
 DX_DECLARE_DEVICE_TWIN_HANDLER(set_channel_id_handler);
 DX_DECLARE_DEVICE_TWIN_HANDLER(set_led_brightness_handler);

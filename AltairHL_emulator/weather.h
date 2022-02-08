@@ -3,9 +3,12 @@
 
 #pragma once
 
-#include "stdbool.h"
 #include "location_from_ip.h"
+#include "stdbool.h"
+#include <ctype.h>
 #include <float.h>
+#include <getopt.h>
+#include <string.h>
 
 typedef struct {
     int temperature;
@@ -38,4 +41,5 @@ typedef struct {
 // *    char *: current weather description
 // *************************************************************/
 // TODO: allow for location customization.
-void GetCurrentWeather(struct location_info *locationInfo, WEATHER_TELEMETRY *telemetry);
+void GetCurrentWeather(WEATHER_TELEMETRY *telemetry);
+void init_open_weather_map_api_key(int argc, char *argv[]);

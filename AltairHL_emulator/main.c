@@ -16,6 +16,11 @@ static DX_TIMER_HANDLER(measure_sensor_handler)
 }
 DX_TIMER_HANDLER_END
 
+static DX_TIMER_HANDLER(open_weather_map_handler){
+    GetCurrentWeather(&weather);
+}
+DX_TIMER_HANDLER_END
+
 static DX_TIMER_HANDLER(report_memory_usage)
 {
     struct rusage r_usage;
@@ -312,17 +317,9 @@ static void sphere_port_out(uint8_t port, uint8_t data)
     static float temperature = 0.0;
     struct location_info *locData;
 
-    // get IP and Weather data.
-    if (port == 32 && data == 1) {
-        locData = GetLocationData();
-        if (locData != NULL && locData->updated){
-            GetCurrentWeather(locData, &weather);
-        }
-    }
-
     // publish the telemetry to IoTC
     if (port == 32 && data == 2) {
-        if (weather.valid){
+        if (weather.valid && azure_connected){
             publish_telemetry(&weather);
         }
     }
@@ -553,15 +550,19 @@ static void *altair_thread(void *arg)
 /// Report on first connect the software version and device startup UTC time
 /// </summary>
 /// <param name="connected"></param>
-static void azure_connection_changed(bool connected)
+static void report_software_version(bool connected)
 {
     if (connected) {
         snprintf(msgBuffer, sizeof(msgBuffer), "Altair emulator version: %s, DevX version: %s", ALTAIR_ON_AZURE_SPHERE_VERSION, AZURE_SPHERE_DEVX_VERSION);
         dx_deviceTwinReportValue(&dt_softwareVersion, msgBuffer);
         dx_deviceTwinReportValue(&dt_deviceStartTime, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
 
-        dx_azureUnregisterConnectionChangedNotification(azure_connection_changed);
+        dx_azureUnregisterConnectionChangedNotification(report_software_version);
     }
+}
+
+static void azure_connection_state(bool connection_state){
+    azure_connected = connection_state;
 }
 
 /// <summary>
@@ -574,10 +575,13 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     dx_Log_Debug_Init(Log_Debug_Time_buffer, sizeof(Log_Debug_Time_buffer));
 
+    init_open_weather_map_api_key(argc, argv);
     init_altair_hardware();
 
     dx_azureConnect(&userConfig, NETWORK_INTERFACE, IOT_PLUG_AND_PLAY_MODEL_ID);
-    dx_azureRegisterConnectionChangedNotification(azure_connection_changed);
+
+    dx_azureRegisterConnectionChangedNotification(azure_connection_state);
+    dx_azureRegisterConnectionChangedNotification(report_software_version);
 
     init_mqtt(argc, argv, publish_callback_wolf, mqtt_connected_cb);
 
