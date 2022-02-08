@@ -28,10 +28,6 @@ static byte rx_buf[MAX_BUFFER_SIZE];
 static char output_buffer[MAX_BUFFER_SIZE / 4];
 static size_t output_buffer_length = 0;
 
-static DX_DECLARE_TIMER_HANDLER(mqtt_ping_handler);
-
-static DX_TIMER_BINDING tmr_mqtt_ping = {.delay = &(struct timespec){15, 0}, .name = "tmr_mqtt_ping", .handler = mqtt_ping_handler};
-
 static wm_Sem mtLock; /* Protect "packetId" and "stop" */
 static wm_Sem pingSignal;
 static MQTTCtx gMqttCtx;
@@ -66,30 +62,35 @@ static word16 mqtt_get_packetid_threadsafe(void)
     return packet_id;
 }
 
-static DX_TIMER_HANDLER(mqtt_ping_handler)
+
+static int check_response(MQTTCtx *mqttCtx, int rc, word32 *startSec, int packet_type)
 {
-    // int rc;
-    // MqttPing ping;
 
-    // if (mqtt_connected) {
-    //     dx_Log_Debug("Ping\n");
-    //     if ((rc = MqttClient_Ping_ex(&gMqttCtx.client, &ping)) != MQTT_CODE_SUCCESS) {
-    //         Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
-    //     }
-    // }
+#ifdef WOLFMQTT_NONBLOCK
+#ifdef WOLFMQTT_TEST_CANCEL
+    if (packet_type == MQTT_PACKET_TYPE_PUBLISH && rc == MQTT_CODE_CONTINUE) {
+        PRINTF("Test cancel by setting early timeout");
+        return MQTT_CODE_ERROR_TIMEOUT;
+    } else
+#else
+    (void)packet_type;
+#endif
+        /* Track elapsed time with no activity and trigger timeout */
+        rc = mqtt_check_timeout(rc, startSec, mqttCtx->cmd_timeout_ms / 1000);
 
-    // dx_timerOneShotSet(&tmr_mqtt_ping, &(struct timespec){15, 0});
-}
-DX_TIMER_HANDLER_END
-
-void send_mqtt_ping(void) {
-    // int rc;
-    // if (mqtt_connected) {
-    //     dx_Log_Debug("Ping\n");
-    //     if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
-    //         Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
-    //     }
-    // }
+    /* check return code */
+    if (rc == MQTT_CODE_CONTINUE) {
+#if 0
+        /* optionally add delay when debugging */
+        usleep(100*1000);
+#endif
+    }
+#else
+    (void)packet_type;
+    (void)startSec;
+    (void)mqttCtx;
+#endif
+    return rc;
 }
 
 bool is_mqtt_connected(void)
@@ -101,20 +102,11 @@ bool is_mqtt_connected(void)
 /* callback indicates a network error occurred */
 static int mqtt_disconnect_cb(MqttClient *client, int error_code, void *ctx)
 {
-    int rc;
-
     if (error_code == MQTT_CODE_ERROR_NETWORK) {
         Log_Debug("Network Error Callback: %s (error %d)\n", MqttClient_ReturnCodeToString(error_code), error_code);
 
         mqtt_connected = false;
         got_disconnected = true;
-    }
-
-    if (mqtt_connected) {
-        dx_Log_Debug("Ping\n");
-        if ((rc = MqttClient_Ping(&gMqttCtx.client)) != MQTT_CODE_SUCCESS) {
-            Log_Debug("MQTT Ping Keep Alive Error: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
-        }
     }
 
     return 0;
@@ -123,9 +115,11 @@ static int mqtt_disconnect_cb(MqttClient *client, int error_code, void *ctx)
 
 static int mqtt_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, byte msg_done)
 {
+    wm_SemLock(&mtLock);
     if (msg_new) {
         _publish_callback(msg);
     }
+    wm_SemUnlock(&mtLock);
     return MQTT_CODE_SUCCESS;
 }
 
@@ -133,7 +127,6 @@ static void client_cleanup(MQTTCtx *mqttCtx)
 {
     /* Cleanup network */
     MqttClientNet_DeInit(&mqttCtx->net);
-
     MqttClient_DeInit(&mqttCtx->client);
 }
 
@@ -159,8 +152,15 @@ static void client_disconnect(MQTTCtx *mqttCtx)
 static int init_mqtt_connection(MQTTCtx *mqttCtx)
 {
     int rc = MQTT_CODE_SUCCESS;
+    word32 startSec;
 
     Log_Debug("MQTT Client: QoS %d, Use TLS %d\n", mqttCtx->qos, mqttCtx->use_tls);
+
+    /* Create a demo mutex for making packet id values */
+    rc = wm_SemInit(&mtLock);
+    if (rc != 0) {
+        return 0;
+    }
 
     /* Initialize Network */
     rc = MqttClientNet_Init(&mqttCtx->net, mqttCtx);
@@ -183,6 +183,12 @@ static int init_mqtt_connection(MQTTCtx *mqttCtx)
     if (rc != MQTT_CODE_SUCCESS) {
         return rc;
     }
+
+    #ifdef WOLFMQTT_NONBLOCK
+    mqttCtx->useNonBlockMode = 1;
+    #endif
+
+
     /* The client.ctx will be stored in the cert callback ctx during
        MqttSocket_Connect for use by mqtt_tls_verify_cb */
     mqttCtx->client.ctx = mqttCtx;
@@ -196,7 +202,14 @@ static int init_mqtt_connection(MQTTCtx *mqttCtx)
 #endif
 
     /* Connect to broker */
-    rc = MqttClient_NetConnect(&mqttCtx->client, mqttCtx->host, mqttCtx->port, DEFAULT_CON_TIMEOUT_MS, mqttCtx->use_tls, mqtt_tls_cb);
+    startSec = 0;
+    do {
+        rc = MqttClient_NetConnect(&mqttCtx->client, mqttCtx->host, mqttCtx->port, DEFAULT_CON_TIMEOUT_MS, mqttCtx->use_tls, mqtt_tls_cb);
+        rc = check_response(mqttCtx, rc, &startSec, MQTT_PACKET_TYPE_CONNECT);
+    } while (rc == MQTT_CODE_CONTINUE);
+
+    /* Connect to broker */
+    // rc = MqttClient_NetConnect(&mqttCtx->client, mqttCtx->host, mqttCtx->port, DEFAULT_CON_TIMEOUT_MS, mqttCtx->use_tls, mqtt_tls_cb);
 
     Log_Debug("MQTT Socket Connect: %s (%d)\n", MqttClient_ReturnCodeToString(rc), rc);
 
@@ -211,13 +224,20 @@ static int init_mqtt_connection(MQTTCtx *mqttCtx)
     mqttCtx->connect.client_id = mqttCtx->client_id;
 
     /* Optional authentication */
-    mqttCtx->connect.username = mqttCtx->username;
-    mqttCtx->connect.password = mqttCtx->password;
+    // mqttCtx->connect.username = mqttCtx->username;
+    // mqttCtx->connect.password = mqttCtx->password;
 
     /* Send Connect and wait for Connect Ack */
+
+    startSec = 0;
     do {
         rc = MqttClient_Connect(&mqttCtx->client, &mqttCtx->connect);
-    } while (rc == MQTT_CODE_CONTINUE || rc == MQTT_CODE_STDIN_WAKE);
+        rc = check_response(mqttCtx, rc, &startSec, MQTT_PACKET_TYPE_CONNECT);
+    } while (rc == MQTT_CODE_CONTINUE);
+
+    // do {
+    //     rc = MqttClient_Connect(&mqttCtx->client, &mqttCtx->connect);
+    // } while (rc == MQTT_CODE_CONTINUE || rc == MQTT_CODE_STDIN_WAKE);
 
     Log_Debug("MQTT Connect: Proto (%s), %s (%d)\n", MqttClient_GetProtocolVersionString(&mqttCtx->client),
               MqttClient_ReturnCodeToString(rc), rc);
@@ -233,6 +253,7 @@ static int init_mqtt_connection(MQTTCtx *mqttCtx)
 static void subscribe_task(MQTTCtx *mqttCtx)
 {
     int rc = MQTT_CODE_SUCCESS;
+    word32 startSec = 0;
 
     XMEMSET(&mqttCtx->subscribe, 0, sizeof(MqttSubscribe));
 
@@ -262,12 +283,19 @@ static void subscribe_task(MQTTCtx *mqttCtx)
     }
 #endif
 
+    dx_Log_Debug("Subscribing\n");
+
     /* Subscribe Topic */
     mqttCtx->subscribe.packet_id = mqtt_get_packetid_threadsafe();
     mqttCtx->subscribe.topic_count = sizeof(topics) / sizeof(MqttTopic);
     mqttCtx->subscribe.topics = topics;
 
-    rc = MqttClient_Subscribe(&mqttCtx->client, &mqttCtx->subscribe);
+    do {
+        rc = MqttClient_Subscribe(&mqttCtx->client, &mqttCtx->subscribe);
+        rc = check_response(mqttCtx, rc, &startSec, MQTT_PACKET_TYPE_SUBSCRIBE);
+    } while (rc == MQTT_CODE_CONTINUE);
+
+    dx_Log_Debug("Subscribe return code: %d\n", rc);
 
     mqtt_connected = rc == MQTT_CODE_SUCCESS;
 
@@ -278,23 +306,57 @@ static void subscribe_task(MQTTCtx *mqttCtx)
 #endif
 }
 
+static bool send_ping_new(void)
+{
+    int rc;
+    MqttPing ping;
+    word32 startSec;
+
+    dx_Log_Debug("ping\n");
+    wm_SemLock(&mtLock);
+
+    startSec = 0;
+    XMEMSET(&ping, 0, sizeof(ping));
+    do {
+        rc = MqttClient_Ping_ex(&gMqttCtx.client, &ping);
+        rc = check_response(&gMqttCtx, rc, &startSec, MQTT_PACKET_TYPE_PING_REQ);
+    } while (rc == MQTT_CODE_CONTINUE);
+    if (rc != MQTT_CODE_SUCCESS) {
+        MqttClient_CancelMessage(&gMqttCtx.client, (MqttObject *)&ping);
+    }
+    wm_SemUnlock(&mtLock);
+
+    if (rc != MQTT_CODE_SUCCESS) {
+        PRINTF("MQTT Ping Keep Alive Error: %s (%d)", MqttClient_ReturnCodeToString(rc), rc);
+    }
+
+    return rc == MQTT_CODE_SUCCESS;
+}
+
 /* This task waits for messages */
 static void *waitMessage_task(void *args)
 {
     int rc;
     MQTTCtx *mqttCtx = &gMqttCtx;
     int channel_id = -1;
+    word32 cmd_timeout_ms = mqttCtx->cmd_timeout_ms;
 
     do {
         if (mqtt_connected) {
-            rc = MqttClient_WaitMessage(&mqttCtx->client, (int)mqttCtx->cmd_timeout_ms);
+            rc = MqttClient_WaitMessage(&mqttCtx->client, cmd_timeout_ms);
 
             if (got_disconnected) {
                 client_disconnect(&gMqttCtx);
             }
+
+            if (rc == MQTT_CODE_ERROR_TIMEOUT) {
+                if (!send_ping_new()){
+                    break;
+                }              
+            }
+
         } else {
-            if (got_disconnected && ((channel_id = read_channel_id_from_storage()) != -1 ) &&
-                dx_isNetworkReady()) {
+            if (got_disconnected && ((channel_id = read_channel_id_from_storage()) != -1) && dx_isNetworkReady()) {
 
                 memset(mqtt_client_id, 0, sizeof(mqtt_client_id));
                 memset(pub_topic_data, 0, sizeof(pub_topic_data));
@@ -317,6 +379,7 @@ static void *waitMessage_task(void *args)
                 mqttCtx->topic_name = pub_topic_data;
                 mqttCtx->client_id = mqtt_client_id;
 
+                dx_Log_Debug("Connecting to MQTT broker\n");
                 rc = init_mqtt_connection(&gMqttCtx);
 
                 if (rc == MQTT_CODE_SUCCESS) {
@@ -421,32 +484,12 @@ int init_mqtt(int argc, char *argv[], void (*publish_callback)(MqttMessage *msg)
 
     mqtt_init_ctx(&gMqttCtx);
 
-    #ifdef WOLFMQTT_NONBLOCK
-        gMqttCtx.useNonBlockMode = true; /* set to use non-blocking mode.
-        network callbacks can return MQTT_CODE_CONTINUE to indicate "would block" */
-    #endif
-
     gMqttCtx.app_name = "Altair on Azure Sphere";
 
     gMqttCtx.host = ALTAIR_MQTT_BROKER;
     gMqttCtx.port = ALTAIR_MQTT_BROKER_PORT;
     gMqttCtx.client_id = ALTAIR_MQTT_IDENTITY;
 
-    /* Create a demo mutex for making packet id values */
-    rc = wm_SemInit(&mtLock);
-    if (rc != 0) {
-        return 0;
-        // client_exit(mqttCtx);
-    }
-    rc = wm_SemInit(&pingSignal);
-    if (rc != 0) {
-        wm_SemFree(&mtLock);
-        return 0;
-        // client_exit(mqttCtx);
-    }
-    wm_SemLock(&pingSignal); /* default to locked */
-
-    dx_timerStart(&tmr_mqtt_ping);
     dx_startThreadDetached(waitMessage_task, NULL, "wait for message");
 
     return 0;
