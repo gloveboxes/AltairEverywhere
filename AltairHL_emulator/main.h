@@ -55,6 +55,15 @@ static const char *AltairMsg = "\x1b[2J\r\nAzure Sphere - Altair 8800 Emulator\r
 
 char msgBuffer[MSG_BUFFER_BYTES] = {0};
 
+static DX_MESSAGE_PROPERTY *diag_msg_properties[] = {
+      &(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"}, 
+      &(DX_MESSAGE_PROPERTY){.key = "type", .value = "weather"},
+      &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
+
+static DX_MESSAGE_CONTENT_PROPERTIES diag_content_properties = {
+    .contentEncoding = "utf-8", 
+    .contentType = "application/json"};
+
 // CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
 CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
 

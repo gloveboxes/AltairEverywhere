@@ -3,10 +3,14 @@
 
 #include "iotc_manager.h"
 
-static DX_MESSAGE_PROPERTY *messageProperties[] = {
+static DX_MESSAGE_PROPERTY *weather_msg_properties[] = {
       &(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"}, 
       &(DX_MESSAGE_PROPERTY){.key = "type", .value = "weather"},
       &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
+
+static DX_MESSAGE_CONTENT_PROPERTIES weather_content_properties = {
+    .contentEncoding = "utf-8", 
+    .contentType = "application/json"};
 
 /// <summary>
 /// Device Twin Handler to set the brightness of panel LEDs
@@ -115,7 +119,7 @@ void publish_telemetry(WEATHER_TELEMETRY *weather)
         DX_JSON_DOUBLE, "latitude", weather->locationInfo->lat,
         DX_JSON_DOUBLE, "longitude", weather->locationInfo->lng)) 
     {
-        dx_azurePublish(msgBuffer, strlen(msgBuffer), messageProperties, NELEMS(messageProperties), NULL);
+        dx_azurePublish(msgBuffer, strlen(msgBuffer), weather_msg_properties, NELEMS(weather_msg_properties), &weather_content_properties);
     }
 
     publish_properties(weather);

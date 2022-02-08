@@ -38,7 +38,7 @@ static DX_TIMER_HANDLER(report_memory_usage)
     if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1,
         DX_JSON_INT, "memoryUsage", r_usage.ru_maxrss))
     {
-        dx_azurePublish(msgBuffer, strlen(msgBuffer), NULL, 0, NULL);
+        dx_azurePublish(msgBuffer, strlen(msgBuffer), diag_msg_properties, NELEMS(diag_msg_properties), &diag_content_properties);
     }
 }
 DX_TIMER_HANDLER_END
