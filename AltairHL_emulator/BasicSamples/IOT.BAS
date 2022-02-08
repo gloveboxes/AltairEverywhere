@@ -1,6 +1,8 @@
-10 PRINT ""
-20 PRINT "Open Weather Map IoT App"
-30 REM FETCH THE LOCATION AND WEATHER DATA
+05 PRINT "============================================"
+10 PRINT "OPEN WEATHER MAP IOT APP"
+20 PRINT "CHANGE PAUSE TO VARY THE DELAY"
+30 PAUSE = 500000
+
 40 FOR I = 1 TO 1E+06
 50 PRINT "============================================"
 60 PRINT "Reading:";I
@@ -28,9 +30,8 @@
 210 GOSUB 500
 220 PRINT "Weather: ";A$
 
-230 REM ADJUST LOOP COUNT TO CREATE A DELAY
-235 PRINT "Pause..."
-240 FOR D = 1 TO 100000!: NEXT D
+230 PRINT "Pause..."
+240 FOR D = 1 TO PAUSE: NEXT D
 250 NEXT I
 260 STOP
 
