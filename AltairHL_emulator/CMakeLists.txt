@@ -102,7 +102,7 @@ set(ALL_FILES
 add_executable(${PROJECT_NAME} ${ALL_FILES})
 
 ################################################################################
-# Following lines required for DesktopDevX
+# Following lines required for EdgeDevX
 add_subdirectory("DesktopDevX" desktop_devx)
 target_link_libraries(${PROJECT_NAME} "desktop_devx")
 ################################################################################

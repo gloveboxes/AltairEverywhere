@@ -7,3 +7,6 @@
 [submodule "AltairHL_emulator/Disks"]
 	path = AltairHL_emulator/Disks
 	url = https://github.com/AzureSphereCloudEnabledAltair8800/AzureSphereAltair8800.disks.git
+[submodule "AltairHL_emulator/EdgeDevX"]
+	path = AltairHL_emulator/EdgeDevX
+	url = https://github.com/Azure-Sphere-DevX/EdgeDevX.git
