@@ -1,6 +1,3 @@
-[submodule "AltairHL_emulator/DesktopDevX"]
-	path = AltairHL_emulator/DesktopDevX
-	url = https://github.com/Azure-Sphere-DevX/DesktopDevX.git
 [submodule "AltairHL_emulator/HardwareDefinitions"]
 	path = AltairHL_emulator/HardwareDefinitions
 	url = https://github.com/Azure-Sphere-DevX/AzureSphereDevX.HardwareDefinitions
