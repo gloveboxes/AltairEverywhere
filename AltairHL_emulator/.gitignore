@@ -1,0 +1,6 @@
+
+# Ignore output directories
+/build/
+/install/
+/.vs/
+.vscode/launch.json

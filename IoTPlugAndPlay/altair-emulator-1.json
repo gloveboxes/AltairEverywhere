@@ -1,0 +1,225 @@
+{
+  "@context": "dtmi:dtdl:context;2",
+  "@id": "dtmi:com:example:emulator:altair;1",
+  "@type": "Interface",
+  "displayName": "Altair Emulator",
+  "contents": [
+    {
+      "@type": [
+        "Telemetry",
+        "Temperature"
+      ],
+      "displayName": "Temperature",
+      "name": "temperature",
+      "schema": "integer",
+      "unit": "degreeCelsius"
+    },
+    {
+      "@type": [
+        "Telemetry",
+        "Pressure"
+      ],
+      "displayName": "Pressure",
+      "name": "pressure",
+      "schema": "integer",
+      "unit": "millibar"
+    },
+    {
+      "@type": [
+        "Telemetry",
+        "Humidity"
+      ],
+      "displayName": "Humidity",
+      "name": "humidity",
+      "schema": "integer",
+      "unit": "kilogramPerCubicMetre"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": "Memory usage",
+      "name": "memoryUsage",
+      "schema": "integer"
+    },
+    {
+      "@type": [
+        "Telemetry",
+        "Latitude"
+      ],
+      "displayName": "Latitude",
+      "name": "latitude",
+      "schema": "double",
+      "unit": "degreeOfArc"
+    },
+    {
+      "@type": [
+        "Telemetry",
+        "Longitude"
+      ],
+      "displayName": "Longitude",
+      "name": "longitude",
+      "schema": "double",
+      "unit": "degreeOfArc"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": "Air Quality Index (US)",
+      "name": "aqi",
+      "schema": "float"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": "Carbon Monoxide",
+      "name": "co",
+      "schema": "float"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": "Nitrogen Monoxide",
+      "name": "no",
+      "schema": "float"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": "Nitrogen Dioxide",
+      "name": "no2",
+      "schema": "float"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": "Ozone",
+      "name": "o3",
+      "schema": "float"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": "Sulphur Dioxide",
+      "name": "so2",
+      "schema": "float"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": "Ammonia",
+      "name": "nh3",
+      "schema": "float"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": "Particulate Matter 2.5",
+      "name": "pm2_5",
+      "schema": "float"
+    },
+    {
+      "@type": "Telemetry",
+      "displayName": "Particulate Matter 1.0",
+      "name": "pm10",
+      "schema": "float"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Start time",
+      "name": "StartTimeUTC",
+      "schema": "dateTime"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Heartbeat",
+      "name": "HeartbeatUTC",
+      "schema": "dateTime"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Software version",
+      "name": "SoftwareVersion",
+      "schema": "string"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Temperature",
+      "name": "Temperature",
+      "schema": "integer"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Pressure",
+      "name": "Pressure",
+      "schema": "integer"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Humidity",
+      "name": "Humidity",
+      "schema": "integer"
+    },
+    {
+      "@type": [
+        "Property",
+        "Location"
+      ],
+      "displayName": "Location",
+      "name": "Location",
+      "schema": "geopoint",
+      "writable": false
+    },
+    {
+      "@type": "Property",
+      "displayName": "LED brightness",
+      "name": "LedBrightness",
+      "schema": "integer",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "displayName": "Air Quality Index (US)",
+      "name": "AirQualityIndexUS",
+      "schema": "float"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Carbon Monoxide",
+      "name": "CarbonMonoxide",
+      "schema": "float"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Nitrogen Monoxide",
+      "name": "NitrogenMonoxide",
+      "schema": "float"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Nitrogen Dioxide",
+      "name": "NitrogenDioxide",
+      "schema": "float"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Ozone",
+      "name": "Ozone",
+      "schema": "float"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Sulphur Dioxide",
+      "name": "SulphurDioxide",
+      "schema": "float"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Ammonia",
+      "name": "Ammonia",
+      "schema": "float"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Particulate Matter 2.5",
+      "name": "PM2_5",
+      "schema": "float"
+    },
+    {
+      "@type": "Property",
+      "displayName": "Particulate Matter 1.0",
+      "name": "PM10",
+      "schema": "float"
+    }
+  ]
+}

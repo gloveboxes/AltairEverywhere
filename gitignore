@@ -1,0 +1,6 @@
+﻿
+# Ignore output directories
+/build/
+/install/
+/.vs/
+.DS_Store

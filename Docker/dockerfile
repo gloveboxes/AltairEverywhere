@@ -1,0 +1,43 @@
+FROM ubuntu
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+EXPOSE 8080
+EXPOSE 8081 
+
+RUN apt update && apt-get install -y --no-install-recommends \
+                    libuv1.dev \
+                    cmake \
+                    build-essential \
+                    gdb \
+                    curl \
+                    libcurl4-openssl-dev \
+                    libssl-dev \
+                    uuid-dev \
+                    ca-certificates \
+                    git \
+                    mosquitto \
+                    libi2c-dev \
+                    nano \
+                    python3 \
+                    htop \
+                && rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/gloveboxes/Altair8800.Emulator.UN-X.git Altair8800 \
+    && cd Altair8800 \
+    && git submodule update --init --recursive
+
+#<REMOVE_THIS_COMMENT_TO_ENABLE_PI_SENSE_HAT>RUN cd /Altair8800/AltairHL_emulator && sed -i 's/# set(ALTAIR_FRONT_PI_SENSE_HAT/set(ALTAIR_FRONT_PI_SENSE_HAT/g' CMakeLists.txt
+
+RUN cd /Altair8800/AltairHL_emulator \
+    && mkdir -p build \
+    && cmake -B build \
+    && cmake --build build --config release --target all -j 8
+
+COPY altair.conf /etc/mosquitto/conf.d
+
+# https://docs.docker.com/config/containers/multi-service_container/
+
+COPY altair.sh altair.sh
+RUN chmod +x altair.sh
+CMD ["./altair.sh"]
