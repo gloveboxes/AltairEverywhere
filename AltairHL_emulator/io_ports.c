@@ -1,10 +1,12 @@
 #include "io_ports.h"
 
-static volatile bool delay_enabled = false;
-static char copyx_filename[15];
-static int copyx_index = 0;
-static bool copyx_enabled = false;
 static FILE *copyx_stream;
+static bool copyx_enabled = false;
+static char copyx_filename[15];
+static char data_buffer[256];
+static int copyx_index = 0;
+static volatile bool delay_enabled = false;
+static int jitter = 0;
 
 // clang-format off
 DX_MESSAGE_PROPERTY *json_msg_properties[] = {
@@ -17,6 +19,15 @@ DX_MESSAGE_CONTENT_PROPERTIES json_content_properties = {
     .contentType = "application/json"};
 // clang-format off
 
+DX_TIMER_HANDLER(port_out_weather_handler)
+{
+    if (environment.valid && azure_connected) {
+        environment.latest.weather.temperature += jitter;
+        publish_telemetry(&environment);
+        environment.latest.weather.temperature -= jitter;
+    }
+}
+DX_TIMER_HANDLER_END
 
 /// <summary>
 /// Intel 8080 OUT Port handler
@@ -25,7 +36,7 @@ DX_MESSAGE_CONTENT_PROPERTIES json_content_properties = {
 /// <param name="data"></param>
 void io_port_out(uint8_t port, uint8_t data)
 {
-    static char data_buffer[256];
+    
     static char *data_ptr = NULL;
     static int data_index = 0;
 
@@ -53,12 +64,9 @@ void io_port_out(uint8_t port, uint8_t data)
             data_index = 0;
         }
         break;
-    case 32:
-        if (environment.valid && azure_connected) {
-            environment.latest.weather.temperature += (int)data;
-            publish_telemetry(&environment);
-            environment.latest.weather.temperature -= (int)data;
-        }
+    case 32:        
+        jitter = (int)data;
+        dx_timerOneShotSet(&tmr_deferred_port_out_weather, &(struct timespec){0,1});
         break;
     case 33:
         if (copyx_index == 0){

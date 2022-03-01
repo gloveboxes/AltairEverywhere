@@ -26,8 +26,10 @@
     retVal = name[readPtr++];
 
 DX_DECLARE_TIMER_HANDLER(mbasic_delay_expired_handler);
+DX_DECLARE_TIMER_HANDLER(port_out_weather_handler);
 
 extern DX_TIMER_BINDING tmr_mbasic_delay_expired;
+extern DX_TIMER_BINDING tmr_deferred_port_out_weather;
 
 uint8_t io_port_in(uint8_t port);
 void io_port_out(uint8_t port, uint8_t data);
