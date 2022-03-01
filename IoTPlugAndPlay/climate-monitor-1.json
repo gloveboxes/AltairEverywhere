@@ -138,7 +138,7 @@
       {
         "@type": "Telemetry",
         "displayName": {
-          "en": "Particulate Matter 1.0"
+          "en": "Particulate Matter 10"
         },
         "name": "pm10",
         "schema": "float"
@@ -239,7 +239,7 @@
       {
         "@type": "Property",
         "displayName": {
-          "en": "Air Quality Index (US)"
+          "en": "Air Quality Index"
         },
         "name": "AirQualityIndexUS",
         "schema": "float",
@@ -311,7 +311,7 @@
       {
         "@type": "Property",
         "displayName": {
-          "en": "Particulate Matter 1.0"
+          "en": "Particulate Matter 10"
         },
         "name": "PM10",
         "schema": "float",
