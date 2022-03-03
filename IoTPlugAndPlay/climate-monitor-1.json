@@ -360,7 +360,7 @@
           "Angle"
         ],
         "displayName": {
-          "en": "WindDirection"
+          "en": "Wind Direction"
         },
         "name": "WindDirection",
         "schema": "integer",
