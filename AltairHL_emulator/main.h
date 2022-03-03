@@ -127,6 +127,7 @@ const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x
 
 // Common Timers
 DX_TIMER_BINDING tmr_deferred_port_out_weather = {.name = "tmr_deferred_port_out_weather", .handler = port_out_weather_handler};
+DX_TIMER_BINDING tmr_deferred_port_out_json = {.name = "tmr_deferred_port_out_json", .handler = port_out_json_handler};
 DX_TIMER_BINDING tmr_mbasic_delay_expired = {.name = "tmr_mbasic_delay_expired", .handler = mbasic_delay_expired_handler};
 static DX_TIMER_BINDING tmr_deferred_command = {.name = "tmr_deferred_command", .handler = deferred_command_handler};
 static DX_TIMER_BINDING tmr_deferred_input = {.name = "tmr_deferred_input", .handler = deferred_input_handler};
@@ -171,8 +172,8 @@ static DX_DEVICE_TWIN_BINDING dt_heartbeatUtc = {.propertyName = "HeartbeatUTC",
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
 
 // initialize bindings
-static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_do_work,         &tmr_panel_refresh, &tmr_report_memory_usage, &tmr_update_environment,
-                                             &tmr_mbasic_delay_expired, &tmr_heart_beat,    &tmr_deferred_command, &tmr_deferred_input, &tmr_deferred_port_out_weather};
+static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_do_work, &tmr_panel_refresh,    &tmr_report_memory_usage, &tmr_update_environment,        &tmr_mbasic_delay_expired,
+                                             &tmr_heart_beat,   &tmr_deferred_command, &tmr_deferred_input,      &tmr_deferred_port_out_weather, &tmr_deferred_port_out_json};
 
 static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {&dt_deviceStartTimeUtc,
                                                          &dt_softwareVersion,

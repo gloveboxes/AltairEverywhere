@@ -6,6 +6,8 @@ static char copyx_filename[15];
 static char data_buffer[256];
 static int copyx_index = 0;
 static volatile bool delay_enabled = false;
+static volatile bool publish_weather_pending = false;
+static volatile bool publish_json_pending = false;
 static int jitter = 0;
 
 // clang-format off
@@ -24,8 +26,18 @@ DX_TIMER_HANDLER(port_out_weather_handler)
     if (environment.valid && azure_connected) {
         environment.latest.weather.temperature += jitter;
         publish_telemetry(&environment);
-        environment.latest.weather.temperature -= jitter;
+        environment.latest.weather.temperature -= jitter;        
     }
+    publish_weather_pending = false;
+}
+DX_TIMER_HANDLER_END
+
+DX_TIMER_HANDLER(port_out_json_handler)
+{
+    if (azure_connected) {
+        dx_azurePublish(data_buffer, strlen(data_buffer), json_msg_properties, NELEMS(json_msg_properties), &json_content_properties);        
+    }
+    publish_json_pending = false;
 }
 DX_TIMER_HANDLER_END
 
@@ -35,8 +47,7 @@ DX_TIMER_HANDLER_END
 /// <param name="port"></param>
 /// <param name="data"></param>
 void io_port_out(uint8_t port, uint8_t data)
-{
-    
+{    
     static char *data_ptr = NULL;
     static int data_index = 0;
 
@@ -48,25 +59,29 @@ void io_port_out(uint8_t port, uint8_t data)
         }
         break;
     case 31:
-        if (data_index == 0) {
-            memset((void *)data_buffer, 0x00, sizeof(data_buffer));
-        }
-
-        if (data != 0 && data_index < sizeof(data_buffer)) {
-            data_buffer[data_index] = data;
-            data_index++;
-        }
-
-        if (data == 0) {
-            if (azure_connected) {
-                dx_azurePublish(data_buffer, strlen(data_buffer), json_msg_properties, NELEMS(json_msg_properties), &json_content_properties);
+        if (!publish_json_pending) {
+            if (data_index == 0) {
+                memset((void *)data_buffer, 0x00, sizeof(data_buffer));
             }
-            data_index = 0;
+
+            if (data != 0 && data_index < sizeof(data_buffer)) {
+                data_buffer[data_index] = data;
+                data_index++;
+            }
+
+            if (data == 0) {
+                publish_json_pending = true;
+                data_index = 0;
+                dx_timerOneShotSet(&tmr_deferred_port_out_json, &(struct timespec){0, 1});                
+            }
         }
         break;
-    case 32:        
-        jitter = (int)data;
-        dx_timerOneShotSet(&tmr_deferred_port_out_weather, &(struct timespec){0,1});
+    case 32:      
+        if (!publish_weather_pending) {  
+            publish_weather_pending = true;
+            jitter = (int)data;
+            dx_timerOneShotSet(&tmr_deferred_port_out_weather, &(struct timespec){0, 1});
+        }
         break;
     case 33:
         if (copyx_index == 0){
