@@ -477,7 +477,7 @@ static void *altair_thread(void *arg)
 static void report_software_version(bool connected)
 {
     if (connected) {
-        snprintf(msgBuffer, sizeof(msgBuffer), "Altair emulator version: %s, DevX version: %s", ALTAIR_ON_AZURE_SPHERE_VERSION, AZURE_SPHERE_DEVX_VERSION);
+        snprintf(msgBuffer, sizeof(msgBuffer), "Altair emulator: %s, DevX: %s", ALTAIR_ON_AZURE_SPHERE_VERSION, AZURE_SPHERE_DEVX_VERSION);
         dx_deviceTwinReportValue(&dt_softwareVersion, msgBuffer);
         dx_deviceTwinReportValue(&dt_deviceStartTimeUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
 
