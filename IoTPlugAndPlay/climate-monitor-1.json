@@ -239,7 +239,7 @@
       {
         "@type": "Property",
         "displayName": {
-          "en": "Air Quality Index"
+          "en": "Air Quality Index (US)"
         },
         "name": "AirQualityIndexUS",
         "schema": "float",
