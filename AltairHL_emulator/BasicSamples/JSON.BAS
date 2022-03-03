@@ -1,7 +1,7 @@
 100 WIDTH 150
 150 PRINT "===================================================="
 200 PRINT "OPEN WEATHER MAP IOT APP"
-250 DELAY% = 10
+250 DELAY% = 20
 300 PRINT "SEND WEATHER DATA TO IOT CENTRAL EVERY";DELAY%;"SECONDS"
 350 RCOUNT% = 0
 
@@ -60,7 +60,7 @@
 2450 RJSON$ = RJSON$ + CHR$(34) + "humidity" + CHR$(34) + ":" +  HUMIDITY$ + ","
 2500 RJSON$ = RJSON$ + CHR$(34) + "latitude" + CHR$(34) + ":" +  LATITUDE$ + ","
 2550 RJSON$ = RJSON$ + CHR$(34) + "longitude" + CHR$(34) + ":" +  LONGITUDE$ + ","
-2560 RJSON$ = RJSON$ + CHR$(34) + "airQualityIndexUS" + CHR$(34) + ":" +  AIRQUALITYINDEX$
+2560 RJSON$ = RJSON$ + CHR$(34) + "aqi" + CHR$(34) + ":" +  AIRQUALITYINDEX$
 2600 RJSON$ = RJSON$ + "}"
 2650 RETURN
 
