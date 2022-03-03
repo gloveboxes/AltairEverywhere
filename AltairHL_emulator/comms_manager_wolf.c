@@ -308,7 +308,7 @@ static bool send_ping_new(void)
     MqttPing ping;
     word32 startSec;
 
-    wm_SemLock(&mtLock);
+    // wm_SemLock(&mtLock);
 
     startSec = 0;
     XMEMSET(&ping, 0, sizeof(ping));
@@ -319,7 +319,7 @@ static bool send_ping_new(void)
     if (rc != MQTT_CODE_SUCCESS) {
         MqttClient_CancelMessage(&gMqttCtx.client, (MqttObject *)&ping);
     }
-    wm_SemUnlock(&mtLock);
+    // wm_SemUnlock(&mtLock);
 
     if (rc != MQTT_CODE_SUCCESS) {
         PRINTF("MQTT Ping Keep Alive Error: %s (%d)", MqttClient_ReturnCodeToString(rc), rc);
