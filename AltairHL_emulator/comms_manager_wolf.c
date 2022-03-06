@@ -3,7 +3,7 @@
 
 #include "comms_manager_wolf.h"
 
-#define MAX_BUFFER_SIZE 4096
+#define MAX_BUFFER_SIZE 2048
 
 static bool mqtt_connected = false;
 static bool got_disconnected = true;
@@ -16,9 +16,6 @@ static char pub_topic_data[30] = {0};
 static char sub_topic_data[30] = {0};
 static char sub_topic_control[30] = {0};
 static char sub_topic_paste[30] = {0};
-// static char sub_topic_vdisk_data[30] = {0};
-// static char pub_topic_vdisk_read[30] = {0};
-// static char pub_topic_vdisk_write[30] = {0};
 
 static void (*_publish_callback)(MqttMessage *msg);
 static void (*_mqtt_connected_cb)(void);
@@ -31,14 +28,9 @@ static size_t output_buffer_length = 0;
 
 static wm_Sem mtLock; /* Protect "packetId" and "stop" */
 static MQTTCtx gMqttCtx;
-static pthread_mutex_t queue_lock;
 
 /* locals */
 static word16 mPacketIdLast;
-
-/* argument parsing */
-// static int myoptind = 0;
-// static char* myoptarg = NULL;
 
 TOPIC_TYPE topic_type(char *topic_name, size_t topic_name_length)
 {
@@ -436,11 +428,6 @@ int init_mqtt(int argc, char *argv[], void (*publish_callback)(MqttMessage *msg)
     gMqttCtx.port = ALTAIR_MQTT_BROKER_PORT;
     gMqttCtx.client_id = ALTAIR_MQTT_IDENTITY;
 
-    // Mutex object to guard output_queue object
-    if (pthread_mutex_init(&queue_lock, NULL) != 0) {
-        Log_Debug("pthread_mutex_init() error");
-    }
-
     dx_startThreadDetached(waitMessage_task, NULL, "wait for message");
 
     return 0;
@@ -462,9 +449,11 @@ void publish_character(char character)
     memcpy(output_buffer + output_buffer_length, &character, 1);
     output_buffer_length++;
 
-    if (output_buffer_length >= sizeof(output_buffer)) {
-        publish_message(output_buffer, output_buffer_length);
-        output_buffer_length = 0;
-        dirty_buffer = false;
+    if (output_buffer_length < sizeof(output_buffer)) {
+        return;
     }
+
+    publish_message(output_buffer, output_buffer_length);
+    output_buffer_length = 0;
+    dirty_buffer = false;
 }

@@ -226,7 +226,7 @@ static void publish_callback_wolf(MqttMessage *msg)
 static DX_TIMER_HANDLER(mqtt_work_scheduler_handler)
 {
     if (dirty_buffer) {
-        send_messages = true;
+        send_partial_msg = true;
     }
 }
 DX_TIMER_HANDLER_END
@@ -459,11 +459,9 @@ static void *altair_thread(void *arg)
             i8080_cycle(&cpu);
         }
 
-        if (send_messages) {
-            if (dirty_buffer) {
-                send_partial_message();
-            }
-            dirty_buffer = send_messages = false;
+        if (send_partial_msg) {
+            send_partial_message();
+            send_partial_msg = false;
         }
     }
 

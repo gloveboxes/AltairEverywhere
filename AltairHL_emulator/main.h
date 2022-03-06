@@ -108,7 +108,7 @@ bool azure_connected = false;
 extern volatile size_t queue_length;
 static ALTAIR_COMMAND deferred_command = NOP;
 volatile bool dirty_buffer = false;
-volatile bool send_messages = false;
+volatile bool send_partial_msg = false;
 static FILE *app_stream;
 
 static char Log_Debug_Time_buffer[128];
