@@ -34,7 +34,7 @@ static void publish_virtual_input_data(void)
     uint8_to_binary((uint8_t)(bus_switches >> 8), address_bus_high_byte, sizeof(address_bus_high_byte));
     uint8_to_binary((uint8_t)(bus_switches), address_bus_low_byte, sizeof(address_bus_low_byte));
 
-    snprintf(panel_info, sizeof(panel_info), "\r\n%15s: %s %s (0x%04x), %s (%d byte instruction)\n\r", "Input", address_bus_high_byte, address_bus_low_byte,
+    snprintf(panel_info, sizeof(panel_info), "\r\n%15s: %s %s (0x%04x), %s (%d byte instruction)", "Input", address_bus_high_byte, address_bus_low_byte,
              bus_switches, get_i8080_instruction_name((uint8_t)bus_switches, &i8080_instruction_size), i8080_instruction_size);
     publish_message(panel_info, strlen(panel_info));
 }
