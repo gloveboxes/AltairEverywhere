@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "comms_manager_wolf.h"
+#include "mqtt_manager.h"
 #include "dx_azure_iot.h"
 #include "dx_device_twins.h"
 #include "dx_json_serializer.h"

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "altair_panel.h"
-#include "comms_manager_wolf.h"
+#include "mqtt_manager.h"
 #include "utils.h"
 #include <stdbool.h>
 #include <string.h>

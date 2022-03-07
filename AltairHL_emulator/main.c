@@ -161,8 +161,6 @@ static DX_TIMER_HANDLER(deferred_input_handler)
             break;
         }
         break;
-    case TOPIC_PASTE_SUB: // paste message
-        break;
     case TOPIC_CONTROL_SUB: // control message
         if (data[0] >= 'A' && data[0] <= 'Z') {
             if (data[0] == 'M') { // CPU Monitor mode
@@ -214,9 +212,13 @@ static void handle_inbound_message(const char *topic_name, size_t topic_name_siz
 /// MQTT received message callback
 /// </summary>
 /// <param name="msg"></param>
-static void publish_callback_wolf(MqttMessage *msg)
-{
-    handle_inbound_message(msg->topic_name, msg->topic_name_len, (const char *)msg->buffer, msg->buffer_len);
+// static void publish_callback_wolf(MqttMessage *msg)
+// {
+//     handle_inbound_message(msg->topic_name, msg->topic_name_len, (const char *)msg->buffer, msg->buffer_len);
+// }
+
+static void publish_callback(void **unused, struct mqtt_response_publish *published){
+    handle_inbound_message(published->topic_name, published->topic_name_size, published->application_message, published->application_message_size);
 }
 
 /// <summary>
@@ -522,7 +524,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
         dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));
     }
 
-    init_mqtt(argc, argv, publish_callback_wolf, mqtt_connected_cb, altair_config.user_config.network_interface);
+    init_mqtt(publish_callback, mqtt_connected_cb);
 
     dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 

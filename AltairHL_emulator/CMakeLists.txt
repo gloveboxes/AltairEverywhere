@@ -20,13 +20,13 @@ add_compile_definitions(BOOT_CPM)
 
 # wolfMQTT Settings ###############################################################################################
 #
-add_compile_definitions(WOLFMQTT_MULTITHREAD)
-add_compile_definitions(WOLFMQTT_DISCONNECT_CB)
-add_compile_definitions(WOLFMQTT_NO_STDIN_CAP)
-add_compile_definitions(WOLFSSL_USER_SETTINGS)
-# add_compile_definitions(WOLFMQTT_V5)
-add_compile_definitions(NO_DH)
-add_compile_definitions(WOLFMQTT_USER_SETTINGS)
+# add_compile_definitions(WOLFMQTT_MULTITHREAD)
+# add_compile_definitions(WOLFMQTT_DISCONNECT_CB)
+# add_compile_definitions(WOLFMQTT_NO_STDIN_CAP)
+# add_compile_definitions(WOLFSSL_USER_SETTINGS)
+# # add_compile_definitions(WOLFMQTT_V5)
+# add_compile_definitions(NO_DH)
+# add_compile_definitions(WOLFMQTT_USER_SETTINGS)
 
 ###################################################################################################################
 
@@ -71,9 +71,9 @@ set(Source
     "Altair8800/memory.c"
     "altair_config.c"
     "io_ports.c"
-    "comms_manager_wolf.c"
     "FrontPanels/front_panel_virtual.c"
     "iotc_manager.c"
+    "mqtt_manager.c"
     "main.c"
     "environment.c"
     # "env_air_visual.c"
@@ -84,21 +84,37 @@ set(Source
 )
 source_group("Source" FILES ${Source})
 
-set(wolfMQTT
-    "wolfMQTT/src/mqtt_client.c"
-    "wolfMQTT/src/mqtt_packet.c"
-    "wolfMQTT/src/mqtt_socket.c"
-    "wolfMQTT/examples/mqttnet.c"
-    "wolfMQTT/examples/mqttexample.c"
+# set(wolfMQTT
+#     "wolfMQTT/src/mqtt_client.c"
+#     "wolfMQTT/src/mqtt_packet.c"
+#     "wolfMQTT/src/mqtt_socket.c"
+#     "wolfMQTT/examples/mqttnet.c"
+#     "wolfMQTT/examples/mqttexample.c"
+# )
+# source_group("wolfMQTT" FILES ${wolfMQTT})
+
+set(MQTT-C
+    MQTT-C/src/mqtt_pal.c
+    MQTT-C/src/mqtt.c
 )
-source_group("wolfMQTT" FILES ${wolfMQTT})
+source_group("MQTT-C" FILES ${MQTT-C})
 
 
 set(ALL_FILES
     ${Source}
     ${Oem}
-    ${wolfMQTT}
+    ${MQTT-C}
 )
+
+# # MQTT-C library
+# add_library(mqttc STATIC
+#     MQTT-C/src/mqtt_pal.c
+#     MQTT-C/src/mqtt.c
+# )
+# target_include_directories(mqttc PUBLIC MQTT-C/include)
+# target_link_libraries(mqttc PUBLIC 
+#     $<$<C_COMPILER_ID:MSVC>:ws2_32>
+# )
 
 # Create executable
 add_executable(${PROJECT_NAME} ${ALL_FILES})
@@ -109,17 +125,19 @@ add_subdirectory("EdgeDevX" edge_devx)
 target_link_libraries(${PROJECT_NAME} "edge_devx")
 ################################################################################
 
-target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC AZURE_IOT_HUB_CONFIGURED)
+
+# target_compile_definitions(${PROJECT_NAME} PUBLIC AZURE_IOT_HUB_CONFIGURED)
 target_link_libraries(${PROJECT_NAME} applibs pthread c edge_devx curl)
 
+target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
 target_link_options(${PROJECT_NAME} PUBLIC "-L/usr/local/lib")
 
 
 target_include_directories(${PROJECT_NAME} PUBLIC AzureSphereDevX/include )
-target_include_directories(${PROJECT_NAME} PUBLIC ../IntercoreContract)
-target_include_directories(${PROJECT_NAME} PUBLIC wolfMQTT wolfMQTT/wolfmqtt ./ )
+# target_include_directories(${PROJECT_NAME} PUBLIC ../IntercoreContract)
+# target_include_directories(${PROJECT_NAME} PUBLIC wolfMQTT wolfMQTT/wolfmqtt ./ )
+target_include_directories(${PROJECT_NAME} PUBLIC MQTT-C/include)
 target_include_directories(${PROJECT_NAME} PUBLIC Drivers/pi_sense_hat)
 include_directories(${CMAKE_SOURCE_DIR} FrontPanels)
 include_directories(${CMAKE_SOURCE_DIR} Altair8800)
@@ -130,19 +148,19 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wno-unknown-pragmas)
 set_source_files_properties(Altair8800/intel8080.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
 set_source_files_properties(Altair8800/intel8080.h PROPERTIES COMPILE_FLAGS -Wno-conversion)
 set_source_files_properties(Altair8800/memory.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
-set_source_files_properties(comms_manager_wolf.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
+# set_source_files_properties(comms_manager_wolf.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
 set_source_files_properties(FrontPanels/front_panel_virtual.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
-set_source_files_properties(wolfMQTT/examples/mqttnet.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
-set_source_files_properties(wolfMQTT/src/mqtt_client.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
-set_source_files_properties(wolfMQTT/src/mqtt_client.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
-set_source_files_properties(wolfMQTT/src/mqtt_packet.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
-set_source_files_properties(wolfMQTT/src/mqtt_packet.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
-set_source_files_properties(wolfMQTT/src/mqtt_socket.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
-set_source_files_properties(wolfMQTT/src/mqtt_socket.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
-set_source_files_properties(wolfMQTT/src/mqttnet.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
-set_source_files_properties(wolfMQTT/src/mqttnet.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
-set_source_files_properties(wolfMQTT/wolfmqtt/mqtt_client.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
-set_source_files_properties(wolfMQTT/wolfmqtt/mqtt_packet.h PROPERTIES COMPILE_FLAGS -Wno-conversion)
+# set_source_files_properties(wolfMQTT/examples/mqttnet.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
+# set_source_files_properties(wolfMQTT/src/mqtt_client.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
+# set_source_files_properties(wolfMQTT/src/mqtt_client.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
+# set_source_files_properties(wolfMQTT/src/mqtt_packet.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
+# set_source_files_properties(wolfMQTT/src/mqtt_packet.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
+# set_source_files_properties(wolfMQTT/src/mqtt_socket.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
+# set_source_files_properties(wolfMQTT/src/mqtt_socket.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
+# set_source_files_properties(wolfMQTT/src/mqttnet.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
+# set_source_files_properties(wolfMQTT/src/mqttnet.c PROPERTIES COMPILE_FLAGS -Wno-sign-conversion)
+# set_source_files_properties(wolfMQTT/wolfmqtt/mqtt_client.c PROPERTIES COMPILE_FLAGS -Wno-conversion)
+# set_source_files_properties(wolfMQTT/wolfmqtt/mqtt_packet.h PROPERTIES COMPILE_FLAGS -Wno-conversion)
 
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

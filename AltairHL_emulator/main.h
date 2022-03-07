@@ -19,7 +19,8 @@
 
 // Altair app
 #include "altair_config.h"
-#include "comms_manager_wolf.h"
+// #include "comms_manager_wolf.h"
+#include "mqtt_manager.h"
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include "front_panel_virtual.h"
