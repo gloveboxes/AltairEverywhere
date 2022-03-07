@@ -191,34 +191,17 @@ DX_TIMER_HANDLER_END
 /// <summary>
 /// Handle inbound MQTT messages
 /// </summary>
-/// <param name="topic_name"></param>
-/// <param name="topic_name_size"></param>
-/// <param name="message"></param>
-/// <param name="message_size"></param>
-static void handle_inbound_message(const char *topic_name, size_t topic_name_size, const char *message, size_t message_size)
+static void publish_callback(void **unused, struct mqtt_response_publish *published)
 {
     if (!mqtt_input_buffer.active) {
 
-        mqtt_input_buffer.topic = topic_type((char *)topic_name, topic_name_size);
+        mqtt_input_buffer.topic = topic_type(published->topic_name, published->topic_name_size);
         mqtt_input_buffer.active = true;
-        mqtt_input_buffer.length = message_size > sizeof(mqtt_input_buffer.buffer) ? sizeof(mqtt_input_buffer.buffer) : message_size;
-        memcpy(mqtt_input_buffer.buffer, message, mqtt_input_buffer.length = message_size);
+        mqtt_input_buffer.length = published->application_message_size > sizeof(mqtt_input_buffer.buffer) ? sizeof(mqtt_input_buffer.buffer) : published->application_message_size;
+        memcpy(mqtt_input_buffer.buffer, published->application_message, mqtt_input_buffer.length);
 
         dx_timerOneShotSet(&tmr_deferred_input, &(struct timespec){0, 1});
     }
-}
-
-/// <summary>
-/// MQTT received message callback
-/// </summary>
-/// <param name="msg"></param>
-// static void publish_callback_wolf(MqttMessage *msg)
-// {
-//     handle_inbound_message(msg->topic_name, msg->topic_name_len, (const char *)msg->buffer, msg->buffer_len);
-// }
-
-static void publish_callback(void **unused, struct mqtt_response_publish *published){
-    handle_inbound_message(published->topic_name, published->topic_name_size, published->application_message, published->application_message_size);
 }
 
 /// <summary>
