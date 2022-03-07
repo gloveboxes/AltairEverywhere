@@ -44,7 +44,7 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
-#define ALTAIR_ON_AZURE_SPHERE_VERSION "4.0.8"
+#define ALTAIR_ON_AZURE_SPHERE_VERSION "4.1.0"
 #define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED FALSE
 
