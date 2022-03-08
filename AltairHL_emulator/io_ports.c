@@ -163,6 +163,15 @@ uint8_t io_port_in(uint8_t port)
 
         retVal = data[readPtr++];
         break;
+    case 43: // Return local time
+        if (!reading_data) {
+            readPtr = 0;
+            dx_getLocalTime(data, sizeof(data));
+            reading_data = true;
+        }
+
+        retVal = data[readPtr++];
+        break;
     case 44: // Generate random number to seed mbasic randomize command
         LOAD_PORT_DATA(((rand() % 64000) - 32000), %d);
         break;

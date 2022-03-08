@@ -13,9 +13,9 @@
 
 1000 WHILE 1
 1100 PRINT "============================================================================================================================"
-1200 PORT = 42 : GOSUB 5900 : TIME$ = RSTRING$
+1200 PORT = 43 : GOSUB 5900 : TIME$ = RSTRING$
 
-1210 PRINT "Reading", "Jitter", "Time (UTC)"
+1210 PRINT "Reading", "Jitter", "Time"
 1230 PRINT RCOUNT%, RJITKEY%, TIME$
 1300 IF RCOUNT% MOD 51 = RJITKEY% THEN RJITKEY% = RND * 50 : RJITVAL% = (RND * 100) : RCOUNT% = 0 ELSE RJITVAL% = 0 : RCOUNT% = RCOUNT% + 1
 
