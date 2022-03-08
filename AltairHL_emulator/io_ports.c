@@ -9,6 +9,8 @@ static volatile bool delay_enabled = false;
 static volatile bool publish_weather_pending = false;
 static volatile bool publish_json_pending = false;
 static int jitter = 0;
+// set tick_count to 1 as the tick count timer doesn't kick in until 1 second after startup
+static volatile uint32_t tick_count = 1; 
 
 // clang-format off
 DX_MESSAGE_PROPERTY *json_msg_properties[] = {
@@ -20,6 +22,17 @@ DX_MESSAGE_CONTENT_PROPERTIES json_content_properties = {
     .contentEncoding = "utf-8", 
     .contentType = "application/json"};
 // clang-format off
+
+DX_TIMER_HANDLER(mbasic_delay_expired_handler)
+{
+    delay_enabled = false;
+}
+DX_TIMER_HANDLER_END
+
+DX_TIMER_HANDLER(tick_count_handler){
+    tick_count++;
+}
+DX_TIMER_HANDLER_END
 
 DX_TIMER_HANDLER(port_out_weather_handler)
 {
@@ -106,12 +119,6 @@ void io_port_out(uint8_t port, uint8_t data)
     }
 }
 
-DX_TIMER_HANDLER(mbasic_delay_expired_handler)
-{
-    delay_enabled = false;
-}
-DX_TIMER_HANDLER_END
-
 /// <summary>
 /// Intel 8080 IN Port handler
 /// </summary>
@@ -120,7 +127,7 @@ DX_TIMER_HANDLER_END
 uint8_t io_port_in(uint8_t port)
 {
     static bool reading_data = false;
-    static char data[40];
+    static char data[128];
     static int readPtr = 0;
     uint8_t retVal = 0;
     int ch;
@@ -153,6 +160,9 @@ uint8_t io_port_in(uint8_t port)
             }
         }
 
+        break;
+    case 41:
+        LOAD_PORT_DATA(tick_count, %u);
         break;
     case 42: // Return current UTC
         if (!reading_data) {
@@ -227,7 +237,7 @@ uint8_t io_port_in(uint8_t port)
         break;
     case 60:
         if (environment.latest.pollution.updated) {
-            LOAD_PORT_DATA(environment.latest.pollution.air_quality_index, %.2f);
+            LOAD_PORT_DATA(environment.latest.pollution.air_quality_index, %.0f);
         }
         break;
     case 61:
