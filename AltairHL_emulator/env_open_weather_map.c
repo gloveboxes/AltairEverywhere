@@ -272,9 +272,6 @@ static void update_owm_pollution(ENVIRONMENT_TELEMETRY *telemetry)
                 }
             }
         }
-        // Attempt to get the Air Quality Index from Air Visual
-        // Seems to be better data
-        update_air_visual(telemetry);
         pollution->updated = true;
     }
 

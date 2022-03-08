@@ -15,15 +15,14 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
                                                    {.name = "ConnectionString", .has_arg = required_argument, .flag = NULL, .val = 'c'},
                                                    {.name = "Hostname", .has_arg = required_argument, .flag = NULL, .val = 'h'},
                                                    {.name = "NetworkInterface", .has_arg = required_argument, .flag = NULL, .val = 'n'},
-                                                   {.name = "OpenWeatherMapKey", .has_arg = required_argument, .flag = NULL, .val = 'o'},
-                                                   {.name = "AirVisualKey", .has_arg = required_argument, .flag = NULL, .val = 'a'}
+                                                   {.name = "OpenWeatherMapKey", .has_arg = required_argument, .flag = NULL, .val = 'o'}
 
     };
 
     altair_config->user_config.connectionType = DX_CONNECTION_TYPE_NOT_DEFINED;
 
     // Loop over all of the options.
-    while ((option = getopt_long(argc, argv, "s:c:k:d:n:o:a:", cmdLineOptions, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "s:c:k:d:n:o:", cmdLineOptions, NULL)) != -1) {
         // Check if arguments are missing. Every option requires an argument.
         if (optarg != NULL && optarg[0] == '-') {
             printf("WARNING: Option %c requires an argument\n", option);
@@ -49,9 +48,6 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
             break;
         case 'o':
             altair_config->open_weather_map_api_key= optarg;
-            break;
-        case 'a':
-            altair_config->air_visual_api_key= optarg;
             break;
         default:
             // Unknown options are ignored.
