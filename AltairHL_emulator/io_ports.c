@@ -129,6 +129,7 @@ uint8_t io_port_in(uint8_t port)
     static bool reading_data = false;
     static char data[128];
     static int readPtr = 0;
+    static size_t string_len;
     uint8_t retVal = 0;
     int ch;
     uint64_t now;
