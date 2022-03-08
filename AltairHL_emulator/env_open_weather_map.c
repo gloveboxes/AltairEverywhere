@@ -272,6 +272,9 @@ static void update_owm_pollution(ENVIRONMENT_TELEMETRY *telemetry)
                 }
             }
         }
+        // Attempt to get the Air Quality Index from Air Visual
+        // Seems to be better data
+        update_air_visual(telemetry);
         pollution->updated = true;
     }
 
@@ -309,7 +312,7 @@ void init_open_weather_map_api_key(ALTAIR_CONFIG_T *altair_config, ENVIRONMENT_T
     if (!dx_isStringNullOrEmpty(altair_config->open_weather_map_api_key) && !owm_initialized && environment->locationInfo.updated) {
 
         snprintf(weatherUrl, sizeof(weatherUrl), weatherURLTemplate, environment->locationInfo.lat, environment->locationInfo.lng, altair_config->open_weather_map_api_key);
-        snprintf(pollutionUrl, sizeof(weatherUrl), pollutionURLTemplate, environment->locationInfo.lat, environment->locationInfo.lng, altair_config->open_weather_map_api_key);
+        snprintf(pollutionUrl, sizeof(pollutionUrl), pollutionURLTemplate, environment->locationInfo.lat, environment->locationInfo.lng, altair_config->open_weather_map_api_key);
 
         owm_initialized = true;
         dx_timerStart(&tmr_weather_cache_expired);

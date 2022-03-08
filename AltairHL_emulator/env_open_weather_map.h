@@ -6,6 +6,7 @@
 #include "altair_config.h"
 #include "dx_timer.h"
 #include "dx_utilities.h"
+#include "env_air_visual.h"
 #include "environment_types.h"
 #include "location_from_ip.h"
 #include "parson.h"

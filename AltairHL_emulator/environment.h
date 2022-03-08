@@ -6,6 +6,7 @@
 #include "location_from_ip.h"
 #include <stdbool.h>
 
+
 extern ENVIRONMENT_TELEMETRY environment;
 
 void init_environment(ALTAIR_CONFIG_T *altair_config);

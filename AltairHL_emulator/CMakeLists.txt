@@ -64,7 +64,7 @@ set(Source
     "mqtt_manager.c"
     "main.c"
     "environment.c"
-    # "env_air_visual.c"
+    "env_air_visual.c"
     "env_open_weather_map.c"
     "location_from_ip.c"
     "storage.c"
