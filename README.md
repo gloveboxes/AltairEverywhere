@@ -6,9 +6,9 @@ The Altair 8800 kick-started the personal computer revolution. You can learn mor
 
 The Altair 8800 Emulator runs on [POSIX](https://en.wikipedia.org/wiki/POSIX) compatible operating systems including Raspberry Pi, Desktop Linux, [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install), and macOS on Apple Silicon and Intel.
 
-The project introduces computer fundamentals with a climate sustainability theme, anomaly detection AI services, and software development. The Altair project can run standalone and is a fantastic safe way to explore machine-level programming, Intel 8080 Assembly programming, along with C and BASIC development. All the source code is provided under an MIT License.
+The project introduces computer fundamentals with a climate sustainability theme and software development. The Altair project can run standalone and is a fantastic safe way to explore machine-level programming, Intel 8080 Assembly programming, along with C and BASIC development. All the source code is provided under an MIT License.
 
-Optionally, the project integrates with free cloud services from [Open Weather Map](http://openweathermap.org) weather and pollution services, [Air Visual](https://www.iqair.com/au/) pollution data, along with [Azure IoT Central](https://azure.microsoft.com/en-au/services/iot-central/), and [Azure Anomaly Detection Cognitive Service](https://azure.microsoft.com/services/cognitive-services/anomaly-detector/).
+Optionally, the project integrates with free cloud services from [Open Weather Map](http://openweathermap.org) weather and pollution services, along with [Azure IoT Central](https://azure.microsoft.com/en-au/services/iot-central/), and [Azure Anomaly Detection Cognitive Service](https://azure.microsoft.com/services/cognitive-services/anomaly-detector/).
 
 ## Documentation
 
