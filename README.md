@@ -14,13 +14,13 @@ Optionally, the project integrates with free cloud services from [Open Weather M
 
 Navigate to the [Altair 8800 Project Wiki](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki) and read the complete documentation.
 
-## What will you learn
+What will you learn about:
 
 - Safe low-level machine and assembly programming.
 - Software development in BASIC and C.
 - Programming the Altair 8800 emulator with the virtual front panel.
 - How to extend the Intel 8080 input/output ports to integrate with cloud services.
-- Pain-free development of cross-platform Azure connected apps written in C/C++.
+- Weather and pollution cloud services
 - Azure services, including IoT, Stream Analytics, Anomaly detection.
 
 ## Altair 8800 history
