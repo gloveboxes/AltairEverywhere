@@ -130,7 +130,8 @@ void publish_message(const void *application_message, size_t application_message
         mqtt_mq_clean(&client.mq);
 
         if ((queue_len = mqtt_mq_length(&client.mq)) > 0) {
-            usleep(1);
+            usleep(1000);
+            printf("MQTT-C queue length: %d\n", mqtt_mq_length(&client.mq));
         }
 
     } while (queue_len > 0 && retry_count++ < 50);
