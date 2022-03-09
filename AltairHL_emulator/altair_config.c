@@ -1,3 +1,6 @@
+/* Copyright (c) Microsoft Corporation. All rights reserved.
+   Licensed under the MIT License. */
+
 #include "altair_config.h"
 
 // Usage text for command line arguments in application manifest.

@@ -1,3 +1,6 @@
+/* Copyright (c) Microsoft Corporation. All rights reserved.
+   Licensed under the MIT License. */
+
 #include "mqtt_manager.h"
 
 void publish_callback(void **unused, struct mqtt_response_publish *published);
@@ -131,7 +134,7 @@ void publish_message(const void *application_message, size_t application_message
 
         if ((queue_len = mqtt_mq_length(&client.mq)) > 0) {
             usleep(1000);
-            printf("MQTT-C queue length: %d\n", mqtt_mq_length(&client.mq));
+            printf("MQTT-C queue length: %ld\n", mqtt_mq_length(&client.mq));
         }
 
     } while (queue_len > 0 && retry_count++ < 50);

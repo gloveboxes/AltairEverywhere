@@ -1,3 +1,6 @@
+/* Copyright (c) Microsoft Corporation. All rights reserved.
+   Licensed under the MIT License. */
+
 // #include "env_air_visual.h"
 
 // static const char *air_visual_url_template = "http://api.airvisual.com/v2/nearest_city?lat=%.6f&lon=%.6f&key=%s";
