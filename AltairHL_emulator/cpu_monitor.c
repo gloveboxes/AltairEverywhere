@@ -1,11 +1,12 @@
 /* Copyright (c) Microsoft Corporation. All rights reserved.
    Licensed under the MIT License. */
 
-#include "front_panel_virtual.h"
+#include "cpu_monitor.h"
 
 static const char *too_many_switches = "\r\nError: Number of input switches must be less that or equal to 16.\n\r";
 static const char *invalid_switches = "\r\nError: Input switches must be either 0 or 1.\n\r";
 static char panel_info[256] = {0};
+static ALTAIR_COMMAND deferred_command = NOP;
 
 static bool validate_input_data(const char *command)
 {
@@ -84,11 +85,11 @@ void process_virtual_input(const char *command, void (*process_control_panel_com
     } else if (strcmp(command, "T") == 0) {
         cmd_switches = TRACE;
         process_control_panel_commands();
-    } else if (strcmp(command, "CPM") == 0) {
-        cmd_switches = RESTART_CPM;
+    } else if (strcmp(command, "R") == 0) {
+        cmd_switches = RESET;
         process_control_panel_commands();
-    } else if (strcmp(command, "AB") == 0) {
-        cmd_switches = RESTART_ALTAIR_BASIC;
+    } else if (strcmp(command, "BASIC") == 0) {
+        cmd_switches = LOAD_ALTAIR_BASIC;
         process_control_panel_commands();
     } else {
         process_virtual_switches(command, process_control_panel_commands);
@@ -197,4 +198,106 @@ void publish_cpu_state(char *command, uint16_t address_bus, uint8_t data_bus)
                                  get_i8080_instruction_name(data_bus, &instruction_length), instruction_length);
 
     publish_message((const char *)panel_info, msg_length);
+}
+
+bool loadRomImage(char *romImageName, uint16_t loadAddress)
+{
+    int romFd = -1;
+    romFd = open(romImageName, O_RDONLY);
+    if (romFd == -1)
+        return false;
+
+    off_t length = lseek(romFd, 0, SEEK_END);
+    lseek(romFd, 0, SEEK_SET);
+
+    ssize_t bytes = read(romFd, &memory[loadAddress], (size_t)length);
+    close(romFd);
+
+    return bytes == length;
+}
+
+/// <summary>
+/// Commands are deferred as they publish inside a mqtt callback that is locked
+/// </summary>
+DX_TIMER_HANDLER(deferred_command_handler)
+{
+    switch (deferred_command) {
+    case SINGLE_STEP:
+        i8080_cycle(&cpu);
+        publish_cpu_state("Single step", cpu.address_bus, cpu.data_bus);
+        bus_switches = cpu.address_bus;
+        break;
+    case EXAMINE:
+        i8080_examine(&cpu, bus_switches);
+        publish_cpu_state("Examine", cpu.address_bus, cpu.data_bus);
+        bus_switches = cpu.address_bus;
+        break;
+    case EXAMINE_NEXT:
+        i8080_examine_next(&cpu);
+        publish_cpu_state("Examine next", cpu.address_bus, cpu.data_bus);
+        bus_switches = cpu.address_bus;
+        break;
+    case DEPOSIT:
+        i8080_deposit(&cpu, (uint8_t)(bus_switches & 0xff));
+        publish_cpu_state("Deposit", cpu.address_bus, cpu.data_bus);
+        break;
+    case DEPOSIT_NEXT:
+        i8080_deposit_next(&cpu, (uint8_t)(bus_switches & 0xff));
+        publish_cpu_state("Deposit next", cpu.address_bus, cpu.data_bus);
+        bus_switches = cpu.address_bus;
+        break;
+    case DISASSEMBLE:
+        i8080_examine(&cpu, bus_switches);
+        disassemble(&cpu);
+        break;
+    case TRACE:
+        i8080_examine(&cpu, bus_switches);
+        trace(&cpu);
+        break;
+    case RESET:
+        memset(memory, 0x00, 64 * 1024); // clear altair memory.
+        // load Disk Loader at 0xff00
+        if (!loadRomImage(DISK_LOADER, 0xff00)) {
+            Log_Debug("Failed to open %s disk load ROM image\n", DISK_LOADER);
+        }
+        i8080_examine(&cpu, 0xff00); // 0xff00 loads from disk boot loader, 0x0000 loads basic
+        cpu_operating_mode = CPU_RUNNING;
+        break;
+    case LOAD_ALTAIR_BASIC:
+        memset(memory, 0x00, 64 * 1024); // clear altair memory.
+        // load Altair BASIC at 0xff00
+        if (!loadRomImage(ALTAIR_BASIC_ROM, 0x0000)) {
+            Log_Debug("Failed to open %s disk load ROM image\n", ALTAIR_BASIC_ROM);
+        }
+        i8080_examine(&cpu, 0x0000); // 0x0000 loads Altair BASIC
+        cpu_operating_mode = CPU_RUNNING;
+        break;
+    default:
+        break;
+    }
+}
+DX_TIMER_HANDLER_END
+
+void process_control_panel_commands(void)
+{
+    if (cpu_operating_mode == CPU_STOPPED) {
+        switch (cmd_switches) {
+        case RUN_CMD:
+            cpu_operating_mode = CPU_RUNNING;
+            break;
+        case STOP_CMD:
+            i8080_examine(&cpu, cpu.registers.pc);
+            bus_switches = cpu.address_bus;
+            break;
+        default:
+            deferred_command = cmd_switches;
+            dx_timerOneShotSet(&tmr_deferred_command, &(struct timespec){0, 1});
+            break;
+        }
+    }
+
+    if (cmd_switches & STOP_CMD) {
+        cpu_operating_mode = CPU_STOPPED;
+    }
+    cmd_switches = 0x00;
 }

@@ -13,6 +13,7 @@ const char *addr;
 const char *port;
 static struct mqtt_client client;
 static int reconnect_count = 0;
+static volatile bool dirty_buffer = false;
 
 static char output_buffer[512];
 static size_t output_buffer_length = 0;
@@ -191,3 +192,15 @@ void *client_refresher(void *client)
     }
     return NULL;
 }
+
+/// <summary>
+/// MQTT Dowork timer callback
+/// </summary>
+/// <param name="eventLoopTimer"></param>
+DX_TIMER_HANDLER(output_buffer_dirty_handler)
+{
+    if (dirty_buffer) {
+        send_partial_msg = true;
+    }
+}
+DX_TIMER_HANDLER_END

@@ -37,12 +37,12 @@
         retVal = 0x00;                   \
     }
 
-DX_DECLARE_TIMER_HANDLER(mbasic_delay_expired_handler);
+DX_DECLARE_TIMER_HANDLER(port_timer_expired_handler);
 DX_DECLARE_TIMER_HANDLER(port_out_json_handler);
 DX_DECLARE_TIMER_HANDLER(port_out_weather_handler);
 DX_DECLARE_TIMER_HANDLER(tick_count_handler);
 
-extern DX_TIMER_BINDING tmr_mbasic_delay_expired;
+extern DX_TIMER_BINDING tmr_port_timer_expired;
 extern DX_TIMER_BINDING tmr_deferred_port_out_weather;
 extern DX_TIMER_BINDING tmr_deferred_port_out_json;
 

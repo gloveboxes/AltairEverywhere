@@ -21,9 +21,11 @@
 #define MQTT_BROKER_URL "127.0.0.1"
 #define MQTT_BROKER_PORT "1883"
 
-extern volatile bool dirty_buffer;
+extern volatile bool send_partial_msg;
 
 typedef enum { TOPIC_UNKNOWN, TOPIC_DATA_SUB, TOPIC_CONTROL_SUB } TOPIC_TYPE;
+
+DX_DECLARE_TIMER_HANDLER(output_buffer_dirty_handler);
 
 TOPIC_TYPE topic_type(const void *topic_name, uint16_t topic_name_length);
 void init_mqtt(void (*publish_callback)(void **unused, struct mqtt_response_publish *published), void (*mqtt_connected_cb)(void));

@@ -10,16 +10,6 @@ project (Altair_emulator C)
 #
 ###################################################################################################################
 
-# BOOT CONFIG #####################################################################################################
-#
-# Comment out the "add_compile_definitions(BOOT_CPM) line below to boot Altair BASIC 4.0
-#
-add_compile_definitions(BOOT_CPM)
-#
-###################################################################################################################
-
-add_compile_definitions(PRINTF=Log_Debug)
-
 set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO mocking for AzureSphereRemoteX.Client" FORCE )
 
 # ENABLE_EDGE_DEVX_REMOTEX is enabled as Log_Debug found in appslib is required.
@@ -59,7 +49,7 @@ set(Source
     "Altair8800/memory.c"
     "altair_config.c"
     "io_ports.c"
-    "FrontPanels/front_panel_virtual.c"
+    "cpu_monitor.c"
     "iotc_manager.c"
     "mqtt_manager.c"
     "main.c"

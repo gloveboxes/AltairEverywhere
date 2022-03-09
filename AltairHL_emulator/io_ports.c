@@ -26,7 +26,7 @@ DX_MESSAGE_CONTENT_PROPERTIES json_content_properties = {
     .contentType = "application/json"};
 // clang-format off
 
-DX_TIMER_HANDLER(mbasic_delay_expired_handler)
+DX_TIMER_HANDLER(port_timer_expired_handler)
 {
     delay_enabled = false;
 }
@@ -70,7 +70,7 @@ void io_port_out(uint8_t port, uint8_t data)
     switch (port) {
     case 30:
         if (data > 0) {
-            dx_timerOneShotSet(&tmr_mbasic_delay_expired, &(struct timespec){data, 0});
+            dx_timerOneShotSet(&tmr_port_timer_expired, &(struct timespec){data, 0});
             delay_enabled = true;
         }
         break;
