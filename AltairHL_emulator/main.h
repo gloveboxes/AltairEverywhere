@@ -53,6 +53,8 @@
 
 #define BASIC_SAMPLES_DIRECTORY "BasicSamples"
 
+static bool loadRomImage(char *romImageName, uint16_t loadAddress);
+
 static const char *AltairMsg = "\x1b[2J\r\nAltair 8800 Emulator\r\n";
 
 // local variables

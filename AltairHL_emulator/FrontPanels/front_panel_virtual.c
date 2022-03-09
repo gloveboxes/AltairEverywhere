@@ -84,6 +84,12 @@ void process_virtual_input(const char *command, void (*process_control_panel_com
     } else if (strcmp(command, "T") == 0) {
         cmd_switches = TRACE;
         process_control_panel_commands();
+    } else if (strcmp(command, "CPM") == 0) {
+        cmd_switches = RESTART_CPM;
+        process_control_panel_commands();
+    } else if (strcmp(command, "AB") == 0) {
+        cmd_switches = RESTART_ALTAIR_BASIC;
+        process_control_panel_commands();
     } else {
         process_virtual_switches(command, process_control_panel_commands);
 		publish_message("\r\nCPU MONITOR> ", 15);

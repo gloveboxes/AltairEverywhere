@@ -284,6 +284,7 @@ static DX_TIMER_HANDLER(deferred_command_handler)
     case EXAMINE:
         i8080_examine(&cpu, bus_switches);
         publish_cpu_state("Examine", cpu.address_bus, cpu.data_bus);
+        bus_switches = cpu.address_bus;
         break;
     case EXAMINE_NEXT:
         i8080_examine_next(&cpu);
@@ -306,6 +307,26 @@ static DX_TIMER_HANDLER(deferred_command_handler)
     case TRACE:
         i8080_examine(&cpu, bus_switches);
         trace(&cpu);
+        break;
+    case RESTART_CPM:
+        memset(memory, 0x00, 64 * 1024); // clear altair memory.
+        // load Disk Loader at 0xff00
+        if (!loadRomImage(DISK_LOADER, 0xff00)) {
+            Log_Debug("Failed to open %s disk load ROM image\n", DISK_LOADER);
+        }
+        i8080_examine(&cpu, 0xff00); // 0xff00 loads from disk boot loader, 0x0000 loads basic
+        cpu_operating_mode = CPU_RUNNING;
+        break;
+    case RESTART_ALTAIR_BASIC:
+        memset(memory, 0x00, 64 * 1024); // clear altair memory.
+
+        const uint8_t rom[] = {
+        #include "Altair8800/8krom.h"
+        };
+
+        memcpy(memory, rom, sizeof(rom));
+        i8080_examine(&cpu, 0x0000); // 0x0000 loads Altair BASIC
+        cpu_operating_mode = CPU_RUNNING;
         break;
     default:
         break;
