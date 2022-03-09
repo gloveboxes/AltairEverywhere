@@ -37,6 +37,7 @@
 #define DISK_A "Disks/cpm63k.dsk"
 #define DISK_B "Disks/blank.dsk"
 #define DISK_LOADER "Disks/88dskrom.bin"
+#define ALTAIR_BASIC_ROM "Disks/altair_basic.bin"
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 #include "front_panel_pi_sense_hat.h"

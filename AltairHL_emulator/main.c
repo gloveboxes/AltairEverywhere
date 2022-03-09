@@ -319,12 +319,10 @@ static DX_TIMER_HANDLER(deferred_command_handler)
         break;
     case RESTART_ALTAIR_BASIC:
         memset(memory, 0x00, 64 * 1024); // clear altair memory.
-
-        const uint8_t rom[] = {
-        #include "Altair8800/8krom.h"
-        };
-
-        memcpy(memory, rom, sizeof(rom));
+        // load Altair BASIC at 0xff00
+        if (!loadRomImage(ALTAIR_BASIC_ROM, 0x0000)) {
+            Log_Debug("Failed to open %s disk load ROM image\n", DISK_LOADER);
+        }
         i8080_examine(&cpu, 0x0000); // 0x0000 loads Altair BASIC
         cpu_operating_mode = CPU_RUNNING;
         break;
@@ -384,7 +382,7 @@ static bool loadRomImage(char *romImageName, uint16_t loadAddress)
     // TODO OPEN FILE
     // int romFd = Storage_OpenFileInImagePackage(romImageName);
     int romFd = -1;
-    romFd = open(romImageName, O_RDWR);
+    romFd = open(romImageName, O_RDONLY);
     if (romFd == -1)
         return false;
 
