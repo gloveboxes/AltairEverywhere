@@ -5,13 +5,13 @@
 
 50 WHILE 1
 60 PRINT "==============================================="
-70 PORT = 41 : GOSUB 160 : SYSTICK$ = RSTRING$
-80 PORT = 42 : GOSUB 160 : UTCTIME$ = RSTRING$
-90 PORT = 43 : GOSUB 160 : LOCALTIME$ = RSTRING$
-100 PRINT "System tick count: ";SYSTICK$
-110 PRINT "Local time: ";LOCALTIME$
-120 PRINT "UTC time: ";UTCTIME$
+
+70 PORT = 41 : GOSUB 160 : PRINT "System tick count: ";RSTRING$
+80 PORT = 42 : GOSUB 160 : PRINT "UTC date and time: ";RSTRING$
+90 PORT = 43 : GOSUB 160 : PRINT "Local date and time: ";RSTRING$
+
 130 GOSUB 230
+
 140 WEND
 150 END
 
