@@ -1,3 +1,6 @@
+;Copyright (c) Microsoft Corporation. All rights reserved.
+;Licensed under the MIT License.
+
       ORG 0100H   ;CP/M base of TPA (transient program area)
       MVI C,09H   ;Print string function
       LXI D,MSG   ;Point to waiting message
