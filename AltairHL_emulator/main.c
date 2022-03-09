@@ -50,9 +50,13 @@ DX_TIMER_HANDLER_END
 /// </summary>
 static DX_TIMER_HANDLER(panel_refresh_handler)
 {
-    uint8_t status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
-    uint8_t data = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
-    uint16_t bus = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
+    uint8_t status = cpu.cpuStatus;
+    uint8_t data = cpu.data_bus;
+    uint16_t bus = cpu.address_bus;
+
+    status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
+    data = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
+    bus = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
 
     update_panel_status_leds(status, data, bus);
 
