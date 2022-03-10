@@ -114,6 +114,7 @@ void reconnect(struct mqtt_client *client, void **reconnect_state_vptr)
         }
 
         reconnect_state->mqtt_connected_cb();
+        printf("Connected to the MQTT broker\n");
     }
 }
 
@@ -134,11 +135,16 @@ void publish_message(const void *application_message, size_t application_message
         mqtt_mq_clean(&client.mq);
 
         if ((queue_len = mqtt_mq_length(&client.mq)) > 0) {
-            usleep(1000);
+            usleep(100000); // 100 ms
             printf("MQTT-C queue length: %ld\n", mqtt_mq_length(&client.mq));
         }
 
     } while (queue_len > 0 && retry_count++ < 50);
+    if (retry_count == 50){
+        printf("Failed to clear the MQTT-C queue\n");
+        printf("Messages in queue: %ld\n", mqtt_mq_length(&client.mq));
+        printf("client->error: %d", (int)client.error);
+    }
 }
 
 void send_partial_message(void)
@@ -175,23 +181,7 @@ void init_mqtt(void (*publish_callback)(void **unused, struct mqtt_response_publ
     mqtt_init_reconnect(&client, reconnect, &reconnect_state, publish_callback);
 
     mqtt_sync(&client);
-
-    // pthread_t client_daemon;
-    // if (pthread_create(&client_daemon, NULL, client_refresher, &client))
-    // {
-    //     fprintf(stderr, "Failed to start client daemon.\n");
-    // }
 }
-
-// void *client_refresher(void *client)
-// {
-//     while (1)
-//     {
-//         mqtt_sync((struct mqtt_client *)client);
-//         usleep(100000U);
-//     }
-//     return NULL;
-// }
 
 /// <summary>
 /// MQTT Dowork timer callback
