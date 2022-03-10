@@ -260,6 +260,9 @@ DX_TIMER_HANDLER(deferred_command_handler)
         if (!loadRomImage(DISK_LOADER, 0xff00)) {
             Log_Debug("Failed to open %s disk load ROM image\n", DISK_LOADER);
         }
+
+        print_console_banner();
+
         i8080_examine(&cpu, 0xff00); // 0xff00 loads from disk boot loader, 0x0000 loads basic
         cpu_operating_mode = CPU_RUNNING;
         break;
@@ -269,6 +272,8 @@ DX_TIMER_HANDLER(deferred_command_handler)
         if (!loadRomImage(ALTAIR_BASIC_ROM, 0x0000)) {
             Log_Debug("Failed to open %s disk load ROM image\n", ALTAIR_BASIC_ROM);
         }
+        print_console_banner();
+        
         i8080_examine(&cpu, 0x0000); // 0x0000 loads Altair BASIC
         cpu_operating_mode = CPU_RUNNING;
         break;

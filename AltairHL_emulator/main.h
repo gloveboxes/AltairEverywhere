@@ -124,7 +124,7 @@ DX_TIMER_BINDING tmr_deferred_port_out_weather = {.name = "tmr_deferred_port_out
 DX_TIMER_BINDING tmr_port_timer_expired = {.name = "tmr_port_timer_expired", .handler = port_timer_expired_handler};
 static DX_TIMER_BINDING tmr_deferred_input = {.name = "tmr_deferred_input", .handler = deferred_input_handler};
 static DX_TIMER_BINDING tmr_heart_beat = {.repeat = &(struct timespec){60, 0}, .name = "tmr_heart_beat", .handler = heart_beat_handler};
-static DX_TIMER_BINDING tmr_output_buffer_dirty = {.repeat = &(struct timespec){0, 250 * OneMS}, .name = "tmr_output_buffer_dirty", .handler = output_buffer_dirty_handler};
+static DX_TIMER_BINDING tmr_mqtt_dowork = {.repeat = &(struct timespec){0, 250 * OneMS}, .name = "tmr_mqtt_dowork", .handler = mqtt_dowork_handler};
 static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){30, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
 static DX_TIMER_BINDING tmr_tick_count = {.repeat = &(struct timespec){1, 0}, .name = "tmr_tick_count", .handler = tick_count_handler};
 static DX_TIMER_BINDING tmr_update_environment = {.delay = &(struct timespec){2, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
@@ -165,7 +165,7 @@ static DX_DEVICE_TWIN_BINDING dt_heartbeatUtc = {.propertyName = "HeartbeatUTC",
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
 
 // initialize bindings
-static DX_TIMER_BINDING *timer_bindings[] = {&tmr_output_buffer_dirty, &tmr_panel_refresh,    &tmr_report_memory_usage, &tmr_update_environment,        &tmr_port_timer_expired,
+static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_dowork, &tmr_panel_refresh,    &tmr_report_memory_usage, &tmr_update_environment,        &tmr_port_timer_expired,
                                              &tmr_heart_beat,   &tmr_deferred_command, &tmr_deferred_input,      &tmr_deferred_port_out_weather, &tmr_deferred_port_out_json,
                                              &tmr_tick_count};
 

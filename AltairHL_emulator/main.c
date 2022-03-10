@@ -289,7 +289,7 @@ static inline uint8_t sense(void)
     return (uint8_t)(bus_switches >> 8);
 }
 
-static void print_console_banner(void)
+void print_console_banner(void)
 {
     for (int x = 0; x < strlen(AltairMsg); x++) {
         terminal_write(AltairMsg[x]);

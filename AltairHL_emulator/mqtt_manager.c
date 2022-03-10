@@ -176,29 +176,31 @@ void init_mqtt(void (*publish_callback)(void **unused, struct mqtt_response_publ
 
     mqtt_sync(&client);
 
-    pthread_t client_daemon;
-    if (pthread_create(&client_daemon, NULL, client_refresher, &client))
-    {
-        fprintf(stderr, "Failed to start client daemon.\n");
-    }
+    // pthread_t client_daemon;
+    // if (pthread_create(&client_daemon, NULL, client_refresher, &client))
+    // {
+    //     fprintf(stderr, "Failed to start client daemon.\n");
+    // }
 }
 
-void *client_refresher(void *client)
-{
-    while (1)
-    {
-        mqtt_sync((struct mqtt_client *)client);
-        usleep(100000U);
-    }
-    return NULL;
-}
+// void *client_refresher(void *client)
+// {
+//     while (1)
+//     {
+//         mqtt_sync((struct mqtt_client *)client);
+//         usleep(100000U);
+//     }
+//     return NULL;
+// }
 
 /// <summary>
 /// MQTT Dowork timer callback
 /// </summary>
 /// <param name="eventLoopTimer"></param>
-DX_TIMER_HANDLER(output_buffer_dirty_handler)
+DX_TIMER_HANDLER(mqtt_dowork_handler)
 {
+    mqtt_sync(&client);
+
     if (dirty_buffer) {
         send_partial_msg = true;
     }
