@@ -33,16 +33,6 @@ DX_DEVICE_TWIN_HANDLER(set_led_brightness_handler, deviceTwinBinding)
 DX_DEVICE_TWIN_HANDLER_END
 
 /// <summary>
-/// Device Twin Handler to set the mqtt channel id
-/// </summary>
-DX_DEVICE_TWIN_HANDLER(set_channel_id_handler, deviceTwinBinding)
-{
-    write_channel_id_to_storage(*(int *)deviceTwinBinding->propertyValue);
-    dx_deviceTwinAckDesiredValue(deviceTwinBinding, deviceTwinBinding->propertyValue, DX_DEVICE_TWIN_RESPONSE_COMPLETED);
-}
-DX_DEVICE_TWIN_HANDLER_END
-
-/// <summary>
 /// Determine if environment value changed. If so, update it's device twin
 /// </summary>
 /// <param name="new_value"></param>

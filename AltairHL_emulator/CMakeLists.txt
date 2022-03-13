@@ -10,6 +10,12 @@ project (Altair_emulator C)
 #
 ###################################################################################################################
 
+###################################################################################################################
+# IoT Hub Polling time overide
+add_compile_definitions(IOT_HUB_POLL_TIME_SECONDS=1)
+add_compile_definitions(IOT_HUB_POLL_TIME_NANOSECONDS=500000000)
+###################################################################################################################
+
 set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO mocking for AzureSphereRemoteX.Client" FORCE )
 
 # ENABLE_EDGE_DEVX_REMOTEX is enabled as Log_Debug found in appslib is required.
@@ -51,7 +57,7 @@ set(Source
     "io_ports.c"
     "cpu_monitor.c"
     "iotc_manager.c"
-    "mqtt_manager.c"
+    "web_socket_server.c"
     "main.c"
     "environment.c"
     # "env_air_visual.c"
@@ -62,16 +68,19 @@ set(Source
 )
 source_group("Source" FILES ${Source})
 
-set(MQTT-C
-    MQTT-C/src/mqtt_pal.c
-    MQTT-C/src/mqtt.c
+set(wsServer
+    wsServer/src/ws.c
+    wsServer/src/base64/base64.c
+    # wsServer/src/sha1/sha1.c # sha1.c is pulled in from the Azure IoT SDK C
+    wsServer/src/handshake/handshake.c
+    wsServer/src/utf8/utf8.c
 )
-source_group("MQTT-C" FILES ${MQTT-C})
+source_group("wsServer" FILES ${wsServer})
 
 set(ALL_FILES
     ${Source}
     ${Oem}
-    ${MQTT-C}
+    ${wsServer}
 )
 
 # Create executable
@@ -83,18 +92,16 @@ add_subdirectory("EdgeDevX" edge_devx)
 target_link_libraries(${PROJECT_NAME} "edge_devx")
 ################################################################################
 
-
-
 # target_compile_definitions(${PROJECT_NAME} PUBLIC AZURE_IOT_HUB_CONFIGURED)
 target_link_libraries(${PROJECT_NAME} applibs pthread c edge_devx curl)
 
 target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
 target_link_options(${PROJECT_NAME} PUBLIC "-L/usr/local/lib")
-
-
 target_include_directories(${PROJECT_NAME} PUBLIC AzureSphereDevX/include )
-target_include_directories(${PROJECT_NAME} PUBLIC MQTT-C/include)
+target_include_directories(${PROJECT_NAME} PRIVATE wsServer/include)
 target_include_directories(${PROJECT_NAME} PUBLIC Drivers/pi_sense_hat)
+
+
 include_directories(${CMAKE_SOURCE_DIR} FrontPanels)
 include_directories(${CMAKE_SOURCE_DIR} Altair8800)
 

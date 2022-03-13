@@ -67,79 +67,30 @@ DX_TIMER_HANDLER_END
 /// <summary>
 /// Handler called to process inbound message
 /// </summary>
-static DX_TIMER_HANDLER(deferred_input_handler)
+DX_TIMER_HANDLER(deferred_input_handler)
 {
     char command[30];
     bool send_cr = false;
     int retry = 0;
 
-    TOPIC_TYPE topic = mqtt_input_buffer.topic;
-    size_t application_message_size = mqtt_input_buffer.length;
-    char *data = mqtt_input_buffer.buffer;
+    size_t application_message_size = web_socket_input_buffer.length;
+    char *data = web_socket_input_buffer.buffer;
 
-    switch (topic) {
-    case TOPIC_DATA_SUB: // data message
-        // upper case incoming message
-        memset(command, 0, sizeof(command));
+    if (data[0] == '\r') {
+        haveCtrlCharacter = 0x0d;
+        haveCtrlPending = true;
 
-        if (application_message_size > 0 && data[application_message_size - 1] == '\r') { // is last char carriage return ?
-            send_cr = true;
-            application_message_size--;
+        // spin until current buffer processed
+        retry = 0;
+        while (haveCtrlPending && retry++ < 10) {
+            nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
         }
+    } else {
 
-        for (int i = 0; i < sizeof(command) - 1 && i < application_message_size; i++) { // -1 to allow for trailing null
-            command[i] = (char)toupper(data[i]);
-        }
+        // test for ctlr char
+        if (data[0] > 0 && data[0] < 27 || data[0] == 28) {
 
-        // if command is loadx then try looking for in baked in samples
-        if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 && (command[application_message_size - 1] == '"')) {
-            command[application_message_size - 1] = 0x00; // replace the '"' with \0
-            load_application(&command[7]);
-            goto cleanup;
-        }
-
-        switch (cpu_operating_mode) {
-        case CPU_RUNNING:
-
-            if (application_message_size > 0) { // for example just cr was send so don't try send chars to CPU
-                input_data = data;
-
-                altairInputBufReadIndex = 0;
-                altairOutputBufReadIndex = 0;
-                terminalInputMessageLen = (int)application_message_size;
-                terminalOutputMessageLen = (int)application_message_size;
-
-                haveTerminalInputMessage = true;
-                haveTerminalOutputMessage = true;
-
-                // spin until current buffer processed
-                retry = 0;
-                while (haveTerminalInputMessage && retry++ < 20) {
-                    nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
-                }
-            }
-
-            if (send_cr) {
-                haveCtrlCharacter = 0x0d;
-                haveCtrlPending = true;
-
-                // spin until current buffer processed
-                retry = 0;
-                while (haveCtrlPending && retry++ < 10) {
-                    nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
-                }
-            }
-            break;
-        case CPU_STOPPED:
-            process_virtual_input(command, process_control_panel_commands);
-            break;
-        default:
-            break;
-        }
-        break;
-    case TOPIC_CONTROL_SUB: // control message
-        if (data[0] >= 'A' && data[0] <= 'Z') {
-            if (data[0] == 'M') { // CPU Monitor mode
+            if (data[0] == 28) {
                 cpu_operating_mode = cpu_operating_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
                 if (cpu_operating_mode == CPU_STOPPED) {
                     bus_switches = cpu.address_bus;
@@ -148,53 +99,97 @@ static DX_TIMER_HANDLER(deferred_input_handler)
                     publish_message("\r\n", 2);
                 }
             } else {
-                haveCtrlCharacter = data[0] & 31; // https://en.wikipedia.org/wiki/Control_character
+                haveCtrlCharacter = data[0];
                 haveCtrlPending = true;
+
+                // spin until current buffer processed
+                retry = 0;
+                while (haveCtrlPending && retry++ < 10) {
+                    nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
+                }
+            }
+            goto cleanup;
+        }
+    }
+
+    // upper case incoming message
+    memset(command, 0, sizeof(command));
+
+    if (application_message_size > 0 && data[application_message_size - 1] == '\r') { // is last char carriage return ?
+        send_cr = true;
+        application_message_size--;
+    }
+
+    for (int i = 0; i < sizeof(command) - 1 && i < application_message_size; i++) { // -1 to allow for trailing null
+        command[i] = (char)toupper(data[i]);
+    }
+
+    // if command is loadx then try looking for in baked in samples
+    if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 && (command[application_message_size - 1] == '"')) {
+        command[application_message_size - 1] = 0x00; // replace the '"' with \0
+        load_application(&command[7]);
+        goto cleanup;
+    }
+
+    switch (cpu_operating_mode) {
+    case CPU_RUNNING:
+
+        if (application_message_size > 0) { // for example just cr was send so don't try send chars to CPU
+            input_data = data;
+
+            altairInputBufReadIndex = 0;
+            altairOutputBufReadIndex = 0;
+            terminalInputMessageLen = (int)application_message_size;
+            terminalOutputMessageLen = (int)application_message_size;
+
+            haveTerminalInputMessage = true;
+            haveTerminalOutputMessage = true;
+
+            // spin until current buffer processed
+            retry = 0;
+            while (haveTerminalInputMessage && retry++ < 20) {
+                nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
             }
         }
+
+        if (send_cr) {
+            haveCtrlCharacter = 0x0d;
+            haveCtrlPending = true;
+
+            // spin until current buffer processed
+            retry = 0;
+            while (haveCtrlPending && retry++ < 10) {
+                nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
+            }
+        }
+        break;
+    case CPU_STOPPED:
+        process_virtual_input(command, process_control_panel_commands);
         break;
     default:
         break;
     }
 
 cleanup:
-    mqtt_input_buffer.active = false;
+    web_socket_input_buffer.active = false;
 }
 DX_TIMER_HANDLER_END
 
 /// <summary>
-/// Handle inbound MQTT messages
+/// Client connected successfully
 /// </summary>
-static void publish_callback(void **unused, struct mqtt_response_publish *published)
-{
-    if (!mqtt_input_buffer.active) {
-
-        mqtt_input_buffer.topic = topic_type(published->topic_name, published->topic_name_size);
-        mqtt_input_buffer.active = true;
-        mqtt_input_buffer.length = published->application_message_size > sizeof(mqtt_input_buffer.buffer) ? sizeof(mqtt_input_buffer.buffer) : published->application_message_size;
-        memcpy(mqtt_input_buffer.buffer, published->application_message, mqtt_input_buffer.length);
-
-        dx_timerOneShotSet(&tmr_deferred_input, &(struct timespec){0, 1});
-    }
-}
-
-/// <summary>
-/// Called on successful connection to the MQTT broker
-/// </summary>
-static void mqtt_connected_cb(void)
+static void client_connected_cb(void)
 {
     static bool connection_initialised = false;
-    // static const char *connected_message = "\r\nCONNECTED TO ALTAIR 8800 EMULATOR VERSION: %s, DevX VERSION: %s.\r\n\r\n";
-    static const char *reconnected_message = "\r\nRECONNECTED TO ALTAIR 8800 EMULATOR VERSION: %s, DevX VERSION: %s.\r\n\r\n";
 
     if (!connection_initialised) {
         connection_initialised = true;
         // int len = snprintf(msgBuffer, sizeof(msgBuffer), connected_message, ALTAIR_EMULATOR_VERSION, AZURE_SPHERE_DEVX_VERSION);
         // publish_message(msgBuffer, (size_t)len);
+        print_console_banner();
         cpu_operating_mode = CPU_RUNNING;
     } else {
-        int len = snprintf(msgBuffer, sizeof(msgBuffer), reconnected_message, ALTAIR_EMULATOR_VERSION, AZURE_SPHERE_DEVX_VERSION);
-        publish_message(msgBuffer, (size_t)len);
+        print_console_banner();
     }
 }
 
@@ -297,6 +292,10 @@ void print_console_banner(void)
 
     for (int x = 0; x < strlen(ALTAIR_EMULATOR_VERSION); x++) {
         terminal_write(ALTAIR_EMULATOR_VERSION[x]);
+    }
+
+    for (int x = 0; x < strlen("\r\n"); x++) {
+        terminal_write("\r\n"[x]);
     }
 }
 
@@ -412,7 +411,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
         dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));
     }
 
-    init_mqtt(publish_callback, mqtt_connected_cb);
+    init_web_socket_server(client_connected_cb);
 
     dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 

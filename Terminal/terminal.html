@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="https://unpkg.com/xterm@4.4.0/css/xterm.css" />
+  <style>
+    #term-box {
+      overflow: hidden;
+      width: auto;
+      height: auto;
+      /* <- fixed height */
+      font-size: 18px;
+      line-height: 20px;
+      /* <- initial line-height */
+    }
+
+    .inputMode {
+      /* border: 5px outset red; */
+      background-color: lightblue;
+      text-align: left;
+      color: black;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-weight: bold;
+    }
+
+    input[type=button] {
+      background-color: black;
+      background-image: radial-gradient(rgba(0, 150, 0, 0.75), black 120%);
+      border: white;
+      color: white;
+      padding: 1px 1px;
+      /* text-decoration: none; */
+      /* margin: 4px 2px; */
+      cursor: pointer;
+      font: 1.3rem Courier New;
+      text-shadow: 0 0 5px #C8C8C8;
+    }
+
+    input[type=text] {
+      background-color: #C8C8C8;
+      border: white;
+      border-width: thick;
+      /* color: white; */
+      padding: 1px 1px;
+      text-decoration: none;
+      font: 1.3rem Courier New;
+      text-shadow: 0 0 5px #C8C8C8;
+    }
+
+    /* https://css-tricks.com/old-timey-terminal-styling/ */
+
+    body {
+      background-color: black;
+      background-image: radial-gradient(rgba(0, 150, 0, 0.75), black 120%);
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      padding: 2rem;
+      color: white;
+      font: 1.3rem Courier New;
+      text-shadow: 0 0 5px #C8C8C8;
+    }
+
+    ::selection {
+      background: #0080FF;
+      text-shadow: none;
+    }
+
+    pre {
+      margin: 0;
+    }
+  </style>
+  <script>
+    "use strict";
+
+    /* WebSocket. */
+    var ws;
+    var connected = false;
+    var count = 0;
+
+
+    var mqtt_client_id = "";
+    var sub_topic = "";
+    var pub_topic_control = "";
+    var pub_topic = "";
+    var pub_topic_paste = "";
+    var channelId = "";
+    var display_name = "";
+    var mqtt_broker_connected = false;
+
+    var client = null;
+    var character_mode = false;
+
+    var current_line = "";
+    var channel_set = false;
+    var term = null;
+
+    function initTerminal() {
+
+      // document.getElementById('displayName').value = localStorage['display_name'] || "";
+
+      term = new Terminal({
+        cursorBlink: "block",
+        fontFamily: 'Courier New',
+        fontSize: 18,
+        rows: 30,
+        cols: 140,
+      });
+
+      term.open(document.getElementById("terminal"));
+
+      term.write(`WELCOME TO ALTAIR TERMINAL\r\n\r\n`);
+
+      // term.write(`WELCOME TO ALTAIR TERMINAL ${clientPrincipal.userDetails}\r\n\r\n`);
+
+      term.prompt = (msg) => {
+        if (connected) {
+          ws.send(msg);
+        }
+      };
+
+
+      term.prompt("");
+
+      term.on("key", function (key, ev) {
+
+        if (ev.ctrlKey) {    // ctrl keys
+          if (ev.keyCode === 76) {   // hook ctrl L as toggel between line mode and wordmaster mode
+            character_mode = !character_mode;
+            if (character_mode) {
+              document.getElementById("inputmode").innerHTML = "Character input mode : Wordmaster (Ctrl+L to toggle)";
+            } else {
+              document.getElementById("inputmode").innerHTML = "Line input mode: Default (Ctrl+L to toggle)";
+            }
+            return;
+          }
+          sendControl(String.fromCharCode(ev.keyCode));
+          return;
+        }
+
+        if (ev.keyCode === 27) { // escape
+          term.prompt(key);
+          term.write(key);
+          return;
+        }
+
+        if (character_mode) {
+          switch (ev.keyCode) {
+            case 39:  // cursor right
+              sendControl(String.fromCharCode(68)); // ctrl d
+              return;
+            case 37:  // cursor left
+              sendControl(String.fromCharCode(83)); // ctrl s
+              return;
+            case 38:  // cursor up
+              sendControl(String.fromCharCode(69)); // ctrl e
+              return;
+            case 40:  // cursor down
+              sendControl(String.fromCharCode(88)); // ctrl x
+              return;
+            case 45:  // insert toggle
+              sendControl(String.fromCharCode(79)); // ctrl o
+              return;
+            case 46:  // delete
+              sendControl(String.fromCharCode(71)); // ctrl g
+              return;
+            case 13:  // Enter
+              term.prompt("\r");
+              current_line = "";
+              return;
+            case 45:  // Insert
+              sendControl(String.fromCharCode(79));
+              return;
+            case 8:  // Backspace
+              sendControl(String.fromCharCode(72));
+              return;
+            default:
+              current_line += key;
+              term.prompt(key);
+              term.write(key);
+              return;
+          }
+        }
+
+        if (!character_mode) {
+
+          switch (ev.keyCode) {
+            case 39:  // cursor right
+              break;
+            case 37:  // cursor left
+              break;
+            case 38:  // cursor up
+              break;
+            case 40:  // cursor down
+              break;
+            case 13:  // Enter
+              current_line += "\r";
+              term.prompt(current_line);
+              term.write("\r");
+              current_line = "";
+              return;
+            case 8:   // Backspace
+              if (current_line) {
+                current_line = current_line.slice(0, current_line.length - 1);
+                term.write("\b \b");
+              }
+              return;
+            default:
+              current_line += key;
+              term.write(key);
+          }
+        }
+      });
+
+      // connect();
+    }
+
+    function chunkSubstr(str, size) {
+      const numChunks = Math.ceil(str.length / size)
+      const chunks = new Array(numChunks)
+
+      for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
+        chunks[i] = str.substr(o, size)
+      }
+      return chunks
+    }
+
+    const getChannelId = async (displayName) => {
+
+      channelId = 8800
+      channel_set = true;
+      generateTopics();
+      mqttInit();
+
+      return;
+
+
+
+      const url = `api/getchannelid?displayname=${displayName}`;
+      document.getElementById("connectState").innerHTML = "MQTT Broker: Connecting...";
+      const response = await fetch(url);
+
+      if (response.ok) { // if HTTP-status is 200-299
+        const json = await response.json();
+
+        if (json['DesiredChannelId']) {
+          channelId = json.DesiredChannelId;
+
+          channel_set = true;
+          generateTopics();
+          mqttInit();
+
+        }
+      } else {
+        alert("HTTP-Error: " + response.status + ". Check the IoT Central device name you entered.");
+        document.getElementById("connectState").innerHTML = "MQTT Broker: Not connected";
+      }
+    }
+
+    function connect() {
+      // display_name = document.getElementById("displayName").value;
+      display_name = 'altair'
+
+      if (display_name == '') {
+        alert('ERROR: Missing the IoT Central device name')
+      } else {
+        localStorage['display_name'] = display_name;
+        if (mqtt_broker_connected) {
+          client.disconnect();
+          mqtt_broker_connected = false;
+          document.getElementById("connectState").innerHTML = "MQTT Broker: Not connected";
+        }
+        getChannelId(display_name);
+      }
+    }
+
+    function generateTopics() {
+      mqtt_client_id = `${channelId}`
+      sub_topic = `altair/${channelId}/web`;
+      pub_topic = `altair/${channelId}/dev`;
+      pub_topic_control = `altair/${channelId}/dev/ctrl`;
+      pub_topic_paste = `altair/${channelId}/dev/paste`
+    }
+
+    async function mqttInit() {
+      // const res = await fetch("/api/mqtt-settings");
+      // const mqttCredentials = await res.json();
+
+      let hostname = location.hostname;
+
+      // https://stackoverflow.com/questions/53051679/how-can-i-use-tls-with-paho-mqtt-over-javascript
+      client = new Paho.MQTT.Client(
+        hostname,
+        8080,
+        "",
+        "altair" + new Date().getTime()
+      );
+
+      // set callback handlers
+      client.onConnectionLost = onConnectionLost;
+      client.onMessageArrived = onMessageArrived;
+
+      // connect the client
+      // https://www.eclipse.org/paho/files/jsdoc/index.html
+      client.connect({
+        keepAliveInterval: 30,
+        mqttVersion: 4,
+        cleanSession: true,
+        useSSL: false,
+        onSuccess: onConnect
+        // ,
+        // userName: mqttCredentials.userName,
+        // password: mqttCredentials.password,
+      });
+    }
+
+    // https://en.wikipedia.org/wiki/Control_character
+    function sendControl(msg) {
+      var output;
+      if (connected) {
+        if (msg == 'M') {
+          output = String.fromCharCode(28);
+        } else {
+          var ascii = msg.charCodeAt(0);
+          output = String.fromCharCode(ascii & 31);
+        }
+        ws.send(output);
+        // msg[0] = msg[0] & 31
+      }
+    }
+
+    // called when the client connects
+    function onConnect() {
+      console.log("onConnect");
+      client.subscribe(sub_topic);
+      document.getElementById("connectState").innerHTML = "MQTT Broker: Connected";
+      mqtt_broker_connected = true;
+    }
+
+    // called when the client loses its connection
+    function onConnectionLost(responseObject) {
+      if (responseObject.errorCode !== 0) {
+        console.log("onConnectionLost:" + responseObject.errorMessage);
+        document.getElementById("connectState").innerHTML = "MQTT Broker: Not connected";
+        alert("Connection lost to the MQTT broker. Refresh page to reconnect");
+        mqtt_broker_connected = false;
+      }
+    }
+
+    // called when a message arrives
+    function onMessageArrived(message) {
+      console.log("onMessageArrived:" + message.payloadString);
+      term.write(message.payloadString);
+    }
+
+    /* Establish connection. */
+    function doConnect(addr) {
+      /* Message to be sent. */
+      var msg;
+
+      /* Do connection. */
+      ws = new WebSocket(addr);
+
+      /* Register events. */
+      ws.onopen = function () {
+        connected = true;
+        document.getElementById("btConn").value = "Disconnect!";
+      };
+
+      /* Deals with messages. */
+      ws.onmessage = function (evt) {
+
+        console.log("onMessageArrived:" + evt.data);
+        term.write(evt.data);
+
+        // // if (count % 100 == 0){
+        // document.getElementById("taLog").value += ("Recv: " + evt.data + "\n");
+        // scoll_to_bottom();
+        // // }
+        // count++;
+      };
+
+      /* Close events. */
+      ws.onclose = function (event) {
+        document.getElementById("btConn").value = "Connect!";
+        document.getElementById("taLog").value +=
+          ("Connection closed: wasClean: " + event.wasClean + ", evCode: "
+            + event.code + "\n");
+        scoll_to_bottom();
+        connected = false;
+      };
+    }
+
+    document.addEventListener("DOMContentLoaded", function (event) {
+      /* Connect buttom. */
+      document.getElementById("btConn").onclick = function () {
+        if (connected == false) {
+          var txt = document.getElementById("txtServer").value;
+          doConnect(txt);
+        }
+
+        else {
+          ws.close();
+          connected = false;
+          document.getElementById("btConn").value = "Connect!";
+        }
+      };
+
+      // /* Input text message. */
+      // document.getElementById("txtMsg").addEventListener('keyup', function (e) {
+      // 	var key = e.which || e.keyCode;
+      // 	if (key == 13)
+      // 		document.getElementById("btMsg").click();
+      // });
+
+      // /* Send message. */
+      // document.getElementById("btMsg").onclick = function () {
+      // 	if (connected == true) {
+      // 		var txt = document.getElementById("txtMsg");
+      // 		var log = document.getElementById("taLog");
+
+      // 		ws.send(txt.value);
+      // 		log.value += ("Send: " + txt.value + "\n");
+      // 		txt.value = "";
+      // 		scoll_to_bottom();
+      // 	}
+      // };
+    });
+
+  </script>
+  <title>ALTAIR 8800 Emulator</title>
+</head>
+
+<body onload="initTerminal();">
+
+  Server: <input type="text" id="txtServer" value="ws://localhost:8082">
+  <input type="button" id="btConn" name="btConn" value="Connect!"><br /><br />
+
+  <!-- <div>
+    Enter your IoT Central device name
+    <input type="text" id="displayName" value="device name" style="width: 400px;">
+    <input type="button" value="Connect" onclick="connect();">
+  </div> -->
+  Altair Web Terminal
+  <br />
+  <div id="connectState">MQTT Broker: Not connected</div>
+  <br />
+  <div id="inputmode">Line input mode: Default (Ctrl+L to toggle)</div>
+  <div id="terminal"></div>
+  <script src="https://unpkg.com/xterm@4.4.0/lib/xterm.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
+  <script src="Javascript/xterm.js"></script>
+  <!-- <script src="Javascript/app.js"></script> -->
+</body>
+
+</html>

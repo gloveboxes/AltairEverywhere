@@ -22,7 +22,7 @@
 #include "altair_panel.h"
 #include "cpu_monitor.h"
 #include "iotc_manager.h"
-#include "mqtt_manager.h"
+#include "web_socket_server.h"
 #include "utils.h"
 #include <curl/curl.h>
 #include <curl/easy.h>
@@ -75,14 +75,13 @@ uint8_t memory[64 * 1024]; // Altair system memory.
 volatile ALTAIR_COMMAND cmd_switches;
 volatile uint16_t bus_switches = 0x00;
 
-typedef struct {
-    bool active;
-    TOPIC_TYPE topic;
-    size_t length;
-    char buffer[512];    
-} MQTT_INPUT_T;
+// typedef struct {
+//     bool active;
+//     size_t length;
+//     char buffer[512];    
+// } WEB_SOCKET_INPUT_T;
 
-MQTT_INPUT_T mqtt_input_buffer;
+// WEB_SOCKET_INPUT_T web_socket_input_buffer;
 
 // basic app load helpers.
 static volatile bool haveAppLoad = false;
@@ -107,7 +106,7 @@ static char Log_Debug_Time_buffer[128];
 
 static bool load_application(const char *fileName);
 
-static DX_DECLARE_TIMER_HANDLER(deferred_input_handler);
+
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
 static DX_DECLARE_TIMER_HANDLER(panel_refresh_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
@@ -119,12 +118,12 @@ const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x
 
 // Common Timers
 DX_TIMER_BINDING tmr_deferred_command = {.name = "tmr_deferred_command", .handler = deferred_command_handler};
+DX_TIMER_BINDING tmr_deferred_input = {.name = "tmr_deferred_input", .handler = deferred_input_handler};
 DX_TIMER_BINDING tmr_deferred_port_out_json = {.name = "tmr_deferred_port_out_json", .handler = port_out_json_handler};
 DX_TIMER_BINDING tmr_deferred_port_out_weather = {.name = "tmr_deferred_port_out_weather", .handler = port_out_weather_handler};
 DX_TIMER_BINDING tmr_port_timer_expired = {.name = "tmr_port_timer_expired", .handler = port_timer_expired_handler};
-static DX_TIMER_BINDING tmr_deferred_input = {.name = "tmr_deferred_input", .handler = deferred_input_handler};
 static DX_TIMER_BINDING tmr_heart_beat = {.repeat = &(struct timespec){60, 0}, .name = "tmr_heart_beat", .handler = heart_beat_handler};
-static DX_TIMER_BINDING tmr_mqtt_dowork = {.repeat = &(struct timespec){0, 250 * OneMS}, .name = "tmr_mqtt_dowork", .handler = mqtt_dowork_handler};
+static DX_TIMER_BINDING tmr_partial_message = {.repeat = &(struct timespec){0, 250 * OneMS}, .name = "tmr_partial_message", .handler = partial_message_handler};
 static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){30, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
 static DX_TIMER_BINDING tmr_tick_count = {.repeat = &(struct timespec){1, 0}, .name = "tmr_tick_count", .handler = tick_count_handler};
 static DX_TIMER_BINDING tmr_update_environment = {.delay = &(struct timespec){2, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
@@ -165,7 +164,7 @@ static DX_DEVICE_TWIN_BINDING dt_heartbeatUtc = {.propertyName = "HeartbeatUTC",
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
 
 // initialize bindings
-static DX_TIMER_BINDING *timer_bindings[] = {&tmr_mqtt_dowork, &tmr_panel_refresh,    &tmr_report_memory_usage, &tmr_update_environment,        &tmr_port_timer_expired,
+static DX_TIMER_BINDING *timer_bindings[] = {&tmr_partial_message, &tmr_panel_refresh,    &tmr_report_memory_usage, &tmr_update_environment,        &tmr_port_timer_expired,
                                              &tmr_heart_beat,   &tmr_deferred_command, &tmr_deferred_input,      &tmr_deferred_port_out_weather, &tmr_deferred_port_out_json,
                                              &tmr_tick_count};
 

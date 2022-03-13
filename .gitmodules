@@ -10,3 +10,6 @@
 [submodule "AltairHL_emulator/MQTT-C"]
 	path = AltairHL_emulator/MQTT-C
 	url = https://github.com/LiamBindle/MQTT-C.git
+[submodule "AltairHL_emulator/wsServer"]
+	path = AltairHL_emulator/wsServer
+	url = https://github.com/Theldus/wsServer.git

@@ -11,8 +11,6 @@
         "azure_sphere_learning_path.h": "c",
         "comms_manager_wolf.h": "c",
         "stack": "c",
-        "mqtt_client.h": "c",
-        "mqttnet.h": "c",
         "unistd.h": "c",
         "*.tcc": "c",
         "memory": "c",
@@ -20,7 +18,10 @@
         "sstream": "c",
         "typeinfo": "c",
         "TEST.C": "cpp",
-        "COPYX.C": "cpp"
+        "COPYX.C": "cpp",
+        "cpu_monitor.h": "c",
+        "memory.h": "c",
+        "filesystem": "c"
     },
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#65c89b",

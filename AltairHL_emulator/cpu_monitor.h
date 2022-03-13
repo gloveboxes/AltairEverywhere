@@ -4,13 +4,14 @@
 #pragma once
 
 #include "altair_panel.h"
-#include "mqtt_manager.h"
+#include "dx_timer.h"
+#include "intel8080.h"
 #include "utils.h"
+#include "web_socket_server.h"
+#include <applibs/log.h>
 #include <stdbool.h>
 #include <string.h>
-#include "intel8080.h"
-#include "dx_timer.h"
-#include <applibs/log.h>
+#include <unistd.h>
 
 #define DISK_A "Disks/cpm63k.dsk"
 #define DISK_B "Disks/blank.dsk"

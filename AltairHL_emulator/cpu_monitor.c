@@ -217,7 +217,7 @@ bool loadRomImage(char *romImageName, uint16_t loadAddress)
 }
 
 /// <summary>
-/// Commands are deferred as they publish inside a mqtt callback that is locked
+/// Commands are deferred so not running on web socket thread
 /// </summary>
 DX_TIMER_HANDLER(deferred_command_handler)
 {
