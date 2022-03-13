@@ -46,7 +46,12 @@ inline void publish_character(char character)
 
 void onopen(int fd)
 {
+    if (client_fd != -1){
+        ws_close_client(client_fd);
+    }
+
     client_fd = fd;
+
     char *cli;
     cli = ws_getaddress(fd);
 #ifndef DISABLE_VERBOSE
@@ -66,7 +71,6 @@ void onopen(int fd)
  */
 void onclose(int fd)
 {
-    client_fd = -1;
     char *cli;
     cli = ws_getaddress(fd);
 #ifndef DISABLE_VERBOSE
