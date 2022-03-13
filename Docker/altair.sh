@@ -1,7 +1,5 @@
 #!/bin/bash
 
-mosquitto -c /etc/mosquitto/mosquitto.conf &
-
 cd /Altair8800/Terminal && python3 -m http.server 8081 &
 
 cd /Altair8800/AltairHL_emulator
