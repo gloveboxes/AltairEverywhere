@@ -50,17 +50,15 @@ DX_TIMER_HANDLER_END
 /// </summary>
 static DX_TIMER_HANDLER(panel_refresh_handler)
 {
-    if (cpu_operating_mode == CPU_RUNNING) {
-        uint8_t status = cpu.cpuStatus;
-        uint8_t data = cpu.data_bus;
-        uint16_t bus = cpu.address_bus;
+    uint8_t status = cpu.cpuStatus;
+    uint8_t data = cpu.data_bus;
+    uint16_t bus = cpu.address_bus;
 
-        status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
-        data = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
-        bus = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
+    status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
+    data = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
+    bus = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
 
-        update_panel_status_leds(status, data, bus);
-    }
+    update_panel_status_leds(status, data, bus);
 
     dx_timerOneShotSet(&tmr_panel_refresh, &(struct timespec){0, 10 * ONE_MS});
 }
