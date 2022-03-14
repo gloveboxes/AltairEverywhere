@@ -33,8 +33,6 @@ RUN cd /Altair8800/AltairHL_emulator \
     && cmake -B build \
     && cmake --build build --config release --target all -j 8
 
-COPY altair.conf /etc/mosquitto/conf.d
-
 # https://docs.docker.com/config/containers/multi-service_container/
 
 COPY altair.sh altair.sh
