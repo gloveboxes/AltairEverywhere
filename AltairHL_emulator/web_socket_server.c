@@ -4,11 +4,10 @@
 #include "web_socket_server.h"
 
 void (*_client_connected_cb)(void);
-void *client_refresher(void *client);
 
+static bool ws_connected = false;
 static char output_buffer[1024];
 static int client_fd = -1;
-static bool ws_connected = false;
 static size_t output_buffer_length = 0;
 static volatile bool dirty_buffer = false;
 
@@ -83,11 +82,11 @@ void onclose(int fd)
 
 void onmessage(int fd, const unsigned char *msg, uint64_t size, int type)
 {
-    // marshall the incoming message off the socket threadß
+    // marshall the incoming message off the socket thread
     if (!ws_input_block.active) {
         ws_input_block.active = true;
         ws_input_block.length = size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : size;
-        memcpy(ws_input_block.buffer, msg, size);
+        memcpy(ws_input_block.buffer, msg, ws_input_block.length);
 
         dx_timerOneShotSet(&tmr_deferred_input, &(struct timespec){0, 1});
     }
