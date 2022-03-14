@@ -14,8 +14,7 @@ static volatile bool dirty_buffer = false;
 
 void publish_message(const void *application_message, size_t application_message_length)
 {
-    if (client_fd != -1) {
-        // ws_sendframe_txt(client_fd, temp, false);
+    if (ws_connected) {
         ws_sendframe(client_fd, application_message, application_message_length, false, WS_FR_OP_TXT);
     }
 }
