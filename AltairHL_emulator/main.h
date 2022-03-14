@@ -75,13 +75,7 @@ uint8_t memory[64 * 1024]; // Altair system memory.
 volatile ALTAIR_COMMAND cmd_switches;
 volatile uint16_t bus_switches = 0x00;
 
-// typedef struct {
-//     bool active;
-//     size_t length;
-//     char buffer[512];    
-// } WEB_SOCKET_INPUT_T;
-
-// WEB_SOCKET_INPUT_T web_socket_input_buffer;
+WS_INPUT_BLOCK_T ws_input_block;
 
 // basic app load helpers.
 static volatile bool haveAppLoad = false;

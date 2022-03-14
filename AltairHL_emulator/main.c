@@ -73,8 +73,8 @@ DX_TIMER_HANDLER(deferred_input_handler)
     bool send_cr = false;
     int retry = 0;
 
-    size_t application_message_size = web_socket_input_buffer.length;
-    char *data = web_socket_input_buffer.buffer;
+    size_t application_message_size = ws_input_block.length;
+    char *data = ws_input_block.buffer;
 
     if (data[0] == '\r') {
         haveCtrlCharacter = 0x0d;
@@ -171,7 +171,7 @@ DX_TIMER_HANDLER(deferred_input_handler)
     }
 
 cleanup:
-    web_socket_input_buffer.active = false;
+    ws_input_block.active = false;
 }
 DX_TIMER_HANDLER_END
 

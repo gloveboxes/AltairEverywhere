@@ -17,9 +17,9 @@ typedef struct {
     bool active;
     size_t length;
     char buffer[256];    
-} WEB_SOCKET_INPUT_T;
+} WS_INPUT_BLOCK_T;
 
-WEB_SOCKET_INPUT_T web_socket_input_buffer;
+extern WS_INPUT_BLOCK_T ws_input_block;
 
 DX_DECLARE_TIMER_HANDLER(deferred_input_handler);
 DX_DECLARE_TIMER_HANDLER(partial_message_handler);

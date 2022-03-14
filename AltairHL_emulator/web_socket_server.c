@@ -85,10 +85,10 @@ void onclose(int fd)
 void onmessage(int fd, const unsigned char *msg, uint64_t size, int type)
 {
     // marshall the incoming message off the socket threadß
-    if (!web_socket_input_buffer.active) {
-        web_socket_input_buffer.active = true;
-        web_socket_input_buffer.length = size > sizeof(web_socket_input_buffer.buffer) ? sizeof(web_socket_input_buffer.buffer) : size;
-        memcpy(web_socket_input_buffer.buffer, msg, size);
+    if (!ws_input_block.active) {
+        ws_input_block.active = true;
+        ws_input_block.length = size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : size;
+        memcpy(ws_input_block.buffer, msg, size);
 
         dx_timerOneShotSet(&tmr_deferred_input, &(struct timespec){0, 1});
     }
