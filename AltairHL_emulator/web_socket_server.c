@@ -8,6 +8,7 @@ void *client_refresher(void *client);
 
 static char output_buffer[1024];
 static int client_fd = -1;
+static bool ws_connected = false;
 static size_t output_buffer_length = 0;
 static volatile bool dirty_buffer = false;
 
@@ -46,11 +47,12 @@ inline void publish_character(char character)
 
 void onopen(int fd)
 {
-    if (client_fd != -1){
+    if (ws_connected){
         ws_close_client(client_fd);
     }
 
     client_fd = fd;
+    ws_connected = true;
 
     char *cli;
     cli = ws_getaddress(fd);
@@ -77,6 +79,7 @@ void onclose(int fd)
     printf("Connection closed, client: %d | addr: %s\n", fd, cli);
 #endif
     free(cli);
+    ws_connected = false;
 }
 
 void onmessage(int fd, const unsigned char *msg, uint64_t size, int type)
