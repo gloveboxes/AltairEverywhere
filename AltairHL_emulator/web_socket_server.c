@@ -30,9 +30,8 @@ void send_partial_message(void)
 inline void publish_character(char character)
 {
     dirty_buffer = true;
-
-    memcpy(output_buffer + output_buffer_length, &character, 1);
-    output_buffer_length++;
+    
+    output_buffer[output_buffer_length++] = character;
 
     if (output_buffer_length < sizeof(output_buffer)) {
         return;
