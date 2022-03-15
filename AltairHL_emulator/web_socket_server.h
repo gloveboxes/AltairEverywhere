@@ -20,6 +20,7 @@ typedef struct {
 } WS_INPUT_BLOCK_T;
 
 extern WS_INPUT_BLOCK_T ws_input_block;
+extern DX_TIMER_BINDING tmr_partial_message;
 
 DX_DECLARE_TIMER_HANDLER(deferred_input_handler);
 DX_DECLARE_TIMER_HANDLER(partial_message_handler);

@@ -30,7 +30,7 @@ void send_partial_message(void)
 inline void publish_character(char character)
 {
     dirty_buffer = true;
-    
+
     output_buffer[output_buffer_length++] = character;
 
     if (output_buffer_length < sizeof(output_buffer)) {
@@ -44,7 +44,7 @@ inline void publish_character(char character)
 
 void onopen(int fd)
 {
-    if (ws_connected){
+    if (ws_connected) {
         ws_close_client(client_fd);
     }
 
@@ -111,5 +111,6 @@ DX_TIMER_HANDLER(partial_message_handler)
     if (dirty_buffer) {
         send_partial_msg = true;
     }
+    dx_timerOneShotSet(&tmr_partial_message, &(struct timespec){0, 250 * ONE_MS});
 }
 DX_TIMER_HANDLER_END
