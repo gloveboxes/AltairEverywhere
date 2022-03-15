@@ -63,7 +63,6 @@ set(Source
     # "env_air_visual.c"
     "env_open_weather_map.c"
     "location_from_ip.c"
-    "storage.c"
     "utils.c"  
 )
 source_group("Source" FILES ${Source})
