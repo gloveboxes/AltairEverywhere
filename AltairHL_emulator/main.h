@@ -11,27 +11,27 @@
 #include "applibs_versions.h"
 #include <applibs/log.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/resource.h>
-#include <signal.h>
 
 // Altair app
 #include "altair_config.h"
 #include "altair_panel.h"
 #include "cpu_monitor.h"
 #include "iotc_manager.h"
-#include "web_socket_server.h"
 #include "utils.h"
+#include "web_socket_server.h"
 #include <curl/curl.h>
 #include <curl/easy.h>
 
 // Intel 8080 emulator
-#include "intel8080.h"
 #include "88dcdd.h"
-#include "memory.h"
+#include "intel8080.h"
 #include "io_ports.h"
+#include "memory.h"
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 #include "front_panel_pi_sense_hat.h"
@@ -40,8 +40,8 @@
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 #define ALTAIR_EMULATOR_VERSION "4.2.5"
-#define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
-#define DX_LOGGING_ENABLED FALSE
+#define Log_Debug(f_, ...)      dx_Log_Debug((f_), ##__VA_ARGS__)
+#define DX_LOGGING_ENABLED      FALSE
 
 // https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play
 #define IOT_PLUG_AND_PLAY_MODEL_ID "dtmi:com:example:climatemonitor;1"
@@ -52,16 +52,13 @@ static const char *AltairMsg = "\x1b[2J\r\nAltair 8800 Emulator ";
 
 char msgBuffer[MSG_BUFFER_BYTES] = {0};
 
-// clang-format off
 static DX_MESSAGE_PROPERTY *diag_msg_properties[] = {
-      &(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"}, 
-      &(DX_MESSAGE_PROPERTY){.key = "type", .value = "diagnostics"},
-      &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
+	&(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"},
+	&(DX_MESSAGE_PROPERTY){.key = "type", .value = "diagnostics"},
+	&(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
 
 static DX_MESSAGE_CONTENT_PROPERTIES diag_content_properties = {
-    .contentEncoding = "utf-8", 
-    .contentType = "application/json"};
-// clang-format on
+	.contentEncoding = "utf-8", .contentType = "application/json"};
 
 // CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
 volatile CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
@@ -78,16 +75,16 @@ volatile uint16_t bus_switches = 0x00;
 WS_INPUT_BLOCK_T ws_input_block;
 
 // basic app load helpers.
-static volatile bool haveAppLoad = false;
-static volatile bool haveCtrlPending = false;
+static volatile bool haveAppLoad       = false;
+static volatile bool haveCtrlPending   = false;
 static volatile char haveCtrlCharacter = 0x00;
 
-static volatile bool haveTerminalInputMessage = false;
+static volatile bool haveTerminalInputMessage  = false;
 static volatile bool haveTerminalOutputMessage = false;
-static volatile int altairInputBufReadIndex = 0;
-static volatile int altairOutputBufReadIndex = 0;
-static volatile int terminalInputMessageLen = 0;
-static volatile int terminalOutputMessageLen = 0;
+static volatile int altairInputBufReadIndex    = 0;
+static volatile int altairOutputBufReadIndex   = 0;
+static volatile int terminalInputMessageLen    = 0;
+static volatile int terminalOutputMessageLen   = 0;
 
 static volatile char *input_data = NULL;
 
@@ -107,8 +104,10 @@ static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
 static DX_DECLARE_TIMER_HANDLER(update_environment_handler);
 static void *altair_thread(void *arg);
 
-const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
+const uint8_t reverse_lut[16] = {
+	0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
+// clang-format off
 // Common Timers
 DX_TIMER_BINDING tmr_deferred_command = {.name = "tmr_deferred_command", .handler = deferred_command_handler};
 DX_TIMER_BINDING tmr_deferred_input = {.name = "tmr_deferred_input", .handler = deferred_input_handler};
@@ -149,32 +148,17 @@ DX_DEVICE_TWIN_BINDING dt_location = {.propertyName = "Location", .twinType = DX
 static DX_DEVICE_TWIN_BINDING dt_deviceStartTimeUtc = {.propertyName = "StartTimeUTC", .twinType = DX_DEVICE_TWIN_STRING};
 static DX_DEVICE_TWIN_BINDING dt_heartbeatUtc = {.propertyName = "HeartbeatUTC", .twinType = DX_DEVICE_TWIN_STRING};
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
+// clang-format on
 
 // initialize bindings
-static DX_TIMER_BINDING *timer_bindings[] = {&tmr_partial_message,  &tmr_report_memory_usage, &tmr_update_environment,        &tmr_port_timer_expired,     &tmr_heart_beat,
-                                             &tmr_deferred_command, &tmr_deferred_input,      &tmr_deferred_port_out_weather, &tmr_deferred_port_out_json, &tmr_tick_count};
+static DX_TIMER_BINDING *timer_bindings[] = {&tmr_partial_message, &tmr_report_memory_usage,
+	&tmr_update_environment, &tmr_port_timer_expired, &tmr_heart_beat, &tmr_deferred_command,
+	&tmr_deferred_input, &tmr_deferred_port_out_weather, &tmr_deferred_port_out_json, &tmr_tick_count};
 
-static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {&dt_deviceStartTimeUtc,
-                                                         &dt_softwareVersion,
-                                                         &dt_ledBrightness,
-                                                         &dt_temperature,
-                                                         &dt_pressure,
-                                                         &dt_humidity,
-                                                         &dt_wind_speed,
-                                                         &dt_wind_direction,
-                                                         &dt_weather,
-                                                         &dt_location,
-                                                         &dt_country,
-                                                         &dt_city,
-                                                         &dt_heartbeatUtc,
-                                                         &dt_air_quality_index,
-                                                         &dt_carbon_monoxide,
-                                                         &dt_nitrogen_monoxide,
-                                                         &dt_nitrogen_dioxide,
-                                                         &dt_ozone,
-                                                         &dt_sulphur_dioxide,
-                                                         &dt_ammonia,
-                                                         &dt_pm2_5,
-                                                         &dt_pm10
+static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {
+	&dt_deviceStartTimeUtc, &dt_softwareVersion, &dt_ledBrightness, &dt_temperature, &dt_pressure,
+	&dt_humidity, &dt_wind_speed, &dt_wind_direction, &dt_weather, &dt_location, &dt_country, &dt_city,
+	&dt_heartbeatUtc, &dt_air_quality_index, &dt_carbon_monoxide, &dt_nitrogen_monoxide, &dt_nitrogen_dioxide,
+	&dt_ozone, &dt_sulphur_dioxide, &dt_ammonia, &dt_pm2_5, &dt_pm10
 
 };

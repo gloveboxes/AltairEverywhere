@@ -1,17 +1,28 @@
 ---
-BasedOnStyle: Google
-IndentWidth: 4
----
+BasedOnStyle: Microsoft
+AlignAfterOpenBracket: DontAlign
+AlignConsecutiveMacros: 'true'
+AlignConsecutiveAssignments: 'true'
+AlignEscapedNewlines: Left
+AlignTrailingComments: 'true'
+AllowAllParametersOfDeclarationOnNextLine: 'true'
+AllowShortCaseLabelsOnASingleLine: 'false'
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: 'false'
+BinPackParameters: 'false'
+ColumnLimit: '110'
+IndentCaseLabels: 'true'
+IndentWidth: '4'
 Language: Cpp
-AccessModifierOffset: -4
-AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: false
-AllowShortLoopsOnASingleLine: false
-BreakBeforeBraces: WebKit
-ColumnLimit: 180
-DerivePointerAlignment: false
-KeepEmptyLinesAtTheStartOfBlocks: true
 PointerAlignment: Right
-SortIncludes: false
-SpacesBeforeTrailingComments: 1
-IndentCaseLabels: false
+SpaceAfterCStyleCast: 'false'
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: 'false'
+SpacesInCStyleCastParentheses: 'false'
+SpacesInContainerLiterals: 'false'
+SpacesInParentheses: 'false'
+SpacesInSquareBrackets: 'false'
+TabWidth: '4'
+UseTab: ForContinuationAndIndentation
+
+...

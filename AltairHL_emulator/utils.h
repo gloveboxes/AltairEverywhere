@@ -6,8 +6,8 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // #define SHOW_DEBUG_MSGS 1
 

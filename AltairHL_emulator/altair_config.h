@@ -9,9 +9,10 @@
 #include <getopt.h>
 #include <string.h>
 
-typedef struct {
-    DX_USER_CONFIG user_config;
-    char *open_weather_map_api_key;
+typedef struct
+{
+	DX_USER_CONFIG user_config;
+	char *open_weather_map_api_key;
 } ALTAIR_CONFIG_T;
 
 bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *altairConfig);

@@ -13,10 +13,11 @@ extern DX_TIMER_BINDING tmr_deferred_input;
 
 void print_console_banner(void);
 
-typedef struct {
-    bool active;
-    size_t length;
-    char buffer[256];    
+typedef struct
+{
+	bool active;
+	size_t length;
+	char buffer[256];
 } WS_INPUT_BLOCK_T;
 
 extern WS_INPUT_BLOCK_T ws_input_block;

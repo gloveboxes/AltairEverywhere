@@ -6,10 +6,11 @@
 #include "dx_utilities.h"
 #include "environment_types.h"
 
-typedef struct {
-    double lat;
-    double lng;
-    bool updated;
+typedef struct
+{
+	double lat;
+	double lng;
+	bool updated;
 } location_info;
 
 void get_geolocation(LOCATION_T *locationInfo);
