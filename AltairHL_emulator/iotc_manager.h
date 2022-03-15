@@ -11,7 +11,6 @@
 #include "environment.h"
 #include "front_panel_pi_sense_hat.h"
 #include "altair_panel.h"
-#include "storage.h"
 
 
 extern DX_DEVICE_TWIN_BINDING dt_air_quality_index;
