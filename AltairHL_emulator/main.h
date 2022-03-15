@@ -39,7 +39,7 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
-#define ALTAIR_EMULATOR_VERSION "4.2.2"
+#define ALTAIR_EMULATOR_VERSION "4.2.3"
 #define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED FALSE
 
@@ -99,7 +99,7 @@ static FILE *app_stream;
 static char Log_Debug_Time_buffer[128];
 
 static bool load_application(const char *fileName);
-
+static void spin_wait(volatile bool *flag);
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
 static DX_DECLARE_TIMER_HANDLER(panel_refresh_handler);

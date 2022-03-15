@@ -76,59 +76,51 @@ DX_TIMER_HANDLER(deferred_input_handler)
     size_t application_message_size = ws_input_block.length;
     char *data = ws_input_block.buffer;
 
-    if (data[0] == '\r') {
-        haveCtrlCharacter = 0x0d;
-        haveCtrlPending = true;
+    memset(command, 0x00, sizeof(command));
 
-        // spin until current buffer processed
-        retry = 0;
-        while (haveCtrlPending && retry++ < 10) {
-            nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
-        }
-    } else {
-
-        // test for ctlr char
-        if (data[0] > 0 && data[0] < 27 || data[0] == 28) {
-            // ASCII 28 is mapped ctrl-m as ctrl-m is carriage return
-            if (data[0] == 28) {
-                cpu_operating_mode = cpu_operating_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
-                if (cpu_operating_mode == CPU_STOPPED) {
-                    bus_switches = cpu.address_bus;
-                    publish_message("\r\nCPU MONITOR> ", 15);
-                } else {
-                    publish_message("\r\n", 2);
-                }
-            } else {
-                haveCtrlCharacter = data[0];
-                haveCtrlPending = true;
-
-                // spin until current buffer processed
-                retry = 0;
-                while (haveCtrlPending && retry++ < 10) {
-                    nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
-                }
-            }
-            goto cleanup;
-        }
-    }
-
-    // upper case incoming message
-    memset(command, 0, sizeof(command));
-
-    if (application_message_size > 0 && data[application_message_size - 1] == '\r') { // is last char carriage return ?
+    // is last char carriage return then strip off and set flag to add line feed at then end
+    if (application_message_size > 0 && data[application_message_size - 1] == '\r') {
         send_cr = true;
         application_message_size--;
     }
 
-    for (int i = 0; i < sizeof(command) - 1 && i < application_message_size; i++) { // -1 to allow for trailing null
-        command[i] = (char)toupper(data[i]);
-    }
+    if (application_message_size > 0) {
 
-    // if command is loadx then try looking for in baked in samples
-    if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 && (command[application_message_size - 1] == '"')) {
-        command[application_message_size - 1] = 0x00; // replace the '"' with \0
-        load_application(&command[7]);
-        goto cleanup;
+        // ctrl-m is mapped to ascii 28 to get around ctrl-m being /r
+        if (data[0] == 28) {
+            cpu_operating_mode = cpu_operating_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
+            if (cpu_operating_mode == CPU_STOPPED) {
+                bus_switches = cpu.address_bus;
+                publish_message("\r\nCPU MONITOR> ", 15);
+            } else {
+                haveCtrlCharacter = 0x0d;
+                spin_wait(&haveCtrlPending);
+            }
+            goto cleanup;
+        }
+
+        // test for ctlr characters
+        if (data[0] > 0 && data[0] < 27) {
+
+            haveCtrlCharacter = data[0];
+            spin_wait(&haveCtrlPending);
+
+            if (cpu_operating_mode == CPU_RUNNING) {
+                goto cleanup;
+            }
+        }
+
+        // upper case the first 30 chars for command processing
+        for (int i = 0; i < sizeof(command) - 1 && i < application_message_size; i++) { // -1 to allow for trailing null
+            command[i] = (char)toupper(data[i]);
+        }
+
+        // if command is loadx then try looking for in baked in samples
+        if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 && (command[application_message_size - 1] == '"')) {
+            command[application_message_size - 1] = 0x00; // replace the '"' with \0
+            load_application(&command[7]);
+            goto cleanup;
+        }
     }
 
     switch (cpu_operating_mode) {
@@ -142,25 +134,13 @@ DX_TIMER_HANDLER(deferred_input_handler)
             terminalInputMessageLen = (int)application_message_size;
             terminalOutputMessageLen = (int)application_message_size;
 
-            haveTerminalInputMessage = true;
             haveTerminalOutputMessage = true;
-
-            // spin until current buffer processed
-            retry = 0;
-            while (haveTerminalInputMessage && retry++ < 20) {
-                nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
-            }
+            spin_wait(&haveTerminalInputMessage);
         }
 
         if (send_cr) {
             haveCtrlCharacter = 0x0d;
-            haveCtrlPending = true;
-
-            // spin until current buffer processed
-            retry = 0;
-            while (haveCtrlPending && retry++ < 10) {
-                nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
-            }
+            spin_wait(&haveCtrlPending);
         }
         break;
     case CPU_STOPPED:
@@ -174,6 +154,22 @@ cleanup:
     ws_input_block.active = false;
 }
 DX_TIMER_HANDLER_END
+
+/// <summary>
+/// Sets wait for terminal io cmd to be processed and flag reset
+/// </summary>
+static void spin_wait(volatile bool *flag)
+{
+    struct timespec delay = {0, 20 * ONE_MS};
+    int retry = 0;
+    *flag = true;
+
+    // wait max 200ms = 10 x 20ms
+    while (*flag && retry++ < 10) {
+        while (nanosleep(&delay, &delay))
+            ;
+    }
+}
 
 /// <summary>
 /// Client connected successfully
