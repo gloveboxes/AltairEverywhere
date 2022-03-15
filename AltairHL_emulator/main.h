@@ -39,7 +39,7 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
-#define ALTAIR_EMULATOR_VERSION "4.2.3"
+#define ALTAIR_EMULATOR_VERSION "4.2.4"
 #define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED FALSE
 
@@ -107,7 +107,6 @@ static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
 static DX_DECLARE_TIMER_HANDLER(update_environment_handler);
 static void *altair_thread(void *arg);
 
-
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
 // Common Timers
@@ -121,12 +120,6 @@ static DX_TIMER_BINDING tmr_partial_message = {.repeat = &(struct timespec){0, 2
 static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){30, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
 static DX_TIMER_BINDING tmr_tick_count = {.repeat = &(struct timespec){1, 0}, .name = "tmr_tick_count", .handler = tick_count_handler};
 static DX_TIMER_BINDING tmr_update_environment = {.delay = &(struct timespec){2, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
-
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-static DX_TIMER_BINDING tmr_panel_refresh = {.delay = &(timespec){0, 10 * OneMS}, .name = "tmr_panel_refresh", .handler = panel_refresh_handler};
-#else  // else create a disabled timer
-static DX_TIMER_BINDING tmr_panel_refresh = {.name = "tmr_panel_refresh", .handler = panel_refresh_handler};
-#endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 // Azure IoT Central Properties (Device Twins)
 
@@ -158,9 +151,8 @@ static DX_DEVICE_TWIN_BINDING dt_heartbeatUtc = {.propertyName = "HeartbeatUTC",
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
 
 // initialize bindings
-static DX_TIMER_BINDING *timer_bindings[] = {&tmr_partial_message, &tmr_panel_refresh,    &tmr_report_memory_usage, &tmr_update_environment,        &tmr_port_timer_expired,
-                                             &tmr_heart_beat,   &tmr_deferred_command, &tmr_deferred_input,      &tmr_deferred_port_out_weather, &tmr_deferred_port_out_json,
-                                             &tmr_tick_count};
+static DX_TIMER_BINDING *timer_bindings[] = {&tmr_partial_message,  &tmr_report_memory_usage, &tmr_update_environment,        &tmr_port_timer_expired,     &tmr_heart_beat,
+                                             &tmr_deferred_command, &tmr_deferred_input,      &tmr_deferred_port_out_weather, &tmr_deferred_port_out_json, &tmr_tick_count};
 
 static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {&dt_deviceStartTimeUtc,
                                                          &dt_softwareVersion,
