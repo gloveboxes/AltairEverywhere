@@ -64,6 +64,11 @@ static void process_virtual_switches(const char *command, void (*process_control
 
 void process_virtual_input(const char *command, void (*process_control_panel_commands)(void))
 {
+    if (strlen(command) == 0){
+        publish_message("\r\nCPU MONITOR> ", 15);
+        return;
+    }
+
     if (strcmp(command, "E") == 0) {
         cmd_switches = EXAMINE;
         process_control_panel_commands();
