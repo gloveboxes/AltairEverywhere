@@ -219,7 +219,7 @@ static void *panel_refresh_thread(void *arg)
 
         update_panel_status_leds(status, data, bus);
 
-        nanosleep(&(struct timespec){0, 40 * ONE_MS}, NULL);
+        nanosleep(&(struct timespec){0, 50 * ONE_MS}, NULL);
     }
 
     dx_Log_Debug("Panel fresh exited\n");
