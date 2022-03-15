@@ -5,11 +5,11 @@
 
 void (*_client_connected_cb)(void);
 
-static bool ws_connected = false;
 static char output_buffer[1024];
 static int client_fd = -1;
 static size_t output_buffer_length = 0;
 static volatile bool dirty_buffer = false;
+static volatile bool ws_connected = false;
 
 void publish_message(const void *application_message, size_t application_message_length)
 {

@@ -141,7 +141,7 @@ DX_TIMER_HANDLER_END
 /// </summary>
 static void spin_wait(volatile bool *flag)
 {
-    struct timespec delay = {0, 20 * ONE_MS};
+    struct timespec delay = {0, 10 * ONE_MS};
     int retry = 0;
     *flag = true;
 
