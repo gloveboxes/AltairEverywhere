@@ -10,12 +10,6 @@ project (Altair_emulator C)
 #
 ###################################################################################################################
 
-###################################################################################################################
-# IoT Hub Polling time overide
-add_compile_definitions(IOT_HUB_POLL_TIME_SECONDS=1)
-add_compile_definitions(IOT_HUB_POLL_TIME_NANOSECONDS=500000000)
-###################################################################################################################
-
 set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO mocking for AzureSphereRemoteX.Client" FORCE )
 
 # ENABLE_EDGE_DEVX_REMOTEX is enabled as Log_Debug found in appslib is required.
