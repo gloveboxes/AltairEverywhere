@@ -187,7 +187,7 @@ uint8_t io_port_in(uint8_t port)
 
 			break;
 		case 41:
-			LOAD_PORT_DATA(tick_count, % u);
+			LOAD_PORT_DATA(tick_count, %u);
 			break;
 		case 42: // Return current UTC
 			if (!reading_data)
