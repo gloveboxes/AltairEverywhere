@@ -78,7 +78,7 @@ void onclose(int fd)
 	// 	printf("Connection closed, client: %d | addr: %s\n", fd, cli);
 	// #endif
 	// 	free(cli);
-	client_fd    = -1;
+	// client_fd    = -1;
 }
 
 void onmessage(int fd, const unsigned char *msg, uint64_t size, int type)
