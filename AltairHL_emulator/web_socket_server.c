@@ -10,11 +10,14 @@ static int client_fd               = -1;
 static size_t output_buffer_length = 0;
 static volatile bool dirty_buffer  = false;
 
-void publish_message(const void *application_message, size_t application_message_length)
+void publish_message(const void *message, size_t message_length)
 {
 	if (client_fd != -1)
 	{
-		ws_sendframe(client_fd, application_message, application_message_length, false, WS_FR_OP_TXT);
+		if (ws_sendframe(client_fd, message, message_length, false, WS_FR_OP_TXT) == -1)
+		{
+			client_fd = -1;
+		}
 	}
 }
 
