@@ -5,15 +5,14 @@
 
 void (*_client_connected_cb)(void);
 
-static char output_buffer[1024];
+static char output_buffer[512];
 static int client_fd               = -1;
 static size_t output_buffer_length = 0;
 static volatile bool dirty_buffer  = false;
-static volatile bool ws_connected  = false;
 
 void publish_message(const void *application_message, size_t application_message_length)
 {
-	if (ws_connected)
+	if (client_fd != -1)
 	{
 		ws_sendframe(client_fd, application_message, application_message_length, false, WS_FR_OP_TXT);
 	}
@@ -47,20 +46,19 @@ inline void publish_character(char character)
 
 void onopen(int fd)
 {
-	if (ws_connected)
-	{
-		ws_close_client(client_fd);
-	}
+	// if (ws_connected)
+	// {
+	// 	ws_close_client(client_fd);
+	// }
 
-	client_fd    = fd;
-	ws_connected = true;
+	client_fd = fd;
 
-	char *cli;
-	cli = ws_getaddress(fd);
-#ifndef DISABLE_VERBOSE
-	printf("Connection opened, client: %d | addr: %s\n", fd, cli);
-#endif
-	free(cli);
+	// 	char *cli;
+	// 	cli = ws_getaddress(fd);
+	// #ifndef DISABLE_VERBOSE
+	// 	printf("Connection opened, client: %d | addr: %s\n", fd, cli);
+	// #endif
+	// 	free(cli);
 
 	_client_connected_cb();
 }
@@ -74,13 +72,13 @@ void onopen(int fd)
  */
 void onclose(int fd)
 {
-	char *cli;
-	cli = ws_getaddress(fd);
-#ifndef DISABLE_VERBOSE
-	printf("Connection closed, client: %d | addr: %s\n", fd, cli);
-#endif
-	free(cli);
-	ws_connected = false;
+	// char *cli;
+	// 	cli = ws_getaddress(fd);
+	// #ifndef DISABLE_VERBOSE
+	// 	printf("Connection closed, client: %d | addr: %s\n", fd, cli);
+	// #endif
+	// 	free(cli);
+	client_fd    = -1;
 }
 
 void onmessage(int fd, const unsigned char *msg, uint64_t size, int type)
