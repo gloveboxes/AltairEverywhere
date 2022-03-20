@@ -40,7 +40,10 @@ int buffer_len;
 
     index = 0;
 
-    while ((ch = inp(port_num)) && index < buffer_len) {
+    /* Select data to be read */
+    outp(port_num, 0);
+
+    while ((ch = inp(200)) && index < buffer_len) {
         buffer[index++] = ch;
     }
     buffer[index] = 0x00;

@@ -6,12 +6,16 @@
 static FILE *copyx_stream;
 static bool copyx_enabled = false;
 static char copyx_filename[15];
-static char data_buffer[256];
 static int copyx_index                       = 0;
 static volatile bool delay_enabled           = false;
 static volatile bool publish_weather_pending = false;
 static volatile bool publish_json_pending    = false;
 static int jitter                            = 0;
+static int request_len;
+static int request_count;
+static char request_buffer[64];
+static char json_buffer[256];
+
 // set tick_count to 1 as the tick count timer doesn't kick in until 1 second after startup
 static volatile uint32_t tick_count = 1;
 
@@ -50,7 +54,7 @@ DX_TIMER_HANDLER(port_out_json_handler)
 {
 	if (azure_connected)
 	{
-		dx_azurePublish(data_buffer, strlen(data_buffer), json_msg_properties, NELEMS(json_msg_properties),
+		dx_azurePublish(json_buffer, strlen(json_buffer), json_msg_properties, NELEMS(json_msg_properties),
 			&json_content_properties);
 	}
 	publish_json_pending = false;
@@ -64,8 +68,8 @@ DX_TIMER_HANDLER_END
 /// <param name="data"></param>
 void io_port_out(uint8_t port, uint8_t data)
 {
-	static char *data_ptr = NULL;
-	static int data_index = 0;
+	static int json_buffer_index = 0;
+	char filename[64];
 
 	switch (port)
 	{
@@ -79,21 +83,21 @@ void io_port_out(uint8_t port, uint8_t data)
 		case 31:
 			if (!publish_json_pending)
 			{
-				if (data_index == 0)
+				if (json_buffer_index == 0)
 				{
-					memset((void *)data_buffer, 0x00, sizeof(data_buffer));
+					memset((void *)json_buffer, 0x00, sizeof(json_buffer));
 				}
 
-				if (data != 0 && data_index < sizeof(data_buffer))
+				if (data != 0 && json_buffer_index < sizeof(json_buffer))
 				{
-					data_buffer[data_index] = data;
-					data_index++;
+					json_buffer[json_buffer_index] = data;
+					json_buffer_index++;
 				}
 
 				if (data == 0)
 				{
 					publish_json_pending = true;
-					data_index           = 0;
+					json_buffer_index    = 0;
 					dx_timerOneShotSet(&tmr_deferred_port_out_json, &(struct timespec){0, 1});
 				}
 			}
@@ -125,9 +129,186 @@ void io_port_out(uint8_t port, uint8_t data)
 
 			if (data == 0)
 			{
-				copyx_enabled = true;
-				copyx_index   = 0;
+				copyx_index = 0;
+                memset(filename, 0x00, sizeof(filename));
+				snprintf(filename, sizeof(filename), "%s/%s", COPYX_FOLDER_NAME, copyx_filename);
+
+				if ((copyx_stream = fopen(filename, "r")) != NULL)
+				{
+					copyx_enabled = true;
+				}
 			}
+			break;
+		case 41:
+			request_len   = snprintf(request_buffer, sizeof(request_buffer), "%u", tick_count);
+			request_count = 0;
+			break;
+		case 42: // get utc date and time
+			dx_getCurrentUtc(request_buffer, sizeof(request_buffer));
+			request_len   = strnlen(request_buffer, sizeof(request_buffer));
+			request_count = 0;
+			break;
+		case 43: // get local date and time
+			dx_getLocalTime(request_buffer, sizeof(request_buffer));
+			request_len   = strnlen(request_buffer, sizeof(request_buffer));
+			request_count = 0;
+			break;
+		case 44: // Generate random number to seed mbasic randomize command
+			request_len = snprintf(request_buffer, sizeof(request_buffer), "%d", ((rand() % 64000) - 32000));
+			request_count = 0;
+			break;
+		case 45:
+			if (environment.latest.weather.updated)
+			{
+				request_len = snprintf(
+					request_buffer, sizeof(request_buffer), "%d", environment.latest.weather.temperature);
+				request_count = 0;
+			}
+			break;
+		case 46:
+			if (environment.latest.weather.updated)
+			{
+				request_len = snprintf(
+					request_buffer, sizeof(request_buffer), "%d", environment.latest.weather.pressure);
+				request_count = 0;
+			}
+			break;
+		case 47:
+			if (environment.latest.weather.updated)
+			{
+				request_len = snprintf(
+					request_buffer, sizeof(request_buffer), "%d", environment.latest.weather.humidity);
+				request_count = 0;
+			}
+			break;
+		case 48:
+			if (environment.latest.weather.updated)
+			{
+				request_len = snprintf(
+					request_buffer, sizeof(request_buffer), "%s", environment.latest.weather.description);
+				request_count = 0;
+			}
+			break;
+		case 49:
+			if (environment.locationInfo.updated)
+			{
+				request_len =
+					snprintf(request_buffer, sizeof(request_buffer), "%.6f", environment.locationInfo.lat);
+				request_count = 0;
+			}
+			break;
+		case 50:
+			if (environment.locationInfo.updated)
+			{
+				request_len =
+					snprintf(request_buffer, sizeof(request_buffer), "%.6f", environment.locationInfo.lng);
+				request_count = 0;
+			}
+			break;
+		case 53:
+			if (environment.latest.weather.updated)
+			{
+				request_len = snprintf(
+					request_buffer, sizeof(request_buffer), "%.2f", environment.latest.weather.wind_speed);
+				request_count = 0;
+			}
+			break;
+		case 54:
+			if (environment.latest.weather.updated)
+			{
+				request_len = snprintf(
+					request_buffer, sizeof(request_buffer), "%d", environment.latest.weather.wind_direction);
+				request_count = 0;
+			}
+			break;
+		case 55:
+			if (environment.locationInfo.updated)
+			{
+				request_len =
+					snprintf(request_buffer, sizeof(request_buffer), "%s", environment.locationInfo.country);
+				request_count = 0;
+			}
+			break;
+		case 57:
+			if (environment.locationInfo.updated)
+			{
+				request_len =
+					snprintf(request_buffer, sizeof(request_buffer), "%s", environment.locationInfo.city);
+				request_count = 0;
+			}
+			break;
+		case 60:
+			if (environment.latest.pollution.updated)
+			{
+				request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.0f",
+					  environment.latest.pollution.air_quality_index);
+				request_count = 0;
+			}
+			break;
+		case 61:
+			if (environment.latest.pollution.updated)
+			{
+				request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.2f",
+					  environment.latest.pollution.carbon_monoxide);
+				request_count = 0;
+			}
+			break;
+		case 62:
+			if (environment.latest.pollution.updated)
+			{
+				request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.2f",
+					  environment.latest.pollution.nitrogen_monoxide);
+				request_count = 0;
+			}
+			break;
+		case 63:
+			if (environment.latest.pollution.updated)
+			{
+				request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.2f",
+					  environment.latest.pollution.nitrogen_dioxide);
+				request_count = 0;
+			}
+			break;
+		case 64:
+			if (environment.latest.pollution.updated)
+			{
+				request_len = snprintf(
+					request_buffer, sizeof(request_buffer), "%.2f", environment.latest.pollution.ozone);
+				request_count = 0;
+			}
+			break;
+		case 65:
+			if (environment.latest.pollution.updated)
+			{
+				request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.2f",
+					  environment.latest.pollution.sulphur_dioxide);
+				request_count = 0;
+			}
+			break;
+		case 66:
+			if (environment.latest.pollution.updated)
+			{
+				request_len = snprintf(
+					request_buffer, sizeof(request_buffer), "%.2f", environment.latest.pollution.ammonia);
+				request_count = 0;
+			}
+			break;
+		case 67:
+			if (environment.latest.pollution.updated)
+			{
+				request_len = snprintf(
+					request_buffer, sizeof(request_buffer), "%.2f", environment.latest.pollution.pm2_5);
+				request_count = 0;
+			}
+			break;
+		case 68:
+			if (environment.latest.pollution.updated)
+			{
+				request_len = snprintf(
+					request_buffer, sizeof(request_buffer), "%.2f", environment.latest.pollution.pm10);
+				request_count = 0;
+			}
+			break;
 		default:
 			break;
 	}
@@ -140,44 +321,29 @@ void io_port_out(uint8_t port, uint8_t data)
 /// <returns></returns>
 uint8_t io_port_in(uint8_t port)
 {
-	static bool reading_data = false;
-	static char data[128];
-	static int readPtr = 0;
-	static size_t string_len;
 	uint8_t retVal = 0;
 	int ch;
-	uint64_t now;
-	char filePathAndName[30];
 
 	switch (port)
 	{
 		case 30: // Has delay expired
 			retVal = (uint8_t)delay_enabled;
 			break;
+		case 31:
+			retVal = (uint8_t)publish_json_pending;
+			break;
+		case 32:
+			retVal = (uint8_t)publish_weather_pending;
+			break;
 		case 33:
-			if (!reading_data && copyx_enabled)
-			{
-				readPtr = 0;
-				snprintf(
-					filePathAndName, sizeof(filePathAndName), "%s/%s", COPYX_FOLDER_NAME, copyx_filename);
-				if ((copyx_stream = fopen(filePathAndName, "r")) == NULL)
-				{
-					retVal       = 0x00;
-					reading_data = false;
-				}
-				else
-				{
-					reading_data = true;
-				}
-			}
-
-			if (reading_data && copyx_enabled)
+			if (copyx_enabled)
 			{
 				if ((ch = fgetc(copyx_stream)) == EOF)
 				{
-					retVal = 0x00;
 					fclose(copyx_stream);
-					copyx_stream = NULL;
+					copyx_stream  = NULL;
+					copyx_enabled = false;
+					retVal        = 0x00;
 				}
 				else
 				{
@@ -186,153 +352,19 @@ uint8_t io_port_in(uint8_t port)
 			}
 
 			break;
-		case 41:
-			LOAD_PORT_DATA(tick_count, %u);
-			break;
-		case 42: // Return current UTC
-			if (!reading_data)
+		case 200: // READ STRING
+			if (request_count < request_len)
 			{
-				readPtr = 0;
-				dx_getCurrentUtc(data, sizeof(data));
-				reading_data = true;
+				retVal = request_buffer[request_count++];
+			}
+			else
+			{
+				retVal = 0x00;
 			}
 
-			retVal = data[readPtr++];
-			break;
-		case 43: // Return local time
-			if (!reading_data)
-			{
-				readPtr = 0;
-				dx_getLocalTime(data, sizeof(data));
-				reading_data = true;
-			}
-
-			retVal = data[readPtr++];
-			break;
-		case 44: // Generate random number to seed mbasic randomize command
-			LOAD_PORT_DATA(((rand() % 64000) - 32000), % d);
-			break;
-		case 45:
-			if (environment.latest.weather.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.weather.temperature, % d);
-			}
-			break;
-		case 46:
-			if (environment.latest.weather.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.weather.pressure, % d);
-			}
-			break;
-		case 47:
-			if (environment.latest.weather.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.weather.humidity, % d);
-			}
-			break;
-		case 48:
-			if (environment.latest.weather.updated)
-			{
-				LOAD_PORT_DATA_FROM_STRING(environment.latest.weather.description);
-			}
-			break;
-		case 49:
-			if (environment.locationInfo.updated)
-			{
-				LOAD_PORT_DATA(environment.locationInfo.lat, % .6f);
-			}
-			break;
-		case 50:
-			if (environment.locationInfo.updated)
-			{
-				LOAD_PORT_DATA(environment.locationInfo.lng, % .6f);
-			}
-			break;
-		case 53:
-			if (environment.latest.weather.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.weather.wind_speed, % .2f);
-			}
-			break;
-		case 54:
-			if (environment.latest.weather.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.weather.wind_direction, % d);
-			}
-			break;
-		case 55:
-			if (environment.locationInfo.updated)
-			{
-				LOAD_PORT_DATA_FROM_STRING(environment.locationInfo.country);
-			}
-			break;
-		case 57:
-			if (environment.locationInfo.updated)
-			{
-				LOAD_PORT_DATA_FROM_STRING(environment.locationInfo.city);
-			}
-			break;
-		case 60:
-			if (environment.latest.pollution.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.pollution.air_quality_index, % .0f);
-			}
-			break;
-		case 61:
-			if (environment.latest.pollution.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.pollution.carbon_monoxide, % .2f);
-			}
-			break;
-		case 62:
-			if (environment.latest.pollution.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.pollution.nitrogen_monoxide, % .2f);
-			}
-			break;
-		case 63:
-			if (environment.latest.pollution.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.pollution.nitrogen_dioxide, % .2f);
-			}
-			break;
-		case 64:
-			if (environment.latest.pollution.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.pollution.ozone, % .2f);
-			}
-			break;
-		case 65:
-			if (environment.latest.pollution.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.pollution.sulphur_dioxide, % .2f);
-			}
-			break;
-		case 66:
-			if (environment.latest.pollution.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.pollution.ammonia, % .2f);
-			}
-			break;
-		case 67:
-			if (environment.latest.pollution.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.pollution.pm2_5, % .2f);
-			}
-			break;
-		case 68:
-			if (environment.latest.pollution.updated)
-			{
-				LOAD_PORT_DATA(environment.latest.pollution.pm10, % .2f);
-			}
 			break;
 		default:
 			retVal = 0x00;
-	}
-
-	if (reading_data && retVal == 0x00)
-	{
-		reading_data = false;
 	}
 
 	return retVal;

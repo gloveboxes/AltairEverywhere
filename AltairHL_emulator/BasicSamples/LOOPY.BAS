@@ -1,4 +1,4 @@
-10 FOR I = 0 TO 999
+10 FOR I = 0 TO 999999
 20 FOR J = 0 TO 999999
 30 PRINT "Loop: ";I;" Counter: ";J
 40 NEXT J
