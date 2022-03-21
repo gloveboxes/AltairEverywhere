@@ -34,7 +34,7 @@ static void format_string(const void *value);
 
 // Weather definitions
 static const void *w_key[] = {
-	"Celsius", "Millibar", "Humidity %", "Wind km/h", "Wind degrees", "Description"};
+	"Celsius", "Millibar", "Humidity %", "Wind km/h", "Wind degrees", "Observation"};
 static const void *w_value[] = {&environment.latest.weather.temperature, &environment.latest.weather.pressure,
 	&environment.latest.weather.humidity, &environment.latest.weather.wind_speed,
 	&environment.latest.weather.wind_direction, &environment.latest.weather.description};
