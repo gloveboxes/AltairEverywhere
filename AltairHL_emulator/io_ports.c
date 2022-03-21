@@ -160,7 +160,8 @@ void io_port_out(uint8_t port, uint8_t data)
 				{
 					publish_json_pending = true;
 					json_buffer_index    = 0;
-					dx_timerOneShotSet(&tmr_deferred_port_out_json, &(struct timespec){0, 1});
+					// Throttle IoT messages to 50ms as IoT dowork clocked at 100ms
+					dx_timerOneShotSet(&tmr_deferred_port_out_json, &(struct timespec){0, 50 * ONE_MS});
 				}
 			}
 			break;
@@ -169,7 +170,8 @@ void io_port_out(uint8_t port, uint8_t data)
 			{
 				publish_weather_pending = true;
 				jitter                  = (int)data;
-				dx_timerOneShotSet(&tmr_deferred_port_out_weather, &(struct timespec){0, 1});
+				// Throttle IoT messages to 50ms as IoT dowork clocked at 100ms
+				dx_timerOneShotSet(&tmr_deferred_port_out_weather, &(struct timespec){0, 50 * ONE_MS});
 			}
 			break;
 		case 33:
