@@ -26,6 +26,68 @@ DX_MESSAGE_PROPERTY *json_msg_properties[] = {&(DX_MESSAGE_PROPERTY){.key = "app
 DX_MESSAGE_CONTENT_PROPERTIES json_content_properties = {
 	.contentEncoding = "utf-8", .contentType = "application/json"};
 
+static void format_double4(void *value);
+static void format_float0(void *value);
+static void format_float2(void *value);
+static void format_int(void *value);
+static void format_string(const void *value);
+
+// Weather definitions
+static const void *w_key[] = {
+	"Celsius", "Millibar", "Humidity %", "Wind km/h", "Wind degrees", "Description"};
+static const void *w_value[] = {&environment.latest.weather.temperature, &environment.latest.weather.pressure,
+	&environment.latest.weather.humidity, &environment.latest.weather.wind_speed,
+	&environment.latest.weather.wind_direction, &environment.latest.weather.description};
+static void (*w_formatter[])() = {
+	format_int, format_int, format_int, format_float2, format_int, format_string};
+
+// Location definitions
+static const void *l_key[]     = {"Latitude", "Longitude", "Country", "City"};
+static const void *l_value[]   = {&environment.locationInfo.lat, &environment.locationInfo.lng,
+    &environment.locationInfo.country, &environment.locationInfo.city};
+static void (*l_formatter[])() = {format_double4, format_double4, format_string, format_string};
+
+// Pollution defintions
+static const void *p_key[]   = {"AQI(CAQI)", "CO", "NO", "NO2", "O3", "SO2", "NH3", "PM2.5", "PM1.0"};
+static const void *p_value[] = {&environment.latest.pollution.air_quality_index,
+	&environment.latest.pollution.carbon_monoxide, &environment.latest.pollution.nitrogen_monoxide,
+	&environment.latest.pollution.nitrogen_dioxide, &environment.latest.pollution.ozone,
+	&environment.latest.pollution.sulphur_dioxide, &environment.latest.pollution.ammonia,
+	&environment.latest.pollution.pm2_5, &environment.latest.pollution.pm10};
+
+static void (*p_formatter[])() = {format_float0, format_float2, format_float2, format_float2, format_float2,
+	format_float2, format_float2, format_float2, format_float2};
+
+static void format_float0(void *value)
+{
+	request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.0f", *(float *)value);
+	request_count = 0;
+}
+
+static void format_float2(void *value)
+{
+	request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.2f", *(float *)value);
+	request_count = 0;
+}
+
+static void format_double4(void *value)
+{
+	request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.4f", *(double *)value);
+	request_count = 0;
+}
+
+static void format_int(void *value)
+{
+	request_len   = snprintf(request_buffer, sizeof(request_buffer), "%d", *(int *)value);
+	request_count = 0;
+}
+
+static void format_string(const void *value)
+{
+	request_len   = snprintf(request_buffer, sizeof(request_buffer), "%s", (char *)value);
+	request_count = 0;
+}
+
 DX_TIMER_HANDLER(port_timer_expired_handler)
 {
 	delay_enabled = false;
@@ -130,7 +192,7 @@ void io_port_out(uint8_t port, uint8_t data)
 			if (data == 0)
 			{
 				copyx_index = 0;
-                memset(filename, 0x00, sizeof(filename));
+				memset(filename, 0x00, sizeof(filename));
 				snprintf(filename, sizeof(filename), "%s/%s", COPYX_FOLDER_NAME, copyx_filename);
 
 				if ((copyx_stream = fopen(filename, "r")) != NULL)
@@ -139,7 +201,44 @@ void io_port_out(uint8_t port, uint8_t data)
 				}
 			}
 			break;
-		case 41:
+		case 34: // Weather key
+			if (data < NELEMS(w_key))
+			{
+				format_string(w_key[data]);
+			}
+
+			break;
+		case 35: // weather value
+			if (environment.latest.weather.updated && data < NELEMS(w_value))
+			{
+				w_formatter[data](w_value[data]);
+			}
+			break;
+		case 36: // Location key
+			if (data < NELEMS(l_key))
+			{
+				format_string(l_key[data]);
+			}
+			break;
+		case 37: // Location value
+			if (environment.locationInfo.updated && data < NELEMS(l_value))
+			{
+				l_formatter[data](l_value[data]);
+			}
+			break;
+		case 38: // Pollution key
+			if (data < NELEMS(p_key))
+			{
+				format_string(p_key[data]);
+			}
+			break;
+		case 39: // Pollution value
+			if (environment.latest.pollution.updated && data < NELEMS(p_value))
+			{
+				p_formatter[data](p_value[data]);
+			}
+			break;
+		case 41: // System tick count
 			request_len   = snprintf(request_buffer, sizeof(request_buffer), "%u", tick_count);
 			request_count = 0;
 			break;
@@ -156,158 +255,6 @@ void io_port_out(uint8_t port, uint8_t data)
 		case 44: // Generate random number to seed mbasic randomize command
 			request_len = snprintf(request_buffer, sizeof(request_buffer), "%d", ((rand() % 64000) - 32000));
 			request_count = 0;
-			break;
-		case 45:
-			if (environment.latest.weather.updated)
-			{
-				request_len = snprintf(
-					request_buffer, sizeof(request_buffer), "%d", environment.latest.weather.temperature);
-				request_count = 0;
-			}
-			break;
-		case 46:
-			if (environment.latest.weather.updated)
-			{
-				request_len = snprintf(
-					request_buffer, sizeof(request_buffer), "%d", environment.latest.weather.pressure);
-				request_count = 0;
-			}
-			break;
-		case 47:
-			if (environment.latest.weather.updated)
-			{
-				request_len = snprintf(
-					request_buffer, sizeof(request_buffer), "%d", environment.latest.weather.humidity);
-				request_count = 0;
-			}
-			break;
-		case 48:
-			if (environment.latest.weather.updated)
-			{
-				request_len = snprintf(
-					request_buffer, sizeof(request_buffer), "%s", environment.latest.weather.description);
-				request_count = 0;
-			}
-			break;
-		case 49:
-			if (environment.locationInfo.updated)
-			{
-				request_len =
-					snprintf(request_buffer, sizeof(request_buffer), "%.6f", environment.locationInfo.lat);
-				request_count = 0;
-			}
-			break;
-		case 50:
-			if (environment.locationInfo.updated)
-			{
-				request_len =
-					snprintf(request_buffer, sizeof(request_buffer), "%.6f", environment.locationInfo.lng);
-				request_count = 0;
-			}
-			break;
-		case 53:
-			if (environment.latest.weather.updated)
-			{
-				request_len = snprintf(
-					request_buffer, sizeof(request_buffer), "%.2f", environment.latest.weather.wind_speed);
-				request_count = 0;
-			}
-			break;
-		case 54:
-			if (environment.latest.weather.updated)
-			{
-				request_len = snprintf(
-					request_buffer, sizeof(request_buffer), "%d", environment.latest.weather.wind_direction);
-				request_count = 0;
-			}
-			break;
-		case 55:
-			if (environment.locationInfo.updated)
-			{
-				request_len =
-					snprintf(request_buffer, sizeof(request_buffer), "%s", environment.locationInfo.country);
-				request_count = 0;
-			}
-			break;
-		case 57:
-			if (environment.locationInfo.updated)
-			{
-				request_len =
-					snprintf(request_buffer, sizeof(request_buffer), "%s", environment.locationInfo.city);
-				request_count = 0;
-			}
-			break;
-		case 60:
-			if (environment.latest.pollution.updated)
-			{
-				request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.0f",
-					  environment.latest.pollution.air_quality_index);
-				request_count = 0;
-			}
-			break;
-		case 61:
-			if (environment.latest.pollution.updated)
-			{
-				request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.2f",
-					  environment.latest.pollution.carbon_monoxide);
-				request_count = 0;
-			}
-			break;
-		case 62:
-			if (environment.latest.pollution.updated)
-			{
-				request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.2f",
-					  environment.latest.pollution.nitrogen_monoxide);
-				request_count = 0;
-			}
-			break;
-		case 63:
-			if (environment.latest.pollution.updated)
-			{
-				request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.2f",
-					  environment.latest.pollution.nitrogen_dioxide);
-				request_count = 0;
-			}
-			break;
-		case 64:
-			if (environment.latest.pollution.updated)
-			{
-				request_len = snprintf(
-					request_buffer, sizeof(request_buffer), "%.2f", environment.latest.pollution.ozone);
-				request_count = 0;
-			}
-			break;
-		case 65:
-			if (environment.latest.pollution.updated)
-			{
-				request_len   = snprintf(request_buffer, sizeof(request_buffer), "%.2f",
-					  environment.latest.pollution.sulphur_dioxide);
-				request_count = 0;
-			}
-			break;
-		case 66:
-			if (environment.latest.pollution.updated)
-			{
-				request_len = snprintf(
-					request_buffer, sizeof(request_buffer), "%.2f", environment.latest.pollution.ammonia);
-				request_count = 0;
-			}
-			break;
-		case 67:
-			if (environment.latest.pollution.updated)
-			{
-				request_len = snprintf(
-					request_buffer, sizeof(request_buffer), "%.2f", environment.latest.pollution.pm2_5);
-				request_count = 0;
-			}
-			break;
-		case 68:
-			if (environment.latest.pollution.updated)
-			{
-				request_len = snprintf(
-					request_buffer, sizeof(request_buffer), "%.2f", environment.latest.pollution.pm10);
-				request_count = 0;
-			}
 			break;
 		default:
 			break;
