@@ -8,12 +8,12 @@
 280 POLLUTIONPORT = 39
 
 300 PRINT "SEND WEATHER DATA TO IOT CENTRAL EVERY";DELAY%;"SECONDS"
-350 RCOUNT% = 0
+350 RCOUNT# = 0
 
 400 WHILE 1
 450 PRINT "===================================================="
-500 PRINT "Reading:"; RCOUNT%; ", BASIC free memory:"; FRE(0)
-550 RCOUNT% = RCOUNT% + 1
+500 PRINT "Reading:"; RCOUNT#; ", BASIC free memory:"; FRE(0)
+550 RCOUNT# = RCOUNT# + 1
 
 600 REM GET TIME AS STRING
 650 PORT = 43 : GOSUB 2700 : PRINT "Time (local): ";RSTRING$
