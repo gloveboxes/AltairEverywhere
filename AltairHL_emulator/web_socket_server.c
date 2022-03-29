@@ -8,7 +8,6 @@ void (*_client_connected_cb)(void);
 static char output_buffer[512];
 static int client_fd               = -1;
 static size_t output_buffer_length = 0;
-static volatile bool dirty_buffer  = false;
 
 void publish_message(const void *message, size_t message_length)
 {
@@ -23,18 +22,12 @@ void publish_message(const void *message, size_t message_length)
 
 void send_partial_message(void)
 {
-    if (output_buffer_length > 0)
-    {
-        publish_message(output_buffer, output_buffer_length);
-        output_buffer_length = 0;
-    }
-    dirty_buffer = false;
+    publish_message(output_buffer, output_buffer_length);
+    output_buffer_length = 0;
 }
 
 inline void publish_character(char character)
 {
-    dirty_buffer = true;
-
     output_buffer[output_buffer_length++] = character;
 
     if (output_buffer_length < sizeof(output_buffer))
@@ -44,7 +37,6 @@ inline void publish_character(char character)
 
     publish_message(output_buffer, output_buffer_length);
     output_buffer_length = 0;
-    dirty_buffer         = false;
 }
 
 void onopen(int fd)
@@ -80,7 +72,8 @@ void onmessage(int fd, const unsigned char *msg, uint64_t size, int type)
     if (!ws_input_block.active)
     {
         ws_input_block.active = true;
-        ws_input_block.length = size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : size;
+        ws_input_block.length =
+            size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : size;
         memcpy(ws_input_block.buffer, msg, ws_input_block.length);
 
         dx_timerOneShotSet(&tmr_deferred_input, &(struct timespec){0, 1});
@@ -104,7 +97,7 @@ void init_web_socket_server(void (*client_connected_cb)(void))
 /// <param name="eventLoopTimer"></param>
 DX_TIMER_HANDLER(partial_message_handler)
 {
-    if (dirty_buffer)
+    if (output_buffer_length > 0)
     {
         send_partial_msg = true;
     }
