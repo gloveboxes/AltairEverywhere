@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 #define DISK_A           "Disks/cpm63k.dsk"
-#define DISK_B           "Disks/blank.dsk"
+#define DISK_B           "Disks/bdsc-v1.60.dsk"
 #define DISK_LOADER      "Disks/88dskrom.bin"
 #define ALTAIR_BASIC_ROM "Disks/altair_basic.bin"
 
