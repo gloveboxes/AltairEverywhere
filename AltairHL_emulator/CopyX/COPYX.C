@@ -1,6 +1,3 @@
-/* Copyright (c) Microsoft Corporation. All rights reserved.
-   Licensed under the MIT License. */
-
 #include <stdio.h>
 
 FILE *fp_output;
@@ -50,7 +47,13 @@ char *filename; int len;
 void copy_file()
 {
     char ch;
-    while ((ch = inp(33)) != 0) {
-        fputc(ch, fp_output);
+
+    /* Wait for the HTTP GET request to complete and file is loaded */
+    /* End of file flag goes low when file is ready to copy */
+    while((ch = inp(33)) == 1){}
+
+    /* While not end of file read in next byte */
+    while ((ch = inp(33)) == 0) {
+       fputc(inp(201), fp_output);
     }
 }

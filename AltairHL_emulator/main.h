@@ -63,7 +63,7 @@ static DX_MESSAGE_CONTENT_PROPERTIES diag_content_properties = {
 // CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
 volatile CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
 
-static ALTAIR_CONFIG_T altair_config;
+ALTAIR_CONFIG_T altair_config;
 ENVIRONMENT_TELEMETRY environment;
 
 intel8080_t cpu;
@@ -110,6 +110,7 @@ const uint8_t reverse_lut[16] = {
 // clang-format off
 // Common Timers
 DX_TIMER_BINDING tmr_deferred_command = {.name = "tmr_deferred_command", .handler = deferred_command_handler};
+DX_TIMER_BINDING tmr_copyx_request = {.name = "tmr_copyx_request", .handler = copyx_request_handler};
 DX_TIMER_BINDING tmr_deferred_input = {.name = "tmr_deferred_input", .handler = deferred_input_handler};
 DX_TIMER_BINDING tmr_deferred_port_out_json = {.name = "tmr_deferred_port_out_json", .handler = port_out_json_handler};
 DX_TIMER_BINDING tmr_deferred_port_out_weather = {.name = "tmr_deferred_port_out_weather", .handler = port_out_weather_handler};
@@ -151,14 +152,41 @@ static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVer
 // clang-format on
 
 // initialize bindings
-static DX_TIMER_BINDING *timer_bindings[] = {&tmr_partial_message, &tmr_report_memory_usage,
-	&tmr_update_environment, &tmr_port_timer_expired, &tmr_heart_beat, &tmr_deferred_command,
-	&tmr_deferred_input, &tmr_deferred_port_out_weather, &tmr_deferred_port_out_json, &tmr_tick_count};
+static DX_TIMER_BINDING *timer_bindings[] = {
+	&tmr_copyx_request,
+	&tmr_deferred_command,
+	&tmr_deferred_input,
+	&tmr_deferred_port_out_json,
+	&tmr_deferred_port_out_weather,
+	&tmr_heart_beat,
+	&tmr_partial_message,
+	&tmr_port_timer_expired,
+	&tmr_report_memory_usage,
+	&tmr_tick_count,
+	&tmr_update_environment,
+};
 
 static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {
-	&dt_deviceStartTimeUtc, &dt_softwareVersion, &dt_ledBrightness, &dt_temperature, &dt_pressure,
-	&dt_humidity, &dt_wind_speed, &dt_wind_direction, &dt_weather, &dt_location, &dt_country, &dt_city,
-	&dt_heartbeatUtc, &dt_air_quality_index, &dt_carbon_monoxide, &dt_nitrogen_monoxide, &dt_nitrogen_dioxide,
-	&dt_ozone, &dt_sulphur_dioxide, &dt_ammonia, &dt_pm2_5, &dt_pm10
-
+	&dt_deviceStartTimeUtc,
+	&dt_softwareVersion,
+	&dt_ledBrightness,
+	&dt_temperature,
+	&dt_pressure,
+	&dt_humidity,
+	&dt_wind_speed,
+	&dt_wind_direction,
+	&dt_weather,
+	&dt_location,
+	&dt_country,
+	&dt_city,
+	&dt_heartbeatUtc,
+	&dt_air_quality_index,
+	&dt_carbon_monoxide,
+	&dt_nitrogen_monoxide,
+	&dt_nitrogen_dioxide,
+	&dt_ozone,
+	&dt_sulphur_dioxide,
+	&dt_ammonia,
+	&dt_pm2_5,
+	&dt_pm10,
 };

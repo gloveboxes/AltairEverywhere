@@ -436,6 +436,8 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 	// https://stackoverflow.com/questions/18935446/program-received-signal-sigpipe-broken-pipe
 	sigaction(SIGPIPE, &(struct sigaction){SIG_IGN}, NULL);
 
+	curl_global_init(CURL_GLOBAL_ALL);
+
 	setvbuf(stdout, NULL, _IONBF, 0); // disable stdout/printf buffering
 
 	dx_Log_Debug_Init(Log_Debug_Time_buffer, sizeof(Log_Debug_Time_buffer));

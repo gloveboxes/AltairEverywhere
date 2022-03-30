@@ -3,6 +3,8 @@
 
 #include "io_ports.h"
 
+static int copy_web(char *url);
+
 typedef struct
 {
 	size_t len;
@@ -17,21 +19,19 @@ typedef struct
 	int index;
 } JSON_UNIT_T;
 
-#ifndef AZURE_SPHERE
-
 typedef struct
 {
-	FILE *stream;
+	int fd;
 	char filename[15];
-	char pc_filename[64];
+	char url[128];
+	bool file_opened;
 	bool enabled;
+	bool end_of_file;
 	int index;
 	int ch;
 } COPY_X_T;
 
 static COPY_X_T copy_x;
-
-#endif // !AZURE_SPHERE
 
 static JSON_UNIT_T ju;
 static REQUEST_UNIT_T ru;
@@ -137,10 +137,17 @@ DX_TIMER_HANDLER(port_out_json_handler)
 {
 	if (azure_connected)
 	{
-		dx_azurePublish(ju.buffer, strlen(ju.buffer), json_msg_properties,
-			NELEMS(json_msg_properties), &json_content_properties);
+		dx_azurePublish(ju.buffer, strlen(ju.buffer), json_msg_properties, NELEMS(json_msg_properties),
+			&json_content_properties);
 	}
 	ju.publish_pending = false;
+}
+DX_TIMER_HANDLER_END
+
+DX_TIMER_HANDLER(copyx_request_handler)
+{
+	copy_web(copy_x.url);
+	copy_x.end_of_file = false;
 }
 DX_TIMER_HANDLER_END
 
@@ -193,17 +200,16 @@ void io_port_out(uint8_t port, uint8_t data)
 				dx_timerOneShotSet(&tmr_deferred_port_out_weather, &(struct timespec){0, 250 * ONE_MS});
 			}
 			break;
-#ifndef AZURE_SPHERE
-		case 33:
-
+		case 33: // copy file from web server to mutable storage
 			if (copy_x.index == 0)
 			{
 				memset(copy_x.filename, 0x00, sizeof(copy_x.filename));
-				copy_x.enabled = false;
-				if (copy_x.stream != NULL)
+				if (copy_x.file_opened && copy_x.fd != -1)
 				{
-					fclose(copy_x.stream);
-					copy_x.stream = NULL;
+					close(copy_x.fd);
+					copy_x.file_opened = false;
+					copy_x.end_of_file = true;
+					copy_x.fd          = -1;
 				}
 			}
 
@@ -215,18 +221,15 @@ void io_port_out(uint8_t port, uint8_t data)
 
 			if (data == 0) // NULL TERMINATION
 			{
-				copy_x.index = 0;
-				memset(copy_x.pc_filename, 0x00, sizeof(copy_x.pc_filename));
-				snprintf(copy_x.pc_filename, sizeof(copy_x.pc_filename), "%s/%s", COPYX_FOLDER_NAME,
-					copy_x.filename);
+				copy_x.index       = 0;
+				copy_x.end_of_file = true;
 
-				if ((copy_x.stream = fopen(copy_x.pc_filename, "r")) != NULL)
-				{
-					copy_x.enabled = true;
-				}
+				memset(copy_x.url, 0x00, sizeof(copy_x.url));
+				snprintf(copy_x.url, sizeof(copy_x.url), "%s/%s", altair_config.copy_x_url, copy_x.filename);
+
+				dx_timerOneShotSet(&tmr_copyx_request, &(struct timespec){0, 250 * ONE_MS});
 			}
 			break;
-#endif           // AZURE_SPHERE
 		case 34: // Weather key
 			if (data < NELEMS(w_key))
 			{
@@ -287,7 +290,7 @@ void io_port_out(uint8_t port, uint8_t data)
 		case 62: // Blue LEB
 			dx_gpioStateSet(&gpioBlue, (bool)data);
 			break;
-#endif // AZURE_SPHERE
+#endif           // AZURE_SPHERE
 		default:
 			break;
 	}
@@ -313,24 +316,9 @@ uint8_t io_port_in(uint8_t port)
 		case 32:
 			retVal = (uint8_t)publish_weather_pending;
 			break;
-#ifndef AZURE_SPHERE
-		case 33:
-			if (copy_x.enabled)
-			{
-				if ((copy_x.ch = fgetc(copy_x.stream)) == EOF)
-				{
-					fclose(copy_x.stream);
-					copy_x.stream  = NULL;
-					copy_x.enabled = false;
-					retVal         = 0x00;
-				}
-				else
-				{
-					retVal = (uint8_t)copy_x.ch;
-				}
-			}
+		case 33: // has copyx file need copied and loaded
+			retVal = copy_x.end_of_file;
 			break;
-#endif            // AZURE_SPHERE
 		case 200: // READ STRING
 			if (ru.count < ru.len && ru.count < sizeof(ru.buffer))
 			{
@@ -341,9 +329,118 @@ uint8_t io_port_in(uint8_t port)
 				retVal = 0x00;
 			}
 			break;
+		case 201: // READ COPYX file from mutable storage
+			if (copy_x.end_of_file)
+			{
+				retVal = 0x00;
+			}
+			else
+			{
+				if (!copy_x.file_opened)
+				{
+					/* open the file */
+#ifdef AZURE_SPHERE
+					copy_x.fd = Storage_OpenMutableFile();
+#else
+					copy_x.fd = open("MutableStorage/copyx", O_RDONLY);
+#endif
+					if (copy_x.fd != -1)
+					{
+						lseek(copy_x.fd, 0, SEEK_SET);
+						copy_x.file_opened = true;
+					}
+				}
+
+				if (copy_x.file_opened)
+				{
+					if (read(copy_x.fd, &retVal, 1) == 0)
+					{
+						close(copy_x.fd);
+#ifdef AZURE_SPHERE
+						Storage_DeleteMutableFile();
+#endif
+						copy_x.file_opened = false;
+						copy_x.end_of_file = true;
+						copy_x.fd          = -1;
+						retVal             = 0x00;
+					}
+				}
+				else
+				{
+					retVal = 0x00;
+				}
+			}
+			break;
 		default:
 			retVal = 0x00;
 	}
 
 	return retVal;
+}
+
+static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
+{
+	ssize_t written = write(*(int *)stream, ptr, nmemb);
+	return (size_t)written;
+}
+
+static int copy_web(char *url)
+{
+	CURL *curl_handle;
+	int copy_web_fd                 = -1;
+
+#ifndef AZURE_SPHERE 
+	const char *pagefilename = "MutableStorage/copyx";
+#endif
+
+	/* init the curl session */
+	curl_handle = curl_easy_init();
+
+	/* set URL to get here */
+	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+
+	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
+
+	// https://curl.se/libcurl/c/CURLOPT_NOSIGNAL.html
+	curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L);
+
+	// https://curl.se/libcurl/c/CURLOPT_TIMEOUT.html
+	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 4L);
+
+	/* Switch on full protocol/debug output while testing */
+	// curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
+
+	/* disable progress meter, set to 0L to enable it */
+	curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+
+	/* send all data to this function  */
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
+
+/* open the file */
+#ifdef AZURE_SPHERE
+	Storage_DeleteMutableFile();
+	copy_web_fd = Storage_OpenMutableFile();
+#else
+	copy_web_fd = open(pagefilename, O_RDWR | O_TRUNC);
+#endif
+
+	if (copy_web_fd != -1)
+	{
+
+		/* write the page body to this file handle */
+		curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &copy_web_fd);
+
+		/* get it! */
+		curl_easy_perform(curl_handle);
+
+		/* close the header file */
+		close(copy_web_fd);
+	}
+
+	/* cleanup curl stuff */
+	curl_easy_cleanup(curl_handle);
+
+	curl_global_cleanup();
+
+	return 0;
 }

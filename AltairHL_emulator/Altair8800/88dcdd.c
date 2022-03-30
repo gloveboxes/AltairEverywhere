@@ -137,6 +137,9 @@ void disk_write(uint8_t b)
     disk_drive.current->sectorDirty = true;
 
     if (disk_drive.current->write_status == 137) {
+        
+        writeSector(disk_drive.current, disk_drive.currentDisk);
+
         disk_drive.current->write_status = 0;
         clear_status(STATUS_ENWD);
     } else
