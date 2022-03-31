@@ -290,7 +290,11 @@ void io_port_out(uint8_t port, uint8_t data)
 		case 62: // Blue LEB
 			dx_gpioStateSet(&gpioBlue, (bool)data);
 			break;
-#endif           // AZURE_SPHERE
+		case 63: // Onboard temperature
+			ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d",
+				data ? onboard_telemetry.pressure : onboard_telemetry.temperature);
+			break;
+#endif // AZURE_SPHERE
 		default:
 			break;
 	}
@@ -387,9 +391,9 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
 static int copy_web(char *url)
 {
 	CURL *curl_handle;
-	int copy_web_fd                 = -1;
+	int copy_web_fd = -1;
 
-#ifndef AZURE_SPHERE 
+#ifndef AZURE_SPHERE
 	const char *pagefilename = "MutableStorage/copyx";
 #endif
 
