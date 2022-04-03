@@ -8,6 +8,71 @@ void (*_client_connected_cb)(void);
 static char output_buffer[512];
 static int client_fd               = -1;
 static size_t output_buffer_length = 0;
+static bool cleanup_required       = false;
+static int fd_ledger[MAX_CLIENTS];
+
+static void cleanup_session(void)
+{
+#ifdef ALTAIR_SERVICE
+    cpu_operating_mode = CPU_STOPPED;
+
+    // Sleep this thread so the Altair CPU thread can complete current instruction
+    nanosleep(&(struct timespec){0, 250 * ONE_MS}, NULL);
+
+    load_boot_disk();
+
+    clear_difference_disk();
+#endif
+
+    cleanup_required = false;
+}
+
+void fd_ledger_init(void)
+{
+    for (int i = 0; i < NELEMS(fd_ledger); i++)
+    {
+        fd_ledger[i] = -1;
+    }
+}
+
+void fd_ledger_close_all(void)
+{
+    client_fd = -1;
+
+    for (int i = 0; i < NELEMS(fd_ledger); i++)
+    {
+        if (fd_ledger[i] != -1)
+        {
+            ws_close_client(fd_ledger[i]);
+            fd_ledger[i] = -1;
+        }
+    }
+}
+
+void fd_ledger_add(int fd)
+{
+    for (int i = 0; i < NELEMS(fd_ledger); i++)
+    {
+        if (fd_ledger[i] == -1)
+        {
+            fd_ledger[i] = fd;
+            client_fd    = fd;
+            break;
+        }
+    }
+}
+
+void fd_ledger_delete(int fd)
+{
+    for (int i = 0; i < NELEMS(fd_ledger); i++)
+    {
+        if (fd == fd_ledger[i])
+        {
+            fd_ledger[i] = -1;
+            break;
+        }
+    }
+}
 
 void publish_message(const void *message, size_t message_length)
 {
@@ -15,7 +80,7 @@ void publish_message(const void *message, size_t message_length)
     {
         if (ws_sendframe(client_fd, message, message_length, false, WS_FR_OP_TXT) == -1)
         {
-            client_fd = -1;
+            fd_ledger_close_all();
         }
     }
 }
@@ -41,12 +106,18 @@ inline void publish_character(char character)
 
 void onopen(int fd)
 {
-    if (client_fd != -1 && fd != client_fd)
+    if (cleanup_required)
     {
-        ws_close_client(client_fd);
+        cleanup_session();
     }
 
-    client_fd = fd;
+    fd_ledger_close_all();
+    fd_ledger_add(fd);
+
+#ifdef ALTAIR_SERVICE
+    cleanup_required = true;
+    (*(int *)dt_new_sessions.propertyValue)++;
+#endif
 
     _client_connected_cb();
 }
@@ -64,6 +135,8 @@ void onclose(int fd)
     // cli = ws_getaddress(fd);
     // printf("Connection closed, client: %d | addr: %s\n", fd, cli);
     // free(cli);
+
+    fd_ledger_delete(fd);
 }
 
 void onmessage(int fd, const unsigned char *msg, uint64_t size, int type)
@@ -72,11 +145,10 @@ void onmessage(int fd, const unsigned char *msg, uint64_t size, int type)
     if (!ws_input_block.active)
     {
         ws_input_block.active = true;
-        ws_input_block.length =
-            size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : size;
+        ws_input_block.length = size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : size;
         memcpy(ws_input_block.buffer, msg, ws_input_block.length);
 
-        dx_timerOneShotSet(&tmr_deferred_input, &(struct timespec){0, 1});
+        dx_timerOneShotSet(&tmr_deferred_input, &(struct timespec){0, 100 * ONE_MS});
     }
 }
 
@@ -84,11 +156,13 @@ void init_web_socket_server(void (*client_connected_cb)(void))
 {
     _client_connected_cb = client_connected_cb;
 
+    fd_ledger_init();
+
     struct ws_events evs;
     evs.onopen    = &onopen;
     evs.onclose   = &onclose;
     evs.onmessage = &onmessage;
-    ws_socket(&evs, 8082, 1); /* Never returns. */
+    ws_socket(&evs, 8082, 1);
 }
 
 /// <summary>
