@@ -126,7 +126,9 @@ DX_TIMER_HANDLER(port_out_weather_handler)
 	if (environment.valid && azure_connected)
 	{
 		environment.latest.weather.temperature += jitter;
+#ifndef ALTAIR_SERVICE
 		publish_telemetry(&environment);
+#endif
 		environment.latest.weather.temperature -= jitter;
 	}
 	publish_weather_pending = false;
@@ -137,8 +139,10 @@ DX_TIMER_HANDLER(port_out_json_handler)
 {
 	if (azure_connected)
 	{
+#ifndef ALTAIR_SERVICE
 		dx_azurePublish(ju.buffer, strlen(ju.buffer), json_msg_properties, NELEMS(json_msg_properties),
 			&json_content_properties);
+#endif
 	}
 	ju.publish_pending = false;
 }
