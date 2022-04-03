@@ -16,16 +16,22 @@ void clear_status(uint8_t bit)
 
 void disk_select(uint8_t b)
 {
-    uint8_t select = b & 0xf;
-    disk_drive.currentDisk = select;
+	uint8_t select         = b & 0xf;
+	disk_drive.currentDisk = select;
 
-    if (select == 0) {
-        disk_drive.current = &disk_drive.disk1;
-    } else if (select == 1) {
-        disk_drive.current = &disk_drive.disk2;
-    } else {
-        disk_drive.current = &disk_drive.nodisk;
-    }
+	switch (select)
+	{
+		case 0:
+			disk_drive.current = &disk_drive.disk1;
+			break;
+		case 1:
+			disk_drive.current = &disk_drive.disk2;
+			break;
+		default:
+			disk_drive.current     = &disk_drive.disk1;
+			disk_drive.currentDisk = 0;
+			break;
+	}
 }
 
 uint8_t disk_status()
