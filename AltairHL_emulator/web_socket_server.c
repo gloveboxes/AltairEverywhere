@@ -4,12 +4,25 @@
 #include "web_socket_server.h"
 
 void (*_client_connected_cb)(void);
+static DX_DECLARE_TIMER_HANDLER(expire_session_handler);
 
 static char output_buffer[512];
+static int fd_ledger[MAX_CLIENTS];
 static int client_fd               = -1;
 static size_t output_buffer_length = 0;
 static bool cleanup_required       = false;
-static int fd_ledger[MAX_CLIENTS];
+
+static volatile bool active_session = false;
+static const int session_minutes    = 1 * 60 * 30; // 30 minutes
+
+static DX_TIMER_BINDING tmr_expire_session = {
+    .name = "tmr_expire_session", .handler = expire_session_handler};
+
+static DX_TIMER_HANDLER(expire_session_handler)
+{
+    active_session = false;
+}
+DX_TIMER_HANDLER_END
 
 static void cleanup_session(void)
 {
@@ -68,6 +81,10 @@ void fd_ledger_delete(int fd)
     {
         if (fd == fd_ledger[i])
         {
+            if (client_fd == fd_ledger[i])
+            {
+                active_session = false;
+            }
             fd_ledger[i] = -1;
             break;
         }
@@ -106,20 +123,34 @@ inline void publish_character(char character)
 
 void onopen(int fd)
 {
-    if (cleanup_required)
+    if (!active_session)
     {
-        cleanup_session();
-    }
-
-    fd_ledger_close_all();
-    fd_ledger_add(fd);
 
 #ifdef ALTAIR_SERVICE
-    cleanup_required = true;
-    (*(int *)dt_new_sessions.propertyValue)++;
+        active_session = true;
+#endif // ALTAIR_SERVICE
+
+        if (cleanup_required)
+        {
+            cleanup_session();
+        }
+
+        fd_ledger_close_all();
+        fd_ledger_add(fd);
+
+#ifdef ALTAIR_SERVICE
+        cleanup_required = true;
+        (*(int *)dt_new_sessions.propertyValue)++;
+        dx_timerOneShotSet(&tmr_expire_session, &(struct timespec){session_minutes, 0});
 #endif
 
-    _client_connected_cb();
+        _client_connected_cb();
+    }
+    else
+    {
+        ws_close_client(fd);
+        return;
+    }
 }
 
 /**
@@ -157,6 +188,8 @@ void init_web_socket_server(void (*client_connected_cb)(void))
     _client_connected_cb = client_connected_cb;
 
     fd_ledger_init();
+
+    dx_timerStart(&tmr_expire_session);
 
     struct ws_events evs;
     evs.onopen    = &onopen;
