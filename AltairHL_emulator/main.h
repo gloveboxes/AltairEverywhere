@@ -39,7 +39,7 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
-#define ALTAIR_EMULATOR_VERSION "4.3.2"
+#define ALTAIR_EMULATOR_VERSION "4.3.3"
 #define Log_Debug(f_, ...)      dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED      FALSE
 
@@ -146,6 +146,11 @@ DX_DEVICE_TWIN_BINDING dt_city = {.propertyName = "City", .twinType = DX_DEVICE_
 DX_DEVICE_TWIN_BINDING dt_country = {.propertyName = "Country", .twinType = DX_DEVICE_TWIN_STRING};
 DX_DEVICE_TWIN_BINDING dt_location = {.propertyName = "Location", .twinType = DX_DEVICE_TWIN_JSON_OBJECT};
 
+DX_DEVICE_TWIN_BINDING dt_filesystem_reads = {.propertyName = "FilesystemReads", .twinType = DX_DEVICE_TWIN_INT};
+DX_DEVICE_TWIN_BINDING dt_difference_disk_reads = {.propertyName = "DifferenceDiskReads", .twinType = DX_DEVICE_TWIN_INT};
+DX_DEVICE_TWIN_BINDING dt_difference_disk_writes = {.propertyName = "DifferenceDiskWrites", .twinType = DX_DEVICE_TWIN_INT};
+DX_DEVICE_TWIN_BINDING dt_new_sessions = {.propertyName = "NewSessions", .twinType = DX_DEVICE_TWIN_INT};
+
 static DX_DEVICE_TWIN_BINDING dt_deviceStartTimeUtc = {.propertyName = "StartTimeUTC", .twinType = DX_DEVICE_TWIN_STRING};
 static DX_DEVICE_TWIN_BINDING dt_heartbeatUtc = {.propertyName = "HeartbeatUTC", .twinType = DX_DEVICE_TWIN_STRING};
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
@@ -189,4 +194,9 @@ static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {
 	&dt_ammonia,
 	&dt_pm2_5,
 	&dt_pm10,
+
+	&dt_filesystem_reads,
+	&dt_difference_disk_reads,
+	&dt_difference_disk_writes,
+	&dt_new_sessions,
 };

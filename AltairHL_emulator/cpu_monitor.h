@@ -27,9 +27,10 @@ extern volatile uint16_t bus_switches;
 
 DX_DECLARE_TIMER_HANDLER(deferred_command_handler);
 
+bool loadRomImage(char *romImageName, uint16_t loadAddress);
 void disassemble(intel8080_t *cpu);
+void load_boot_disk(void);
+void process_control_panel_commands(void);
 void process_virtual_input(const char *command, void (*process_control_panel_commands)(void));
 void publish_cpu_state(char *command, uint16_t address_bus, uint8_t data_bus);
 void trace(intel8080_t *cpu);
-void process_control_panel_commands(void);
-bool loadRomImage(char *romImageName, uint16_t loadAddress);

@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "88dcdd.h"
+#include "cpu_monitor.h"
+#include "dx_device_twins.h"
 #include "dx_utilities.h"
 #include <stdbool.h>
 #include <stdio.h>
@@ -20,6 +23,8 @@ typedef struct
 	char buffer[256];
 } WS_INPUT_BLOCK_T;
 
+extern DX_DEVICE_TWIN_BINDING dt_new_sessions;
+extern volatile CPU_OPERATING_MODE cpu_operating_mode;
 extern WS_INPUT_BLOCK_T ws_input_block;
 extern DX_TIMER_BINDING tmr_partial_message;
 

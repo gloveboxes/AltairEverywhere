@@ -12,7 +12,8 @@ static int client_fd               = -1;
 static size_t output_buffer_length = 0;
 static bool cleanup_required       = false;
 
-static volatile bool active_session = false;
+pthread_mutex_t session_mutex       = PTHREAD_MUTEX_INITIALIZER;
+static bool active_session = false;
 static const int session_minutes    = 1 * 60 * 30; // 30 minutes
 
 static DX_TIMER_BINDING tmr_expire_session = {
@@ -26,7 +27,7 @@ DX_TIMER_HANDLER_END
 
 static void cleanup_session(void)
 {
-#ifdef ALTAIR_SERVICE
+#ifdef ALTAIR_CLOUD
     cpu_operating_mode = CPU_STOPPED;
 
     // Sleep this thread so the Altair CPU thread can complete current instruction
@@ -123,13 +124,10 @@ inline void publish_character(char character)
 
 void onopen(int fd)
 {
+    pthread_mutex_lock(&session_mutex);
+
     if (!active_session)
     {
-
-#ifdef ALTAIR_SERVICE
-        active_session = true;
-#endif // ALTAIR_SERVICE
-
         if (cleanup_required)
         {
             cleanup_session();
@@ -138,19 +136,20 @@ void onopen(int fd)
         fd_ledger_close_all();
         fd_ledger_add(fd);
 
-#ifdef ALTAIR_SERVICE
+#ifdef ALTAIR_CLOUD
+        active_session = true;
         cleanup_required = true;
-        (*(int *)dt_new_sessions.propertyValue)++;
         dx_timerOneShotSet(&tmr_expire_session, &(struct timespec){session_minutes, 0});
 #endif
-
+        (*(int *)dt_new_sessions.propertyValue)++;
         _client_connected_cb();
     }
     else
     {
         ws_close_client(fd);
-        return;
     }
+
+    pthread_mutex_unlock(&session_mutex);
 }
 
 /**
@@ -176,7 +175,7 @@ void onmessage(int fd, const unsigned char *msg, uint64_t size, int type)
     if (!ws_input_block.active)
     {
         ws_input_block.active = true;
-        ws_input_block.length = size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : size;
+        ws_input_block.length = size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : (size_t)size;
         memcpy(ws_input_block.buffer, msg, ws_input_block.length);
 
         dx_timerOneShotSet(&tmr_deferred_input, &(struct timespec){0, 100 * ONE_MS});

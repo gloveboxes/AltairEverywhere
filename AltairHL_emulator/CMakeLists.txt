@@ -10,6 +10,15 @@ project (Altair_emulator C)
 #
 ###################################################################################################################
 
+###################################################################################################################
+#
+# set(ALTAIR_CLOUD TRUE "Enable Altair as a service real-time in-memory differencing disk")
+###################################################################################################################
+
+if (ALTAIR_CLOUD)
+    add_compile_definitions(ALTAIR_CLOUD)
+endif(ALTAIR_CLOUD)
+
 set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO mocking for AzureSphereRemoteX.Client" FORCE )
 
 # ENABLE_EDGE_DEVX_REMOTEX is enabled as Log_Debug found in appslib is required.
@@ -50,6 +59,7 @@ set(Source
     "altair_config.c"
     "io_ports.c"
     "cpu_monitor.c"
+    "difference_disk.c"
     "iotc_manager.c"
     "web_socket_server.c"
     "main.c"
@@ -93,6 +103,7 @@ target_link_options(${PROJECT_NAME} PUBLIC "-L/usr/local/lib")
 target_include_directories(${PROJECT_NAME} PUBLIC AzureSphereDevX/include )
 target_include_directories(${PROJECT_NAME} PRIVATE wsServer/include)
 target_include_directories(${PROJECT_NAME} PUBLIC Drivers/pi_sense_hat)
+target_include_directories(${PROJECT_NAME} PUBLIC uthash/include)
 
 
 include_directories(${CMAKE_SOURCE_DIR} FrontPanels)

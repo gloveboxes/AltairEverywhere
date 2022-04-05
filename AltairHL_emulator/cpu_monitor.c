@@ -262,6 +262,19 @@ bool loadRomImage(char *romImageName, uint16_t loadAddress)
 	return bytes == length;
 }
 
+void load_boot_disk(void)
+{
+	memset(memory, 0x00, 64 * 1024); // clear altair memory.
+	// load Disk Loader at 0xff00
+	if (!loadRomImage(DISK_LOADER, 0xff00))
+	{
+		Log_Debug("Failed to open %s disk load ROM image\n", DISK_LOADER);
+	}
+	//print_console_banner();
+
+	i8080_examine(&cpu, 0xff00); // 0xff00 loads from disk boot loader
+}
+
 /// <summary>
 /// Commands are deferred so not running on web socket thread
 /// </summary>
@@ -302,15 +315,7 @@ DX_TIMER_HANDLER(deferred_command_handler)
 			trace(&cpu);
 			break;
 		case RESET:
-			memset(memory, 0x00, 64 * 1024); // clear altair memory.
-			// load Disk Loader at 0xff00
-			if (!loadRomImage(DISK_LOADER, 0xff00))
-			{
-				Log_Debug("Failed to open %s disk load ROM image\n", DISK_LOADER);
-			}
-			print_console_banner();
-
-			i8080_examine(&cpu, 0xff00); // 0xff00 loads from disk boot loader, 0x0000 loads basic
+            load_boot_disk();
 			cpu_operating_mode = CPU_RUNNING;
 			break;
 		case LOAD_ALTAIR_BASIC:

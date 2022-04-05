@@ -178,20 +178,8 @@ static void spin_wait(volatile bool *flag)
 /// </summary>
 static void client_connected_cb(void)
 {
-	static bool connection_initialised = false;
-
-	if (!connection_initialised)
-	{
-		connection_initialised = true;
-		// int len = snprintf(msgBuffer, sizeof(msgBuffer), connected_message, ALTAIR_EMULATOR_VERSION,
-		// AZURE_SPHERE_DEVX_VERSION); publish_message(msgBuffer, (size_t)len);
-		print_console_banner();
-		cpu_operating_mode = CPU_RUNNING;
-	}
-	else
-	{
-		print_console_banner();
-	}
+	print_console_banner();
+	cpu_operating_mode = CPU_RUNNING;
 }
 
 /// <summary>
@@ -357,21 +345,37 @@ static void *altair_thread(void *arg)
 	disk_controller.write         = disk_write;
 	disk_controller.sector        = sector;
 
+#ifdef ALTAIR_CLOUD
+	if ((disk_drive.disk1.fp = open(DISK_A, O_RDONLY)) == -1)
+	{
+		Log_Debug("Failed to open %s disk image\n", DISK_A);
+		exit(-1);
+	}
+#else
 	if ((disk_drive.disk1.fp = open(DISK_A, O_RDWR)) == -1)
 	{
 		Log_Debug("Failed to open %s disk image\n", DISK_A);
 		exit(-1);
 	}
+#endif // ALTAIR_CLOUD
 
 	disk_drive.disk1.diskPointer = 0;
 	disk_drive.disk1.sector      = 0;
 	disk_drive.disk1.track       = 0;
 
+#ifdef ALTAIR_CLOUD
+	if ((disk_drive.disk2.fp = open(DISK_B, O_RDONLY)) == -1)
+	{
+		Log_Debug("Failed to open %s disk image\n", DISK_A);
+		exit(-1);
+	}
+#else
 	if ((disk_drive.disk2.fp = open(DISK_B, O_RDWR)) == -1)
 	{
 		Log_Debug("Failed to open %s disk image\n", DISK_B);
 		exit(-1);
 	}
+#endif // ALTAIR_CLOUD
 	disk_drive.disk2.diskPointer = 0;
 	disk_drive.disk2.sector      = 0;
 	disk_drive.disk2.track       = 0;
@@ -461,10 +465,10 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 			IOT_PLUG_AND_PLAY_MODEL_ID);
 
 		dx_azureRegisterConnectionChangedNotification(azure_connection_state);
-		dx_azureRegisterConnectionChangedNotification(report_software_version);
-
-		dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));
+		dx_azureRegisterConnectionChangedNotification(report_software_version);		
 	}
+
+	dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));
 
 	init_web_socket_server(client_connected_cb);
 
