@@ -18,7 +18,7 @@ RUN apt update && apt-get install -y --no-install-recommends \
                     git \
                     libi2c-dev \
                     nano \
-                    python3 \
+                    # python3 \
                     htop \
                 && rm -rf /var/lib/apt/lists/*
 
