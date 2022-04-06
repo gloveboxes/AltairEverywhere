@@ -134,7 +134,7 @@ void onopen(ws_cli_conn_t *client)
             cleanup_session();
         }
 
-        fd_ledger_close_all();
+        // fd_ledger_close_all();
         fd_ledger_add(client);
 
 #ifdef ALTAIR_CLOUD
