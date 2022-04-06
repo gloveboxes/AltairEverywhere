@@ -58,7 +58,7 @@ static void update_owm_weather(ENVIRONMENT_TELEMETRY *telemetry)
 		return;
 	}
 
-	char *data = dx_getHttpData(weatherUrl);
+	char *data = dx_getHttpData(weatherUrl, 1);
 
 	if (data == NULL)
 	{
@@ -228,7 +228,7 @@ static void update_owm_pollution(ENVIRONMENT_TELEMETRY *telemetry)
 		return;
 	}
 
-	char *data = dx_getHttpData(pollutionUrl);
+	char *data = dx_getHttpData(pollutionUrl, 1);
 
 	if (data == NULL)
 	{
