@@ -39,7 +39,7 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
-#define ALTAIR_EMULATOR_VERSION "4.3.3"
+#define ALTAIR_EMULATOR_VERSION "4.3.4"
 #define Log_Debug(f_, ...)      dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED      FALSE
 
@@ -109,8 +109,8 @@ const uint8_t reverse_lut[16] = {
 
 // clang-format off
 // Common Timers
-DX_TIMER_BINDING tmr_deferred_command = {.name = "tmr_deferred_command", .handler = deferred_command_handler};
 DX_TIMER_BINDING tmr_copyx_request = {.name = "tmr_copyx_request", .handler = copyx_request_handler};
+DX_TIMER_BINDING tmr_deferred_command = {.name = "tmr_deferred_command", .handler = deferred_command_handler};
 DX_TIMER_BINDING tmr_deferred_input = {.name = "tmr_deferred_input", .handler = deferred_input_handler};
 DX_TIMER_BINDING tmr_deferred_port_out_json = {.name = "tmr_deferred_port_out_json", .handler = port_out_json_handler};
 DX_TIMER_BINDING tmr_deferred_port_out_weather = {.name = "tmr_deferred_port_out_weather", .handler = port_out_weather_handler};
@@ -120,6 +120,12 @@ static DX_TIMER_BINDING tmr_heart_beat = {.repeat = &(struct timespec){60, 0}, .
 static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){45, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
 static DX_TIMER_BINDING tmr_tick_count = {.repeat = &(struct timespec){1, 0}, .name = "tmr_tick_count", .handler = tick_count_handler};
 static DX_TIMER_BINDING tmr_update_environment = {.delay = &(struct timespec){2, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
+
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+static DX_TIMER_BINDING tmr_panel_refresh = {.delay = &(struct timespec){1, 0}, .name = "tmr_panel_refresh", .handler = panel_refresh_handler};
+#else
+static DX_TIMER_BINDING tmr_panel_refresh = {.name = "tmr_panel_refresh", .handler = panel_refresh_handler};
+#endif
 
 // Azure IoT Central Properties (Device Twins)
 
@@ -169,6 +175,8 @@ static DX_TIMER_BINDING *timer_bindings[] = {
 	&tmr_report_memory_usage,
 	&tmr_tick_count,
 	&tmr_update_environment,
+	&tmr_panel_refresh,
+
 };
 
 static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {
