@@ -146,7 +146,7 @@ void onopen(ws_cli_conn_t *client)
     }
     else
     {
-        // ws_close_client(fd);
+        ws_close_client(client);
     }
 
     pthread_mutex_unlock(&session_mutex);
