@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <script src="https://unpkg.com/xterm@4.4.0/lib/xterm.js"></script>
+  <script src="https://unpkg.com/xterm@4.18.0/lib/xterm.js"></script>
   <script src="Javascript/xterm.js"></script>
 
   <link rel="stylesheet" href="https://unpkg.com/xterm@4.4.0/css/xterm.css" />
@@ -16,6 +16,17 @@
       font-size: 18px;
       line-height: 20px;
       /* <- initial line-height */
+    }
+
+    #docs {
+      background-color: #C8C8C8;
+      border: white;
+      border-width: thick;
+      /* color: white; */
+      padding: 1px 1px;
+      text-decoration: none;
+      font: 1.3rem Courier New;
+      text-shadow: 0 0 5px #C8C8C8;
     }
 
     .inputMode {
@@ -86,6 +97,16 @@
     var term = null;
 
     function initTerminal() {
+
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const host_address = urlParams.get('altair')
+
+      if (host_address) {
+        document.getElementById('altairAddress').value = host_address;
+      } else {
+        document.getElementById('altairAddress').value = localStorage['altair_address'] || "";
+      }
 
       term = new Terminal({
         cursorBlink: "block",
@@ -208,7 +229,7 @@
         }
       });
 
-      doConnect();
+      // doConnect();
     }
 
     // https://en.wikipedia.org/wiki/Control_character
@@ -225,10 +246,32 @@
       }
     }
 
+    function doDisconnect() {
+      // if (connected){
+      //   ws.close();
+      // }
+    }
+
 
     /* Establish web socket connection. */
     function doConnect() {
-      var addr = "ws://" + location.hostname + ":8082";
+      var altair_address = document.getElementById("altairAddress").value.trim();
+
+      if (altair_address == '') {
+        alert('Altair device hostname or IP Address required!');
+        return;
+      }
+
+      localStorage['altair_address'] = altair_address;
+
+      var addr = "ws://" + altair_address + ":8082";
+
+      if (connected) {
+        ws.close();
+        document.getElementById("connect_button").value = "Connect";
+        connected = false;
+        return;
+      }
 
       /* Do connection. */
       ws = new WebSocket(addr);
@@ -236,7 +279,7 @@
       /* Register events. */
       ws.onopen = function () {
         connected = true;
-        document.getElementById("connectState").innerHTML = "Altair Web Terminal: Connected";
+        document.getElementById("connect_button").value = "Disconnect";
       };
 
       /* Deals with messages. */
@@ -247,7 +290,7 @@
 
       /* Close events. */
       ws.onclose = function (event) {
-        document.getElementById("connectState").innerHTML = "Altair Web Terminal: Not connected";
+        document.getElementById("connect_button").value = "Connect";
         connected = false;
       };
     }
@@ -258,10 +301,29 @@
 
 <body onload="initTerminal();">
 
-  <div id="connectState">Altair Web Terminal: Not connected</div>
+  <div style="display: flex;">
+    <div style="flex-grow: 1;">
+      <input type="text" id="altairAddress" value="Altair IP Address" style="width: 400px;">
+      <input type="button" id="connect_button" value="Connect" onclick="doConnect();">
+    </div>
+    Altair 8800 Emulator&nbsp;
+    <div id="docs">
+      <a href="https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki" target="_blank">Documentation</a> <a
+        href="https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals" target="_blank">Manuals</a>
+    </div>
+  </div>
+
   <br />
-  <div id="inputmode">Line input mode: Default (Ctrl+L to toggle)</div>
+
+  <div style="display: flex;">
+    <div style="flex-grow: 1;">
+      Line input mode: Default (Ctrl+L to toggle)
+    </div>
+    Reboot Altair (Ctrl+M, R, Enter)
+  </div>
+
   <div id="terminal"></div>
 
 </body>
+
 </html>
