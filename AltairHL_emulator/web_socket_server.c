@@ -85,6 +85,7 @@ void fd_ledger_delete(ws_cli_conn_t *client)
             if (current_ws == ws_ledger[i])
             {
                 active_session = false;
+                current_ws = NULL;
             }
             ws_ledger[i] = NULL;
             break;
