@@ -73,10 +73,10 @@ source_group("Source" FILES ${Source})
 
 set(wsServer
     wsServer/src/ws.c
-    wsServer/src/base64/base64.c
+    wsServer/src/base64.c
     # wsServer/src/sha1/sha1.c # sha1.c is pulled in from the Azure IoT SDK C
-    wsServer/src/handshake/handshake.c
-    wsServer/src/utf8/utf8.c
+    wsServer/src/handshake.c
+    wsServer/src/utf8.c
 )
 source_group("wsServer" FILES ${wsServer})
 
