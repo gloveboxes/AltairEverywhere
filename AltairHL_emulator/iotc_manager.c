@@ -174,5 +174,5 @@ void publish_telemetry(ENVIRONMENT_TELEMETRY *environment)
 		Log_Debug("MsgBuffer too small. Msg not sent.\n");
 	}
 
-	publish_properties(environment);
+	// publish_properties(environment);
 }
