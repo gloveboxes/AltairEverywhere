@@ -38,7 +38,7 @@ void get_geolocation(LOCATION_T *locationInfo)
 		return;
 	}
 
-	char *data = dx_getHttpData(geoIfyURL, 4);
+	char *data = dx_getHttpData(geoIfyURL, 6);
 
 	if (data == NULL)
 	{

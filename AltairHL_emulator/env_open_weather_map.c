@@ -23,7 +23,7 @@ static bool owm_cached = false;
 
 static void generate_fake_telemetry(ENVIRONMENT_TELEMETRY *telemetry)
 {
-	static location_info greenwich = {.lat = 51.477928, .lng = -0.001545};
+	// static location_info greenwich = {.lat = 51.477928, .lng = -0.001545};
 	// So create some random weather data with geo location on Greenwich
 	int rnd = (rand() % 10) - 5;
 
@@ -34,6 +34,7 @@ static void generate_fake_telemetry(ENVIRONMENT_TELEMETRY *telemetry)
 	telemetry->latest.weather.humidity       = 20 + (rand() % 60);
 	telemetry->latest.weather.wind_speed     = 0.0;
 	telemetry->latest.weather.wind_direction = 0;
+	snprintf(telemetry->latest.weather.description, 80, "%s", "OWM not available. Random data generated");
 	telemetry->latest.weather.updated        = true;
 }
 
@@ -58,11 +59,15 @@ static void update_owm_weather(ENVIRONMENT_TELEMETRY *telemetry)
 		return;
 	}
 
-	char *data = dx_getHttpData(weatherUrl, 1);
+	char *data = dx_getHttpData(weatherUrl, 6);
 
 	if (data == NULL)
 	{
-		generate_fake_telemetry(telemetry);
+		// do we don't have weather data cached from before then generate fake
+		if (!telemetry->latest.weather.updated)
+		{
+			generate_fake_telemetry(telemetry);
+		}
 	}
 	else
 	{
@@ -224,17 +229,12 @@ static void update_owm_pollution(ENVIRONMENT_TELEMETRY *telemetry)
 
 	if (!owm_initialized)
 	{
-		generate_fake_telemetry(telemetry);
 		return;
 	}
 
-	char *data = dx_getHttpData(pollutionUrl, 1);
+	char *data = dx_getHttpData(pollutionUrl, 6);
 
-	if (data == NULL)
-	{
-		generate_fake_telemetry(telemetry);
-	}
-	else
+	if (data != NULL)
 	{
 		/*
 		{
