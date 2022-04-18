@@ -13,7 +13,8 @@ static DX_TIMER_HANDLER(update_environment_handler)
 
 	if (azure_connected && environment.valid)
 	{
-		publish_properties(&environment);
+		// publish_properties(&environment);
+		publish_telemetry(&environment);
 		dx_timerOneShotSet(&tmr_update_environment, &(struct timespec){60, 0});
 	}
 	else
