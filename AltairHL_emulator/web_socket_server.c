@@ -52,6 +52,7 @@ void fd_ledger_init(void)
 void fd_ledger_close_all(void)
 {
     current_ws = NULL;
+    active_session = false;
 
     for (int i = 0; i < NELEMS(ws_ledger); i++)
     {
