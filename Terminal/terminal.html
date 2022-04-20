@@ -5,85 +5,81 @@
   <script src="https://unpkg.com/xterm@4.18.0/lib/xterm.js"></script>
   <script src="Javascript/xterm.js"></script>
 
-  <link rel="stylesheet" href="https://unpkg.com/xterm@4.4.0/css/xterm.css" />
+  <link rel="stylesheet" href="https://unpkg.com/xterm@4.18.0/css/xterm.css" />
 
   <style>
-    #term-box {
-      overflow: hidden;
-      width: auto;
-      height: auto;
-      /* <- fixed height */
-      font-size: 18px;
-      line-height: 20px;
-      /* <- initial line-height */
+    @font-face {
+      font-family: GlassTTYVT220;
+      src: local("Glass TTY VT220"), local("Glass TTY VT220 Medium"), url(/font/Glass_TTY_VT220.ttf) format("truetype");
+    }
+
+    html,
+    input[type=submit],
+    div.find a:active {
+      background-color: #002f00;
+      color: #e5b800;
+    }
+
+    a {
+      background-color: #002f00;
+      color: #e5b800;
+    }
+
+    a:hover {
+      background-color: #002f00;
+      color: #e5b800;
     }
 
     #docs {
-      background-color: #C8C8C8;
-      border: white;
+      background-color: #002f00;
       border-width: thick;
-      /* color: white; */
+      border: white;
+      font-family: GlassTTYVT220;
+      font-size: 20px;
       padding: 1px 1px;
-      text-decoration: none;
-      font: 1.3rem Courier New;
-      text-shadow: 0 0 5px #C8C8C8;
-    }
-
-    .inputMode {
-      /* border: 5px outset red; */
-      background-color: lightblue;
-      text-align: left;
-      color: black;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      font-weight: bold;
     }
 
     input[type=button] {
       background-color: black;
-      background-image: radial-gradient(rgba(0, 150, 0, 0.75), black 120%);
-      border: white;
-      color: white;
-      padding: 1px 1px;
-      /* text-decoration: none; */
-      /* margin: 4px 2px; */
+      border-color: blue;
+      border-style: solid;
+      border-width: thin;
+      color: #e5b800;
       cursor: pointer;
-      font: 1.3rem Courier New;
-      text-shadow: 0 0 5px #C8C8C8;
+      font-family: GlassTTYVT220;
+      font-size: 20px;
+      padding: 1px 1px;
     }
 
     input[type=text] {
-      background-color: #C8C8C8;
-      border: white;
-      border-width: thick;
-      /* color: white; */
+      background-color: black;
+      border-color: blue;
+      border-style: solid;
+      border-width: thin;
+      color: #e5b800;
+      font-family: GlassTTYVT220;
+      font-size: 20px;
       padding: 1px 1px;
       text-decoration: none;
-      font: 1.3rem Courier New;
-      text-shadow: 0 0 5px #C8C8C8;
     }
 
     /* https://css-tricks.com/old-timey-terminal-styling/ */
 
     body {
-      background-color: black;
-      background-image: radial-gradient(rgba(0, 150, 0, 0.75), black 120%);
-      height: 100vh;
-      margin: 0;
+      background-color: #002f00;
+      color: #e5b800;
+      font-family: GlassTTYVT220;
+      font-size: 20px;
+      margin-left: 40px;
+      margin-right: 40px;
+      margin-top: 20px;
       overflow: hidden;
-      padding: 2rem;
-      color: white;
-      font: 1.3rem Courier New;
-      text-shadow: 0 0 5px #C8C8C8;
+      padding: 1rem;
     }
 
-    ::selection {
-      background: #0080FF;
-      text-shadow: none;
-    }
-
-    pre {
-      margin: 0;
-    }
+    /* pre {
+      margin: 10;
+    } */
   </style>
   <script>
     "use strict";
@@ -110,10 +106,10 @@
 
       term = new Terminal({
         cursorBlink: "block",
-        fontFamily: 'Courier New',
-        fontSize: 18,
-        rows: 30,
-        cols: 140,
+        fontFamily: 'GlassTTYVT220',
+        fontSize: 20,
+        rows: 36,
+        cols: 140
       });
 
       term.open(document.getElementById("terminal"));
@@ -303,13 +299,13 @@
 
   <div style="display: flex;">
     <div style="flex-grow: 1;">
-      <input type="text" id="altairAddress" value="Altair IP Address" style="width: 400px;">
+      <input type="text" id="altairAddress" value="Altair IP Address" style="width: 500px;">
       <input type="button" id="connect_button" value="Connect" onclick="doConnect();">
     </div>
-    Altair 8800 Emulator&nbsp;
     <div id="docs">
       <a href="https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki" target="_blank">Documentation</a> <a
-        href="https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki/03-Reference-manuals" target="_blank">Manuals</a>
+        href="https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki/03-Reference-manuals"
+        target="_blank">Manuals</a>
     </div>
   </div>
 
