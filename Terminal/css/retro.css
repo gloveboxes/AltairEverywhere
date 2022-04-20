@@ -1,0 +1,68 @@
+@font-face {
+    font-family: GlassTTYVT220;
+    src: local("Glass TTY VT220"), local("Glass TTY VT220 Medium"), url(../font/Glass_TTY_VT220.ttf) format("truetype");
+}
+
+html,
+input[type=submit],
+div.find a:active {
+    background-color: #002f00;
+    color: #e5b800;
+}
+
+a {
+    background-color: #002f00;
+    color: #e5b800;
+}
+
+a:hover {
+    background-color: #002f00;
+    color: #e5b800;
+}
+
+#docs {
+    background-color: #002f00;
+    border-width: thick;
+    border: white;
+    font-family: GlassTTYVT220;
+    font-size: 20px;
+    padding: 1px 1px;
+}
+
+input[type=button] {
+    background-color: black;
+    border-color: blue;
+    border-style: solid;
+    border-width: thin;
+    color: #e5b800;
+    cursor: pointer;
+    font-family: GlassTTYVT220;
+    font-size: 20px;
+    padding: 1px 1px;
+}
+
+input[type=text] {
+    background-color: black;
+    border-color: blue;
+    border-style: solid;
+    border-width: thin;
+    color: #e5b800;
+    font-family: GlassTTYVT220;
+    font-size: 20px;
+    padding: 1px 1px;
+    text-decoration: none;
+}
+
+/* https://css-tricks.com/old-timey-terminal-styling/ */
+
+body {
+    background-color: #002f00;
+    color: #e5b800;
+    font-family: GlassTTYVT220;
+    font-size: 20px;
+    margin-left: 40px;
+    margin-right: 40px;
+    margin-top: 20px;
+    overflow: hidden;
+    padding: 1rem;
+}

@@ -6,81 +6,8 @@
   <script src="Javascript/xterm.js"></script>
 
   <link rel="stylesheet" href="https://unpkg.com/xterm@4.18.0/css/xterm.css" />
+  <link rel="stylesheet" href="css/retro.css">
 
-  <style>
-    @font-face {
-      font-family: GlassTTYVT220;
-      src: local("Glass TTY VT220"), local("Glass TTY VT220 Medium"), url(/font/Glass_TTY_VT220.ttf) format("truetype");
-    }
-
-    html,
-    input[type=submit],
-    div.find a:active {
-      background-color: #002f00;
-      color: #e5b800;
-    }
-
-    a {
-      background-color: #002f00;
-      color: #e5b800;
-    }
-
-    a:hover {
-      background-color: #002f00;
-      color: #e5b800;
-    }
-
-    #docs {
-      background-color: #002f00;
-      border-width: thick;
-      border: white;
-      font-family: GlassTTYVT220;
-      font-size: 20px;
-      padding: 1px 1px;
-    }
-
-    input[type=button] {
-      background-color: black;
-      border-color: blue;
-      border-style: solid;
-      border-width: thin;
-      color: #e5b800;
-      cursor: pointer;
-      font-family: GlassTTYVT220;
-      font-size: 20px;
-      padding: 1px 1px;
-    }
-
-    input[type=text] {
-      background-color: black;
-      border-color: blue;
-      border-style: solid;
-      border-width: thin;
-      color: #e5b800;
-      font-family: GlassTTYVT220;
-      font-size: 20px;
-      padding: 1px 1px;
-      text-decoration: none;
-    }
-
-    /* https://css-tricks.com/old-timey-terminal-styling/ */
-
-    body {
-      background-color: #002f00;
-      color: #e5b800;
-      font-family: GlassTTYVT220;
-      font-size: 20px;
-      margin-left: 40px;
-      margin-right: 40px;
-      margin-top: 20px;
-      overflow: hidden;
-      padding: 1rem;
-    }
-
-    /* pre {
-      margin: 10;
-    } */
-  </style>
   <script>
     "use strict";
 
@@ -91,12 +18,29 @@
     var character_mode = false;
     var current_line = "";
     var term = null;
+    var xterm_font = 'GlassTTYVT220';
+    var xterm_font_size = 20;
+
+    function loadcss(mode) {
+      if (mode == "modern") {
+        var fileref = document.createElement("link")
+        fileref.setAttribute("rel", "stylesheet")
+        fileref.setAttribute("type", "text/css")
+        fileref.setAttribute("href", "css/modern.css")
+        xterm_font = 'Courier'
+        xterm_font_size = 18;
+      }
+      if (typeof fileref != "undefined")
+        document.getElementsByTagName("head")[0].appendChild(fileref)
+    }
 
     function initTerminal() {
 
       const queryString = window.location.search;
       const urlParams = new URLSearchParams(queryString);
       const host_address = urlParams.get('altair')
+
+      loadcss(urlParams.get('mode'))
 
       if (host_address) {
         document.getElementById('altairAddress').value = host_address;
@@ -106,8 +50,8 @@
 
       term = new Terminal({
         cursorBlink: "block",
-        fontFamily: 'GlassTTYVT220',
-        fontSize: 20,
+        fontFamily: xterm_font,
+        fontSize: xterm_font_size,
         rows: 36,
         cols: 140
       });
