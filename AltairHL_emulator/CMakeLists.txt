@@ -12,7 +12,7 @@ project (Altair_emulator C)
 
 ###################################################################################################################
 #
-set(ALTAIR_CLOUD TRUE "Enable Altair as a service real-time in-memory differencing disk")
+# set(ALTAIR_CLOUD TRUE "Enable Altair as a service real-time in-memory differencing disk")
 ###################################################################################################################
 
 if (ALTAIR_CLOUD)
