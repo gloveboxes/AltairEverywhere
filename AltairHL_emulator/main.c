@@ -11,10 +11,9 @@ static DX_TIMER_HANDLER(update_environment_handler)
 {
 	update_weather();
 
-	if (azure_connected && environment.valid)
+	if (azure_connected && environment.locationInfo.updated)
 	{
-		// publish_properties(&environment);
-		publish_telemetry(&environment);
+		update_geo_properties(&environment);
 		dx_timerOneShotSet(&tmr_update_environment, &(struct timespec){60, 0});
 	}
 	else
@@ -48,7 +47,8 @@ static DX_TIMER_HANDLER(heart_beat_handler)
 {
 	if (azure_connected)
 	{
-		dx_deviceTwinReportValue(&dt_heartbeatUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
+		dx_deviceTwinReportValue(
+			&dt_heartbeatUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
 		dx_deviceTwinReportValue(&dt_filesystem_reads, dt_filesystem_reads.propertyValue);
 		dx_deviceTwinReportValue(&dt_difference_disk_reads, dt_difference_disk_reads.propertyValue);
 		dx_deviceTwinReportValue(&dt_difference_disk_writes, dt_difference_disk_writes.propertyValue);
@@ -463,7 +463,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 			IOT_PLUG_AND_PLAY_MODEL_ID);
 
 		dx_azureRegisterConnectionChangedNotification(azure_connection_state);
-		dx_azureRegisterConnectionChangedNotification(report_software_version);		
+		dx_azureRegisterConnectionChangedNotification(report_software_version);
 	}
 
 	dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));

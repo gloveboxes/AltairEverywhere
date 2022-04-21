@@ -35,6 +35,7 @@ extern DX_DEVICE_TWIN_BINDING dt_weather;
 extern bool azure_connected;
 extern char msgBuffer[MSG_BUFFER_BYTES];
 
-DX_DECLARE_DEVICE_TWIN_HANDLER(set_led_brightness_handler);
 // void publish_properties(ENVIRONMENT_TELEMETRY *environment);
+DX_DECLARE_DEVICE_TWIN_HANDLER(set_led_brightness_handler);
 void publish_telemetry(ENVIRONMENT_TELEMETRY *environment);
+void update_geo_properties(ENVIRONMENT_TELEMETRY *environment);

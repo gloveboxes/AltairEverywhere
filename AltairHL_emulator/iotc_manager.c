@@ -73,13 +73,12 @@ static void device_twin_update_string(
 static void device_twin_update_location(
 	double latitude, double longitude, DX_DEVICE_TWIN_BINDING *device_twin)
 {
-	char location_buffer[128];
-	snprintf(
-		location_buffer, sizeof(location_buffer), "{\"lat\":%f,\"lon\":%f,\"alt\":0}", latitude, longitude);
+	char location_buffer[64];
+	snprintf(location_buffer, sizeof(location_buffer), "{\"lat\":%f,\"lon\":%f,\"alt\":0}", latitude, longitude);
 	dx_deviceTwinReportValue(device_twin, location_buffer);
 }
 
-static void update_geo_location(ENVIRONMENT_TELEMETRY *environment)
+void update_geo_properties(ENVIRONMENT_TELEMETRY *environment)
 {
 	static bool updated = false;
 
@@ -125,7 +124,7 @@ void publish_properties(ENVIRONMENT_TELEMETRY *environment)
 	UPDATE_PROPERTY_FLOAT(pm2_5);
 	UPDATE_PROPERTY_FLOAT(pm10);
 
-	update_geo_location(environment);
+	update_geo_properties(environment);
 }
 
 void publish_telemetry(ENVIRONMENT_TELEMETRY *environment)
