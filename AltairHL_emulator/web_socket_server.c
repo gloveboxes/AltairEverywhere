@@ -15,7 +15,7 @@ static DX_TIMER_BINDING tmr_expire_session = {
 	.name = "tmr_expire_session", .handler = expire_session_handler};
 static bool cleanup_required       = false;
 static const int session_minutes   = 1 * 60 * 30; // 30 minutes
-static session_count               = 0;
+static int session_count               = 0;
 static size_t output_buffer_length = 0;
 static ws_cli_conn_t *current_ws   = NULL;
 
