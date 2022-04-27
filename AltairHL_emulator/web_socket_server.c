@@ -122,6 +122,7 @@ inline void publish_character(char character)
 
 void onopen(ws_cli_conn_t *client)
 {
+	printf("New session\n");
 	fd_ledger_close_all();
 	fd_ledger_add(client);
 
@@ -139,15 +140,9 @@ void onopen(ws_cli_conn_t *client)
 	_client_connected_cb();
 }
 
-/**
- * @brief Called when a client disconnects to the server.
- *
- * @param fd File Descriptor belonging to the client. The @p fd parameter
- * is used in order to send messages and retrieve informations
- * about the client.
- */
 void onclose(ws_cli_conn_t *client)
 {
+	printf("Session closed\n");
 	fd_ledger_delete(client);
 }
 
