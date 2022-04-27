@@ -10,7 +10,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "${workspaceFolder}/build/Altair_emulator",
-            "args": [  ],
+            "args": [ "-s", "0ne0025368E", "-d", "nuc", "-k", "/pxrEDYC7nI7+kWbCl+FzDkBskomdGgC8T1EPeng/Wk=", "-u", "http://localhost:5502", "-o", "41cfa0029da8bd93cafdf1ee18aede4a", "-n", "eth0" ],
             "cwd": "${workspaceFolder}"            
         },
         {

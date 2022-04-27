@@ -24,7 +24,7 @@ add_compile_definitions(IOT_HUB_POLL_TIME_SECONDS=0)
 add_compile_definitions(IOT_HUB_POLL_TIME_NANOSECONDS=500000000)
 
 # overide wsServer MAX_CLIENTS
-add_compile_definitions(MAX_CLIENTS=2)
+add_compile_definitions(MAX_CLIENTS=1)
 
 set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO mocking for AzureSphereRemoteX.Client" FORCE )
 
