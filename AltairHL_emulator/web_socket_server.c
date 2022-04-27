@@ -3,26 +3,57 @@
 
 #include "web_socket_server.h"
 
+extern long int ws_last_pong_id;
+
 static DX_DECLARE_TIMER_HANDLER(expire_session_handler);
 static void (*_client_connected_cb)(void);
 static void cleanup_session(void);
 static void fd_ledger_close_all(void);
 
 static char output_buffer[512];
-static ws_cli_conn_t *ws_ledger[MAX_CLIENTS];
+
+typedef struct {
+	ws_cli_conn_t *ws_client;
+	long int ws_last_ping;
+	long int ws_last_pong;
+} WS_CLIENT_T;
+
+static WS_CLIENT_T ws_ledger[MAX_CLIENTS];
 
 static DX_TIMER_BINDING tmr_expire_session = {
 	.name = "tmr_expire_session", .handler = expire_session_handler};
 static bool cleanup_required       = false;
 static const int session_minutes   = 1 * 60 * 30; // 30 minutes
-static int session_count               = 0;
+static int session_count           = 0;
 static size_t output_buffer_length = 0;
-static ws_cli_conn_t *current_ws   = NULL;
+static long int ws_last_ping_id         = 0l;
 
 static DX_TIMER_HANDLER(expire_session_handler)
 {
 	fd_ledger_close_all();
 	cleanup_session();
+}
+DX_TIMER_HANDLER_END
+
+DX_TIMER_HANDLER(ws_ping_pong_handler)
+{
+	char ping_token[20];
+
+	if (session_count > 0)
+	{
+		printf("last ping: %ld\n", ws_last_ping_id);
+		printf("last pong: %ld\n", ws_last_pong_id);
+		if (ws_last_pong_id != -1 && ws_last_pong_id != ws_last_ping_id)
+		{
+			fd_ledger_close_all();
+		}
+		else
+		{
+			snprintf(ping_token, sizeof(ping_token), "%ld", ++ws_last_ping_id);
+			ws_sendframe(NULL, ping_token, strlen(ping_token), WS_FR_OP_PING);
+			printf("ping sent\n");
+		}
+	}
 }
 DX_TIMER_HANDLER_END
 
@@ -44,7 +75,7 @@ static void fd_ledger_init(void)
 {
 	for (int i = 0; i < NELEMS(ws_ledger); i++)
 	{
-		ws_ledger[i] = NULL;
+		memset(&ws_ledger[i], 0x00, sizeof(WS_CLIENT_T));
 	}
 }
 
@@ -54,10 +85,10 @@ static void fd_ledger_close_all(void)
 
 	for (int i = 0; i < NELEMS(ws_ledger); i++)
 	{
-		if (ws_ledger[i] != NULL)
+		if (ws_ledger[i].ws_client != NULL)
 		{
-			ws_close_client(ws_ledger[i]);
-			ws_ledger[i] = NULL;
+			ws_close_client(ws_ledger[i].ws_client);
+			ws_ledger[i].ws_client = NULL;
 		}
 	}
 }
@@ -68,9 +99,9 @@ static void fd_ledger_add(ws_cli_conn_t *client)
 
 	for (int i = 0; i < NELEMS(ws_ledger); i++)
 	{
-		if (ws_ledger[i] == NULL)
+		if (ws_ledger[i].ws_client == NULL)
 		{
-			ws_ledger[i] = client;
+			ws_ledger[i].ws_client = client;
 			break;
 		}
 	}
@@ -82,9 +113,9 @@ static void fd_ledger_delete(ws_cli_conn_t *client)
 
 	for (int i = 0; i < NELEMS(ws_ledger); i++)
 	{
-		if (client == ws_ledger[i])
+		if (client == ws_ledger[i].ws_client)
 		{
-			ws_ledger[i] = NULL;
+			ws_ledger[i].ws_client = NULL;
 			break;
 		}
 	}

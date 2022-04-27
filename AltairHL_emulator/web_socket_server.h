@@ -30,6 +30,7 @@ extern DX_TIMER_BINDING tmr_partial_message;
 
 DX_DECLARE_TIMER_HANDLER(deferred_input_handler);
 DX_DECLARE_TIMER_HANDLER(partial_message_handler);
+DX_DECLARE_TIMER_HANDLER(ws_ping_pong_handler);
 
 void init_web_socket_server(void (*client_connected_cb)(void));
 void publish_character(char character);

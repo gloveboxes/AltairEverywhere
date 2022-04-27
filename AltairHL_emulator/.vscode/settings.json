@@ -21,7 +21,11 @@
         "COPYX.C": "cpp",
         "cpu_monitor.h": "c",
         "memory.h": "c",
-        "filesystem": "c"
+        "filesystem": "c",
+        "version.h": "c",
+        "event.h": "c",
+        "stdbool.h": "c",
+        "event_struct.h": "c"
     },
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#65c89b",
@@ -41,5 +45,6 @@
         "titleBar.activeForeground": "#15202b",
         "titleBar.inactiveBackground": "#42b88399",
         "titleBar.inactiveForeground": "#15202b99"
-    }
+    },
+    "liveServer.settings.port": 5502
 }
