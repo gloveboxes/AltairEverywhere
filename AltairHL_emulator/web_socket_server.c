@@ -30,8 +30,6 @@ DX_TIMER_HANDLER(ws_ping_pong_handler)
 {
 	if (session_count > 0)
 	{
-		// long int ws_last_pong_id = ws_ping(NULL, ws_last_ping_id);
-
 		long int ws_last_pong_id = ws_ping(ws_ledger[0], ws_last_ping_id);
 
 		printf("last ping: %ld\n", ws_last_ping_id);
