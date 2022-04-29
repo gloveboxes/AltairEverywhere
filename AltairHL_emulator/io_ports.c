@@ -15,7 +15,7 @@ typedef struct
 typedef struct
 {
     char buffer[256];
-    bool publish_pending;
+    volatile bool publish_pending;
     int index;
 } JSON_UNIT_T;
 
@@ -36,8 +36,8 @@ static COPY_X_T copy_x;
 static JSON_UNIT_T ju;
 static REQUEST_UNIT_T ru;
 static int jitter                   = 0;
-static bool delay_enabled           = false;
-static bool publish_weather_pending = false;
+static volatile bool delay_enabled           = false;
+static volatile bool publish_weather_pending = false;
 
 // set tick_count to 1 as the tick count timer doesn't kick in until 1 second after startup
 static uint32_t tick_count = 1;
