@@ -26,7 +26,7 @@ RUN git clone https://github.com/gloveboxes/Altair8800.Emulator.UN-X.git Altair8
     && git submodule update --init --recursive
 
 #<REMOVE_THIS_COMMENT_TO_ENABLE_PI_SENSE_HAT>RUN cd /Altair8800/AltairHL_emulator && sed -i 's/# set(ALTAIR_FRONT_PI_SENSE_HAT/set(ALTAIR_FRONT_PI_SENSE_HAT/g' CMakeLists.txt
-RUN cd /Altair8800/AltairHL_emulator && sed -i 's/# set(ALTAIR_CLOUD/set(ALTAIR_CLOUD/g' CMakeLists.txt
+#<REMOVE_THIS_COMMENT_TO_ENABLE_CLOUD>RUN cd /Altair8800/AltairHL_emulator && sed -i 's/# set(ALTAIR_CLOUD/set(ALTAIR_CLOUD/g' CMakeLists.txt
 
 RUN cd /Altair8800/AltairHL_emulator \
     && mkdir -p build \
