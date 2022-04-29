@@ -169,8 +169,8 @@ void io_port_out(uint8_t port, uint8_t data)
 		case 30:
 			if (data > 0)
 			{
-				dx_timerOneShotSet(&tmr_port_timer_expired, &(struct timespec){data, 0});
 				delay_enabled = true;
+				dx_timerOneShotSet(&tmr_port_timer_expired, &(struct timespec){data, 0});				
 			}
 			break;
 		case 31:
