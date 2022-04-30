@@ -39,7 +39,7 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
-#define ALTAIR_EMULATOR_VERSION "4.4.5"
+#define ALTAIR_EMULATOR_VERSION "4.4.6"
 #define Log_Debug(f_, ...)      dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED      FALSE
 
@@ -99,7 +99,7 @@ static bool load_application(const char *fileName);
 static void spin_wait(volatile bool *flag);
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
-static DX_DECLARE_TIMER_HANDLER(panel_refresh_handler);
+// static DX_DECLARE_TIMER_HANDLER(panel_refresh_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
 static DX_DECLARE_TIMER_HANDLER(update_environment_handler);
 static void *altair_thread(void *arg);
@@ -122,11 +122,11 @@ static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){
 static DX_TIMER_BINDING tmr_tick_count = {.repeat = &(struct timespec){1, 0}, .name = "tmr_tick_count", .handler = tick_count_handler};
 static DX_TIMER_BINDING tmr_update_environment = {.delay = &(struct timespec){2, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
 
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-static DX_TIMER_BINDING tmr_panel_refresh = {.delay = &(struct timespec){1, 0}, .name = "tmr_panel_refresh", .handler = panel_refresh_handler};
-#else
-static DX_TIMER_BINDING tmr_panel_refresh = {.name = "tmr_panel_refresh", .handler = panel_refresh_handler};
-#endif
+// #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+// static DX_TIMER_BINDING tmr_panel_refresh = {.delay = &(struct timespec){1, 0}, .name = "tmr_panel_refresh", .handler = panel_refresh_handler};
+// #else
+// static DX_TIMER_BINDING tmr_panel_refresh = {.name = "tmr_panel_refresh", .handler = panel_refresh_handler};
+// #endif
 
 // Azure IoT Central Properties (Device Twins)
 
@@ -176,7 +176,7 @@ static DX_TIMER_BINDING *timer_bindings[] = {
 	&tmr_report_memory_usage,
 	&tmr_tick_count,
 	&tmr_update_environment,
-	&tmr_panel_refresh,
+	// &tmr_panel_refresh,
 	&tmr_ws_ping_pong,
 
 };

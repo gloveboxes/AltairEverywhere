@@ -57,25 +57,25 @@ static DX_TIMER_HANDLER(heart_beat_handler)
 }
 DX_TIMER_HANDLER_END
 
-/// <summary>
-/// Updates the PI Sense HAT with Altair address bus, databus, and CPU state
-/// </summary>
-DX_TIMER_HANDLER(panel_refresh_handler)
-{
-	uint8_t status = cpu.cpuStatus;
-	uint8_t data   = cpu.data_bus;
-	uint16_t bus   = cpu.address_bus;
+// /// <summary>
+// /// Updates the PI Sense HAT with Altair address bus, databus, and CPU state
+// /// </summary>
+// DX_TIMER_HANDLER(panel_refresh_handler)
+// {
+// 	uint8_t status = cpu.cpuStatus;
+// 	uint8_t data   = cpu.data_bus;
+// 	uint16_t bus   = cpu.address_bus;
 
-	status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
-	data   = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
-	bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 |
-                     reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
+// 	status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
+// 	data   = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
+// 	bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 |
+//                      reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
 
-	update_panel_status_leds(status, data, bus);
+// 	update_panel_status_leds(status, data, bus);
 
-	dx_timerOneShotSet(&tmr_panel_refresh, &(struct timespec){0, 50 * ONE_MS});
-}
-DX_TIMER_HANDLER_END
+// 	dx_timerOneShotSet(&tmr_panel_refresh, &(struct timespec){0, 50 * ONE_MS});
+// }
+// DX_TIMER_HANDLER_END
 
 /// <summary>
 /// Handler called to process inbound message
@@ -238,6 +238,29 @@ static bool load_application(const char *fileName)
 
 	publish_message("\n\rFile not found\n\r", 18);
 	return false;
+}
+
+/// <summary>
+/// Updates the PI Sense HAT with Altair address bus, databus, and CPU state
+/// </summary>
+static void *panel_refresh_thread(void *arg)
+{
+	while (true)
+	{
+		uint8_t status = cpu.cpuStatus;
+		uint8_t data   = cpu.data_bus;
+		uint16_t bus   = cpu.address_bus;
+
+		status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
+		data   = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
+		bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 |
+                         reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
+
+		update_panel_status_leds(status, data, bus);
+
+		nanosleep(&(struct timespec){0, 50 * ONE_MS}, NULL);
+	}
+	return NULL;
 }
 
 static char terminal_read(void)
@@ -473,6 +496,10 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 	dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 
 	dx_startThreadDetached(altair_thread, NULL, "altair_thread");
+
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+	dx_startThreadDetached(panel_refresh_thread, NULL, "panel_refresh_thread");
+#endif
 }
 
 /// <summary>

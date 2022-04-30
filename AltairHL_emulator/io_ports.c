@@ -15,7 +15,6 @@ typedef struct
 typedef struct
 {
     char buffer[256];
-    volatile bool publish_pending;
     int index;
 } JSON_UNIT_T;
 
@@ -35,9 +34,9 @@ static COPY_X_T copy_x;
 
 static JSON_UNIT_T ju;
 static REQUEST_UNIT_T ru;
-static int jitter                   = 0;
 static volatile bool delay_enabled           = false;
 static volatile bool publish_weather_pending = false;
+static volatile bool publish_pending;
 
 // set tick_count to 1 as the tick count timer doesn't kick in until 1 second after startup
 static uint32_t tick_count = 1;
@@ -125,11 +124,9 @@ DX_TIMER_HANDLER(port_out_weather_handler)
 {
     if (environment.valid && azure_connected)
     {
-        environment.latest.weather.temperature += jitter;
 #ifndef ALTAIR_CLOUD
         publish_telemetry(&environment);
 #endif
-        environment.latest.weather.temperature -= jitter;
     }
     publish_weather_pending = false;
 }
@@ -144,7 +141,7 @@ DX_TIMER_HANDLER(port_out_json_handler)
             &json_content_properties);
 #endif
     }
-    ju.publish_pending = false;
+    publish_pending = false;
 }
 DX_TIMER_HANDLER_END
 
@@ -175,7 +172,7 @@ void io_port_out(uint8_t port, uint8_t data)
             }
             break;
         case 31:
-            if (!ju.publish_pending)
+            if (!publish_pending)
             {
                 if (ju.index == 0)
                 {
@@ -189,9 +186,9 @@ void io_port_out(uint8_t port, uint8_t data)
 
                 if (data == 0)
                 {
-                    ju.publish_pending = true;
+                    publish_pending = true;
                     ju.index           = 0;
-                    // Throttle IoT messages to 1 second as IoT dowork clocked at 500ms
+                    // Throttle IoT messages to 1 second
                     dx_timerOneShotSet(&tmr_deferred_port_out_json, &(struct timespec){1, 0});
                 }
             }
@@ -200,8 +197,7 @@ void io_port_out(uint8_t port, uint8_t data)
             if (!publish_weather_pending)
             {
                 publish_weather_pending = true;
-                jitter                  = (int)data;
-                // Throttle IoT messages to 1 second as IoT dowork clocked at 500ms
+                // Throttle IoT messages to 1 second
                 dx_timerOneShotSet(&tmr_deferred_port_out_weather, &(struct timespec){1, 0});
             }
             break;
@@ -320,7 +316,7 @@ uint8_t io_port_in(uint8_t port)
             retVal = (uint8_t)delay_enabled;
             break;
         case 31:
-            retVal = (uint8_t)ju.publish_pending;
+            retVal = (uint8_t)publish_pending;
             break;
         case 32:
             retVal = (uint8_t)publish_weather_pending;
