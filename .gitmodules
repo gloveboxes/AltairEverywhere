@@ -10,6 +10,7 @@
 [submodule "AltairHL_emulator/uthash"]
 	path = AltairHL_emulator/uthash
 	url = https://github.com/troydhanson/uthash.git
+
 [submodule "AltairHL_emulator/wsServer"]
 	path = AltairHL_emulator/wsServer
-	url = https://github.com/gloveboxes/wsServer.git
+	url = https://github.com/Theldus/wsServer.git
