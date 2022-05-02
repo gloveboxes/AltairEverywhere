@@ -240,29 +240,6 @@ static bool load_application(const char *fileName)
 	return false;
 }
 
-/// <summary>
-/// Updates the PI Sense HAT with Altair address bus, databus, and CPU state
-/// </summary>
-static void *panel_refresh_thread(void *arg)
-{
-	while (true)
-	{
-		uint8_t status = cpu.cpuStatus;
-		uint8_t data   = cpu.data_bus;
-		uint16_t bus   = cpu.address_bus;
-
-		status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
-		data   = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
-		bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 |
-                         reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
-
-		update_panel_status_leds(status, data, bus);
-
-		nanosleep(&(struct timespec){0, 50 * ONE_MS}, NULL);
-	}
-	return NULL;
-}
-
 static char terminal_read(void)
 {
 	uint8_t rxBuffer[2] = {0};
@@ -346,6 +323,43 @@ void print_console_banner(void)
 	{
 		terminal_write("\r\n"[x]);
 	}
+}
+
+/// <summary>
+/// Updates the PI Sense HAT with Altair address bus, databus, and CPU state
+/// </summary>
+static void *panel_refresh_thread(void *arg)
+{
+	uint8_t last_status = 0;
+	uint8_t last_data   = 0;
+	uint16_t last_bus   = 0;
+
+	while (true)
+	{
+		uint8_t status = cpu.cpuStatus;
+		uint8_t data   = cpu.data_bus;
+		uint16_t bus   = cpu.address_bus;
+
+		if (status != last_status || data != last_data || bus != last_bus)
+		{
+			last_status = status;
+			last_data   = data;
+			last_bus    = bus;
+
+			status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
+			data   = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
+			bus = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 |
+							 reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
+
+			update_panel_status_leds(status, data, bus);
+			nanosleep(&(struct timespec){0, 50 * ONE_MS}, NULL);
+		}
+		else
+		{
+			nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
+		}
+	}
+	return NULL;
 }
 
 /// <summary>
