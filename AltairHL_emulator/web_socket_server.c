@@ -6,10 +6,8 @@
 static DX_DECLARE_TIMER_HANDLER(expire_session_handler);
 static void (*_client_connected_cb)(void);
 static void cleanup_session(void);
-static void fd_ledger_close_all(void);
 
 static char output_buffer[512];
-static ws_cli_conn_t *ws_ledger[MAX_CLIENTS];
 
 static DX_TIMER_BINDING tmr_expire_session = {
 	.name = "tmr_expire_session", .handler = expire_session_handler};
@@ -17,11 +15,10 @@ static bool cleanup_required       = false;
 static const int session_minutes   = 1 * 60 * 30; // 30 minutes
 static int session_count           = 0;
 static size_t output_buffer_length = 0;
-static long int ws_last_ping_id    = 0l;
+static struct  timeval ws_timeout = {0, 250 * 1000};
 
 static DX_TIMER_HANDLER(expire_session_handler)
 {
-	fd_ledger_close_all();
 	cleanup_session();
 }
 DX_TIMER_HANDLER_END
@@ -30,17 +27,7 @@ DX_TIMER_HANDLER(ws_ping_pong_handler)
 {
 	if (session_count > 0)
 	{
-		long int ws_last_pong_id = ws_ping(ws_ledger[0], ws_last_ping_id);
-
-		printf("last ping: %ld\n", ws_last_ping_id);
-		printf("last pong: %ld\n", ws_last_pong_id);
-
-		if (ws_last_ping_id - ws_last_pong_id > 1)
-		{
-			fd_ledger_close_all();
-		}
-
-		ws_last_ping_id++;
+		ws_ping(NULL, 1);
 	}
 }
 DX_TIMER_HANDLER_END
@@ -59,69 +46,13 @@ static void cleanup_session(void)
 	cleanup_required = false;
 }
 
-static void fd_ledger_init(void)
-{
-	session_count = 0;
-	// ws_last_pong_id = -1;
-	ws_last_ping_id = 0;
-
-	for (int i = 0; i < NELEMS(ws_ledger); i++)
-	{
-		ws_ledger[i] = NULL;
-	}
-}
-
-static void fd_ledger_close_all(void)
-{
-	session_count = 0;
-	// ws_last_pong_id = -1;
-	ws_last_ping_id = 0;
-
-	for (int i = 0; i < NELEMS(ws_ledger); i++)
-	{
-		if (ws_ledger[i] != NULL)
-		{
-			ws_close_client(ws_ledger[i]);
-			ws_ledger[i] = NULL;
-		}
-	}
-}
-
-static void fd_ledger_add(ws_cli_conn_t *client)
-{
-	session_count++;
-
-	for (int i = 0; i < NELEMS(ws_ledger); i++)
-	{
-		if (ws_ledger[i] == NULL)
-		{
-			ws_ledger[i] = client;
-			break;
-		}
-	}
-}
-
-static void fd_ledger_delete(ws_cli_conn_t *client)
-{
-	session_count--;
-
-	for (int i = 0; i < NELEMS(ws_ledger); i++)
-	{
-		if (client == ws_ledger[i])
-		{
-			ws_ledger[i] = NULL;
-			break;
-		}
-	}
-}
-
 void publish_message(const void *message, size_t message_length)
 {
 	if (session_count > 0)
 	{
 		if (ws_sendframe(NULL, message, message_length, WS_FR_OP_TXT) == -1)
 		{
-			fd_ledger_close_all();
+			dx_Log_Debug("ws_sendframe failed\n");
 		}
 	}
 }
@@ -148,11 +79,7 @@ inline void publish_character(char character)
 void onopen(ws_cli_conn_t *client)
 {
 	printf("New session\n");
-	fd_ledger_close_all();
-	fd_ledger_add(client);
-
-	// ws_last_pong_id = -1;
-	ws_last_ping_id = 0;
+	session_count++;
 
 	if (cleanup_required)
 	{
@@ -171,7 +98,12 @@ void onopen(ws_cli_conn_t *client)
 void onclose(ws_cli_conn_t *client)
 {
 	printf("Session closed\n");
-	fd_ledger_delete(client);
+	session_count--;
+
+	if (cleanup_required)
+	{
+		cleanup_session();
+	}
 }
 
 void onmessage(ws_cli_conn_t *client, const unsigned char *msg, uint64_t size, int type)
@@ -192,15 +124,13 @@ void init_web_socket_server(void (*client_connected_cb)(void))
 {
 	_client_connected_cb = client_connected_cb;
 
-	fd_ledger_init();
-
 	dx_timerStart(&tmr_expire_session);
 
 	struct ws_events evs;
 	evs.onopen    = &onopen;
 	evs.onclose   = &onclose;
 	evs.onmessage = &onmessage;
-	ws_socket(&evs, 8082, 1);
+	ws_socket(&evs, 8082, 1, 250);
 }
 
 /// <summary>
