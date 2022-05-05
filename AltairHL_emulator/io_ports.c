@@ -189,7 +189,7 @@ void io_port_out(uint8_t port, uint8_t data)
                     publish_pending = true;
                     ju.index           = 0;
                     // Throttle IoT messages to 1 second
-                    dx_timerOneShotSet(&tmr_deferred_port_out_json, &(struct timespec){1, 0});
+                    dx_timerOneShotSet(&tmr_deferred_port_out_json, &(struct timespec){0, 500 * ONE_MS});
                 }
             }
             break;
@@ -198,7 +198,7 @@ void io_port_out(uint8_t port, uint8_t data)
             {
                 publish_weather_pending = true;
                 // Throttle IoT messages to 1 second
-                dx_timerOneShotSet(&tmr_deferred_port_out_weather, &(struct timespec){1, 0});
+                dx_timerOneShotSet(&tmr_deferred_port_out_weather, &(struct timespec){0, 500 * ONE_MS});
             }
             break;
         case 33: // copy file from web server to mutable storage
