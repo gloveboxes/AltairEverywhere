@@ -116,7 +116,7 @@ void onmessage(ws_cli_conn_t *client, const unsigned char *msg, uint64_t size, i
 			size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : (size_t)size;
 		memcpy(ws_input_block.buffer, msg, ws_input_block.length);
 
-		dx_timerOneShotSet(&tmr_deferred_input, &(struct timespec){0, 100 * ONE_MS});
+		dx_asyncSend(&async_terminal, (void*)&ws_input_block);
 	}
 }
 

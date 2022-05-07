@@ -19,10 +19,6 @@ if (ALTAIR_CLOUD)
     add_compile_definitions(ALTAIR_CLOUD)
 endif(ALTAIR_CLOUD)
 
-# Overide iot client defaults
-add_compile_definitions(IOT_HUB_POLL_TIME_SECONDS=0)
-add_compile_definitions(IOT_HUB_POLL_TIME_NANOSECONDS=500000000)
-
 # overide wsServer MAX_CLIENTS
 add_compile_definitions(MAX_CLIENTS=1)
 

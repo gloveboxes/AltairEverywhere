@@ -5,6 +5,7 @@
 
 #include "altair_panel.h"
 #include "dx_timer.h"
+#include "dx_async.h"
 #include "intel8080.h"
 #include "utils.h"
 #include "web_socket_server.h"
@@ -18,14 +19,14 @@
 #define DISK_LOADER      "Disks/88dskrom.bin"
 #define ALTAIR_BASIC_ROM "Disks/altair_basic.bin"
 
-extern DX_TIMER_BINDING tmr_deferred_command;
+extern DX_ASYNC_BINDING async_deferred_command;
 extern intel8080_t cpu;
 extern uint8_t memory[64 * 1024];
 extern volatile ALTAIR_COMMAND cmd_switches;
 extern volatile CPU_OPERATING_MODE cpu_operating_mode;
 extern volatile uint16_t bus_switches;
 
-DX_DECLARE_TIMER_HANDLER(deferred_command_handler);
+DX_DECLARE_ASYNC_HANDLER(async_deferred_command_handler);
 
 bool loadRomImage(char *romImageName, uint16_t loadAddress);
 void disassemble(intel8080_t *cpu);

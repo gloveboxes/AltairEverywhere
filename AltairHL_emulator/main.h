@@ -1,6 +1,7 @@
 #pragma once
 
 // DevX Libraries
+#include "dx_async.h"
 #include "dx_device_twins.h"
 #include "dx_exit_codes.h"
 #include "dx_terminate.h"
@@ -109,11 +110,8 @@ const uint8_t reverse_lut[16] = {
 
 // clang-format off
 // Common Timers
-DX_TIMER_BINDING tmr_copyx_request = {.name = "tmr_copyx_request", .handler = copyx_request_handler};
-DX_TIMER_BINDING tmr_deferred_command = {.name = "tmr_deferred_command", .handler = deferred_command_handler};
-DX_TIMER_BINDING tmr_deferred_input = {.name = "tmr_deferred_input", .handler = deferred_input_handler};
-DX_TIMER_BINDING tmr_deferred_port_out_json = {.name = "tmr_deferred_port_out_json", .handler = port_out_json_handler};
-DX_TIMER_BINDING tmr_deferred_port_out_weather = {.name = "tmr_deferred_port_out_weather", .handler = port_out_weather_handler};
+
+
 DX_TIMER_BINDING tmr_partial_message = {.repeat = &(struct timespec){0, 250 * ONE_MS}, .name = "tmr_partial_message", .handler = partial_message_handler};
 DX_TIMER_BINDING tmr_ws_ping_pong = {.repeat = &(struct timespec){10, 0}, .name = "tmr_partial_message", .handler = ws_ping_pong_handler};
 DX_TIMER_BINDING tmr_port_timer_expired = {.name = "tmr_port_timer_expired", .handler = port_timer_expired_handler};
@@ -122,11 +120,12 @@ static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){
 static DX_TIMER_BINDING tmr_tick_count = {.repeat = &(struct timespec){1, 0}, .name = "tmr_tick_count", .handler = tick_count_handler};
 static DX_TIMER_BINDING tmr_update_environment = {.delay = &(struct timespec){2, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
 
-// #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-// static DX_TIMER_BINDING tmr_panel_refresh = {.delay = &(struct timespec){1, 0}, .name = "tmr_panel_refresh", .handler = panel_refresh_handler};
-// #else
-// static DX_TIMER_BINDING tmr_panel_refresh = {.name = "tmr_panel_refresh", .handler = panel_refresh_handler};
-// #endif
+DX_ASYNC_BINDING async_copyx_request = {.handler = async_copyx_request_handler};
+DX_ASYNC_BINDING async_deferred_command = {.handler = async_deferred_command_handler};
+DX_ASYNC_BINDING async_publish_json = {.handler = async_publish_json_handler};
+DX_ASYNC_BINDING async_publish_weather = {.handler = async_publish_weather_handler};
+DX_ASYNC_BINDING async_set_timer = {.handler = async_set_timer_handler};
+DX_ASYNC_BINDING async_terminal = {.handler = async_terminal_handler};
 
 // Azure IoT Central Properties (Device Twins)
 
@@ -163,22 +162,24 @@ static DX_DEVICE_TWIN_BINDING dt_heartbeatUtc = {.propertyName = "HeartbeatUTC",
 static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
 // clang-format on
 
+static DX_ASYNC_BINDING *async_bindings[] = {
+	&async_copyx_request,
+	&async_deferred_command,
+	&async_publish_json,
+	&async_publish_weather,
+	&async_set_timer,
+	&async_terminal,
+};
+
 // initialize bindings
 static DX_TIMER_BINDING *timer_bindings[] = {
-	&tmr_copyx_request,
-	&tmr_deferred_command,
-	&tmr_deferred_input,
-	&tmr_deferred_port_out_json,
-	&tmr_deferred_port_out_weather,
 	&tmr_heart_beat,
 	&tmr_partial_message,
 	&tmr_port_timer_expired,
 	&tmr_report_memory_usage,
 	&tmr_tick_count,
 	&tmr_update_environment,
-	// &tmr_panel_refresh,
 	&tmr_ws_ping_pong,
-
 };
 
 static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {

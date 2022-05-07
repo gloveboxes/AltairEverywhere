@@ -278,7 +278,7 @@ void load_boot_disk(void)
 /// <summary>
 /// Commands are deferred so not running on web socket thread
 /// </summary>
-DX_TIMER_HANDLER(deferred_command_handler)
+DX_ASYNC_HANDLER(async_deferred_command_handler, handle)
 {
 	switch (deferred_command)
 	{
@@ -334,7 +334,7 @@ DX_TIMER_HANDLER(deferred_command_handler)
 			break;
 	}
 }
-DX_TIMER_HANDLER_END
+DX_ASYNC_HANDLER_END
 
 void process_control_panel_commands(void)
 {
@@ -351,7 +351,7 @@ void process_control_panel_commands(void)
 				break;
 			default:
 				deferred_command = cmd_switches;
-				dx_timerOneShotSet(&tmr_deferred_command, &(struct timespec){0, 1});
+				dx_asyncSend(&async_deferred_command, NULL);
 				break;
 		}
 	}

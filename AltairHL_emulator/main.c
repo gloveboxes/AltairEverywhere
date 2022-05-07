@@ -57,30 +57,10 @@ static DX_TIMER_HANDLER(heart_beat_handler)
 }
 DX_TIMER_HANDLER_END
 
-// /// <summary>
-// /// Updates the PI Sense HAT with Altair address bus, databus, and CPU state
-// /// </summary>
-// DX_TIMER_HANDLER(panel_refresh_handler)
-// {
-// 	uint8_t status = cpu.cpuStatus;
-// 	uint8_t data   = cpu.data_bus;
-// 	uint16_t bus   = cpu.address_bus;
-
-// 	status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
-// 	data   = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
-// 	bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 |
-//                      reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
-
-// 	update_panel_status_leds(status, data, bus);
-
-// 	dx_timerOneShotSet(&tmr_panel_refresh, &(struct timespec){0, 50 * ONE_MS});
-// }
-// DX_TIMER_HANDLER_END
-
 /// <summary>
 /// Handler called to process inbound message
 /// </summary>
-DX_TIMER_HANDLER(deferred_input_handler)
+DX_ASYNC_HANDLER(async_terminal_handler, handle)
 {
 	char command[30];
 	bool send_cr = false;
@@ -178,7 +158,7 @@ DX_TIMER_HANDLER(deferred_input_handler)
 cleanup:
 	ws_input_block.active = false;
 }
-DX_TIMER_HANDLER_END
+DX_ASYNC_HANDLER_END
 
 /// <summary>
 /// Sets wait for terminal io cmd to be processed and flag reset
@@ -491,6 +471,8 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
 	init_altair_hardware();
 
+	dx_asyncSetInit(async_bindings, NELEMS(async_bindings));
+
 	// if there is no ID Scope or connection string then don't attempt to start connection to Azure IoT
 	// Central
 	if (!dx_isStringNullOrEmpty(altair_config.user_config.idScope) ||
@@ -504,11 +486,8 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 	}
 
 	dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));
-
 	init_web_socket_server(client_connected_cb);
-
 	dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
-
 	dx_startThreadDetached(altair_thread, NULL, "altair_thread");
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE

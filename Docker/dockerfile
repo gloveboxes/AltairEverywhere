@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 EXPOSE 8082
 
 RUN apt update && apt-get install -y --no-install-recommends \
-                    libevent-dev \
+                    libuv1.dev  \
                     cmake \
                     build-essential \
                     gdb \
