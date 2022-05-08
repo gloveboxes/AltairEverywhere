@@ -13,9 +13,10 @@
 #include <stdio.h>
 #include <ws.h>
 
-extern volatile bool send_partial_msg;
-extern DX_TIMER_BINDING tmr_deferred_input;
+extern DX_ASYNC_BINDING async_expire_session;
 extern DX_ASYNC_BINDING async_terminal;
+extern DX_TIMER_BINDING tmr_deferred_input;
+extern volatile bool send_partial_msg;
 
 void print_console_banner(void);
 
@@ -31,6 +32,7 @@ extern volatile CPU_OPERATING_MODE cpu_operating_mode;
 extern WS_INPUT_BLOCK_T ws_input_block;
 extern DX_TIMER_BINDING tmr_partial_message;
 
+DX_DECLARE_ASYNC_HANDLER(async_expire_session_handler);
 DX_DECLARE_ASYNC_HANDLER(async_terminal_handler);
 DX_DECLARE_TIMER_HANDLER(partial_message_handler);
 DX_DECLARE_TIMER_HANDLER(ws_ping_pong_handler);

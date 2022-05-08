@@ -40,7 +40,7 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
-#define ALTAIR_EMULATOR_VERSION "4.5.1"
+#define ALTAIR_EMULATOR_VERSION "4.5.2"
 #define Log_Debug(f_, ...)      dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED      FALSE
 
@@ -122,6 +122,7 @@ static DX_TIMER_BINDING tmr_update_environment = {.delay = &(struct timespec){2,
 
 DX_ASYNC_BINDING async_copyx_request = {.handler = async_copyx_request_handler};
 DX_ASYNC_BINDING async_deferred_command = {.handler = async_deferred_command_handler};
+DX_ASYNC_BINDING async_expire_session = {.handler = async_expire_session_handler};
 DX_ASYNC_BINDING async_publish_json = {.handler = async_publish_json_handler};
 DX_ASYNC_BINDING async_publish_weather = {.handler = async_publish_weather_handler};
 DX_ASYNC_BINDING async_set_timer = {.handler = async_set_timer_handler};
@@ -165,6 +166,7 @@ static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVer
 static DX_ASYNC_BINDING *async_bindings[] = {
 	&async_copyx_request,
 	&async_deferred_command,
+	&async_expire_session,
 	&async_publish_json,
 	&async_publish_weather,
 	&async_set_timer,

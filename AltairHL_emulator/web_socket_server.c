@@ -15,10 +15,15 @@ static bool cleanup_required       = false;
 static const int session_minutes   = 1 * 60 * 30; // 30 minutes
 static int session_count           = 0;
 static size_t output_buffer_length = 0;
-static struct  timeval ws_timeout = {0, 250 * 1000};
+static struct timeval ws_timeout   = {0, 250 * 1000};
+ws_cli_conn_t *current_client      = NULL;
 
 static DX_TIMER_HANDLER(expire_session_handler)
 {
+	if (session_count > 0 && current_client)
+	{
+		ws_close_client(current_client);
+	}
 	cleanup_session();
 }
 DX_TIMER_HANDLER_END
@@ -31,6 +36,12 @@ DX_TIMER_HANDLER(ws_ping_pong_handler)
 	}
 }
 DX_TIMER_HANDLER_END
+
+DX_ASYNC_HANDLER(async_expire_session_handler, handle)
+{
+	dx_timerOneShotSet(&tmr_expire_session, &(struct timespec){session_minutes, 0});
+}
+DX_ASYNC_HANDLER_END
 
 static void cleanup_session(void)
 {
@@ -80,6 +91,7 @@ void onopen(ws_cli_conn_t *client)
 {
 	printf("New session\n");
 	session_count++;
+	current_client = client;
 
 	if (cleanup_required)
 	{
@@ -88,7 +100,7 @@ void onopen(ws_cli_conn_t *client)
 
 #ifdef ALTAIR_CLOUD
 	cleanup_required = true;
-	dx_timerOneShotSet(&tmr_expire_session, &(struct timespec){session_minutes, 0});
+	dx_asyncSend(&async_expire_session, NULL);
 #endif
 
 	(*(int *)dt_new_sessions.propertyValue)++;
@@ -99,6 +111,7 @@ void onclose(ws_cli_conn_t *client)
 {
 	printf("Session closed\n");
 	session_count--;
+	current_client = NULL;
 
 	if (cleanup_required)
 	{
@@ -116,7 +129,7 @@ void onmessage(ws_cli_conn_t *client, const unsigned char *msg, uint64_t size, i
 			size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : (size_t)size;
 		memcpy(ws_input_block.buffer, msg, ws_input_block.length);
 
-		dx_asyncSend(&async_terminal, (void*)&ws_input_block);
+		dx_asyncSend(&async_terminal, (void *)&ws_input_block);
 	}
 }
 
