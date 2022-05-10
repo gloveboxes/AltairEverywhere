@@ -34,9 +34,10 @@ static COPY_X_T copy_x;
 
 static JSON_UNIT_T ju;
 static REQUEST_UNIT_T ru;
-static volatile bool delay_enabled           = false;
-static volatile bool publish_weather_pending = false;
-static volatile bool publish_pending;
+static volatile bool delay_milliseconds_enabled = false;
+static volatile bool delay_seconds_enabled      = false;
+static volatile bool publish_json_pending       = false;
+static volatile bool publish_weather_pending    = false;
 
 // set tick_count to 1 as the tick count timer doesn't kick in until 1 second after startup
 static uint32_t tick_count = 1;
@@ -108,9 +109,15 @@ static void format_string(const void *value)
 	ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%s", (char *)value);
 }
 
-DX_TIMER_HANDLER(port_timer_expired_handler)
+DX_TIMER_HANDLER(timer_seconds_expired_handler)
 {
-	delay_enabled = false;
+	delay_seconds_enabled = false;
+}
+DX_TIMER_HANDLER_END
+
+DX_TIMER_HANDLER(timer_millisecond_expired_handler)
+{
+	delay_milliseconds_enabled = false;
 }
 DX_TIMER_HANDLER_END
 
@@ -127,10 +134,17 @@ DX_ASYNC_HANDLER(async_copyx_request_handler, handle)
 }
 DX_ASYNC_HANDLER_END
 
-DX_ASYNC_HANDLER(async_set_timer_handler, handle)
+DX_ASYNC_HANDLER(async_set_timer_seconds_handler, handle)
 {
 	int data = *((int *)handle->data);
-	dx_timerOneShotSet(&tmr_port_timer_expired, &(struct timespec){data, 0});
+	dx_timerOneShotSet(&tmr_timer_seconds_expired, &(struct timespec){data, 0});
+}
+DX_ASYNC_HANDLER_END
+
+DX_ASYNC_HANDLER(async_set_timer_millisecond_handler, handle)
+{
+	int data = *((int *)handle->data);
+	dx_timerOneShotSet(&tmr_timer_millisecond_expired, &(struct timespec){0, data * ONE_MS});
 }
 DX_ASYNC_HANDLER_END
 
@@ -155,7 +169,7 @@ DX_ASYNC_HANDLER(async_publish_json_handler, handle)
 			&json_content_properties);
 #endif
 	}
-	publish_pending = false;
+	publish_json_pending = false;
 }
 DX_ASYNC_HANDLER_END
 
@@ -168,20 +182,30 @@ void io_port_out(uint8_t port, uint8_t data)
 {
 	memset(&ru, 0x00, sizeof(REQUEST_UNIT_T));
 	static int timer_delay;
+	static int timer_milliseconds_delay;
 
 	switch (port)
 	{
-		case 30:
-			delay_enabled = false;
+		case 29:
+			delay_milliseconds_enabled = false;
 			if (data > 0)
 			{
-				delay_enabled = true;
-				timer_delay   = data;
+				delay_milliseconds_enabled = true;
+				timer_milliseconds_delay   = data;
+				dx_asyncSend(&async_set_millisencond_timer, (void *)&timer_milliseconds_delay);
+			}
+			break;
+		case 30:
+			delay_seconds_enabled = false;
+			if (data > 0)
+			{
+				delay_seconds_enabled = true;
+				timer_delay           = data;
 				dx_asyncSend(&async_set_timer, (void *)&timer_delay);
 			}
 			break;
 		case 31:
-			if (!publish_pending)
+			if (!publish_json_pending)
 			{
 				if (ju.index == 0)
 				{
@@ -195,8 +219,8 @@ void io_port_out(uint8_t port, uint8_t data)
 
 				if (data == 0)
 				{
-					publish_pending = true;
-					ju.index        = 0;
+					publish_json_pending = true;
+					ju.index             = 0;
 					dx_asyncSend(&async_publish_json, NULL);
 				}
 			}
@@ -235,7 +259,7 @@ void io_port_out(uint8_t port, uint8_t data)
 				memset(copy_x.url, 0x00, sizeof(copy_x.url));
 				snprintf(copy_x.url, sizeof(copy_x.url), "%s/%s", altair_config.copy_x_url, copy_x.filename);
 
-                dx_asyncSend(&async_copyx_request, NULL);
+				dx_asyncSend(&async_copyx_request, NULL);
 			}
 			break;
 		case 34: // Weather key
@@ -319,11 +343,14 @@ uint8_t io_port_in(uint8_t port)
 
 	switch (port)
 	{
+		case 29: // Has delay expired
+			retVal = (uint8_t)delay_milliseconds_enabled;
+			break;
 		case 30: // Has delay expired
-			retVal = (uint8_t)delay_enabled;
+			retVal = (uint8_t)delay_seconds_enabled;
 			break;
 		case 31:
-			retVal = (uint8_t)publish_pending;
+			retVal = (uint8_t)publish_json_pending;
 			break;
 		case 32:
 			retVal = (uint8_t)publish_weather_pending;
