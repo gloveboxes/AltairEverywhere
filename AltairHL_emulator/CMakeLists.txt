@@ -40,6 +40,7 @@ if (ALTAIR_FRONT_PI_SENSE_HAT)
     set(Oem
         "FrontPanels/front_panel_pi_sense_hat.c"
         "Drivers/pi_sense_hat/led_panel.c"
+        "Drivers/pi_sense_hat/graphics.c"
     )
     source_group("Oem" FILES ${Oem})
 

@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
+#include "led_panel.h"
 
 typedef struct
 {
@@ -16,6 +17,8 @@ typedef struct
 } GFX_SCROLL_LEFT_CONTEXT;
 
 uint8_t gfx_reverse_byte(uint8_t data);
+void gfx_bitmap_to_rgb(uint8_t bitmap[8], uint16_t *panel_buffer, size_t buffer_len);
 void gfx_load_character(uint8_t character, uint8_t bitmap[8]);
 void gfx_reverse_panel(unsigned char A[8]);
 void gfx_rotate_counterclockwise(unsigned char A[8], uint32_t m, uint32_t n, unsigned char B[8]);
+void gfx_set_color(uint16_t color);

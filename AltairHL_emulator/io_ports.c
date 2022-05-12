@@ -42,6 +42,10 @@ static volatile bool publish_weather_pending    = false;
 // set tick_count to 1 as the tick count timer doesn't kick in until 1 second after startup
 static uint32_t tick_count = 1;
 
+// Font buffers
+static uint8_t bitmap[8];
+uint16_t panel_8x8_buffer[64];
+
 // clang-format off
 DX_MESSAGE_PROPERTY *json_msg_properties[] = {
     &(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"},
@@ -327,6 +331,30 @@ void io_port_out(uint8_t port, uint8_t data)
 				data ? onboard_telemetry.pressure : onboard_telemetry.temperature);
 			break;
 #endif // AZURE_SPHERE
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+		case 80: // panel_mode 0 = bus data, 1 = font, 2 = bitmap
+			if (data < 3)
+			{
+				panel_mode = data;
+			}
+			break;
+		case 81: // set pixel red color
+			break;
+		case 82: // set pixel green color
+			break;
+		case 83: // set pixel blue color
+			break;
+		case 84: // display character
+			memset(panel_8x8_buffer, 0x00, sizeof(panel_8x8_buffer));
+			gfx_set_color(2);
+			gfx_load_character(data, bitmap);
+			gfx_rotate_counterclockwise(bitmap, 1, 1, bitmap);
+			gfx_reverse_panel(bitmap);
+			gfx_rotate_counterclockwise(bitmap, 1, 1, bitmap);
+			gfx_bitmap_to_rgb(bitmap, panel_8x8_buffer, sizeof(panel_8x8_buffer));
+			pi_sense_8x8_panel_update(panel_8x8_buffer, sizeof(panel_8x8_buffer));
+			break;
+#endif // PI SENSE HAT
 		default:
 			break;
 	}

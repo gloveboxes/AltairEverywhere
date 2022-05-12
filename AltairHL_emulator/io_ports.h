@@ -6,6 +6,7 @@
 #include "dx_timer.h"
 #include "dx_utilities.h"
 #include "environment_types.h"
+#include "graphics.h"
 #include "iotc_manager.h"
 #include <applibs/storage.h>
 #include <fcntl.h>
@@ -39,6 +40,15 @@ extern DX_ASYNC_BINDING async_publish_json;
 extern DX_ASYNC_BINDING async_publish_weather;
 extern DX_ASYNC_BINDING async_set_timer; 
 extern DX_ASYNC_BINDING async_set_millisencond_timer;
+
+enum PANEL_MODE_T
+{
+	PANEL_BUS_MODE,
+	PANEL_FONT_MODE,
+	PANEL_BITMAP_MODE
+};
+
+extern enum PANEL_MODE_T panel_mode;
 
 uint8_t io_port_in(uint8_t port);
 void io_port_out(uint8_t port, uint8_t data);
