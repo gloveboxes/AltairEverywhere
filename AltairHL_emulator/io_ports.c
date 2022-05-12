@@ -42,9 +42,11 @@ static volatile bool publish_weather_pending    = false;
 // set tick_count to 1 as the tick count timer doesn't kick in until 1 second after startup
 static uint32_t tick_count = 1;
 
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 // Font buffers
 static uint8_t bitmap[8];
 uint16_t panel_8x8_buffer[64];
+#endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 // clang-format off
 DX_MESSAGE_PROPERTY *json_msg_properties[] = {
