@@ -3,7 +3,7 @@
 
 #include "graphics.h"
 
-static uint16_t pixel_color;
+static uint16_t pixel_color = 40;
 
 // https://github.com/MikroElektronika/Matrix_R_click/blob/master/library/__matrixr_driver.c
 
@@ -195,12 +195,27 @@ void gfx_load_character(uint8_t character, uint8_t bitmap[8])
 	}
 }
 
-void gfx_set_color(uint16_t color)
+void gfx_set_color(uint8_t color)
 {
-	color = color < 3 ? 3 : color;
-	color = color > 15 ? 15 : color;
-	pixel_color = (color + 16) << 1;
-	pixel_color = 608;
+	switch (color)
+	{
+	case 0:
+		pixel_color = 20480;
+		break;
+	case 1:
+		pixel_color = 640;
+		break;
+	case 2:
+		pixel_color = 40;
+		break;	
+	default:
+		break;
+	}
+
+	// color = color < 3 ? 3 : color;
+	// color = color > 15 ? 15 : color;
+	// pixel_color = (color + 16) << 1;
+	// pixel_color = 20480;
 }
 
 void gfx_bitmap_to_rgb(uint8_t bitmap[8], uint16_t *panel_buffer, size_t buffer_len)

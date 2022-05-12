@@ -340,15 +340,17 @@ void io_port_out(uint8_t port, uint8_t data)
 				panel_mode = data;
 			}
 			break;
-		case 81: // set pixel red color
+		case 81:
+			gfx_set_color(data);
 			break;
-		case 82: // set pixel green color
+		case 82: // set pixel red color
 			break;
-		case 83: // set pixel blue color
+		case 83: // set pixel green color
 			break;
-		case 84: // display character
+		case 84: // set pixel blue color
+			break;
+		case 85: // display character
 			memset(panel_8x8_buffer, 0x00, sizeof(panel_8x8_buffer));
-			gfx_set_color(2);
 			gfx_load_character(data, bitmap);
 			gfx_rotate_counterclockwise(bitmap, 1, 1, bitmap);
 			gfx_reverse_panel(bitmap);
