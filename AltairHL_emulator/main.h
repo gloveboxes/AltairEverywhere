@@ -64,7 +64,7 @@ static DX_MESSAGE_CONTENT_PROPERTIES diag_content_properties = {
 	.contentEncoding = "utf-8", .contentType = "application/json"};
 
 // CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
-volatile CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
+CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
 
 ALTAIR_CONFIG_T altair_config;
 ENVIRONMENT_TELEMETRY environment;
@@ -72,34 +72,30 @@ ENVIRONMENT_TELEMETRY environment;
 intel8080_t cpu;
 uint8_t memory[64 * 1024]; // Altair system memory.
 
-volatile ALTAIR_COMMAND cmd_switches;
-volatile uint16_t bus_switches = 0x00;
-
-WS_INPUT_BLOCK_T ws_input_block;
+ALTAIR_COMMAND cmd_switches;
+uint16_t bus_switches = 0x00;
 
 // basic app load helpers.
-static volatile bool haveAppLoad       = false;
-static volatile bool haveCtrlPending   = false;
-static volatile char haveCtrlCharacter = 0x00;
+static bool haveAppLoad       = false;
+static char terminalInputCharacter = 0x00;
 
-static volatile bool haveTerminalInputMessage  = false;
-static volatile bool haveTerminalOutputMessage = false;
-static volatile int altairInputBufReadIndex    = 0;
-static volatile int altairOutputBufReadIndex   = 0;
-static volatile int terminalInputMessageLen    = 0;
-static volatile int terminalOutputMessageLen   = 0;
+static bool haveTerminalInputMessage  = false;
+static bool haveTerminalOutputMessage = false;
+static int altairInputBufReadIndex    = 0;
+static int altairOutputBufReadIndex   = 0;
+static int terminalInputMessageLen    = 0;
+static int terminalOutputMessageLen   = 0;
 
-static volatile char *input_data = NULL;
+static char *input_data = NULL;
 
 bool azure_connected = false;
-extern volatile size_t queue_length;
-volatile bool send_partial_msg = false;
+bool send_partial_msg = false;
 static FILE *app_stream;
 
 static char Log_Debug_Time_buffer[128];
 
 static bool load_application(const char *fileName);
-static void spin_wait(volatile bool *flag);
+static void spin_wait(bool *flag);
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
 // static DX_DECLARE_TIMER_HANDLER(panel_refresh_handler);

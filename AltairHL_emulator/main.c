@@ -63,22 +63,32 @@ DX_TIMER_HANDLER_END
 DX_ASYNC_HANDLER(async_terminal_handler, handle)
 {
 	char command[30];
-	bool send_cr = false;
-	int retry    = 0;
-
-	size_t application_message_size = ws_input_block.length;
-	char *data                      = ws_input_block.buffer;
-
 	memset(command, 0x00, sizeof(command));
 
-	// is last char carriage return then strip off and set flag to add line feed at then end
-	if (application_message_size > 0 && data[application_message_size - 1] == '\r')
+	WS_INPUT_BLOCK_T *in_block = (WS_INPUT_BLOCK_T *)handle->data;
+
+	size_t application_message_size = in_block->length;
+	char *data                      = in_block->buffer;
+
+	// Was just enter pressed
+	if (data[0] == '\r')
 	{
-		send_cr = true;
-		application_message_size--;
+		switch (cpu_operating_mode)
+		{
+			case CPU_RUNNING:
+				terminalInputCharacter = 0x0d;
+				break;
+			case CPU_STOPPED:
+				data[0] = 0x00;
+				process_virtual_input(data, process_control_panel_commands);
+			default:
+				break;
+		}
+		goto cleanup;
 	}
 
-	if (application_message_size > 0)
+	// Is it a ctrl character
+	if (application_message_size == 1 && data[0] > 0 && data[0] < 29)
 	{
 		// ctrl-m is mapped to ascii 28 to get around ctrl-m being /r
 		if (data[0] == 28)
@@ -91,38 +101,49 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 			}
 			else
 			{
-				haveCtrlCharacter = 0x0d;
-				spin_wait(&haveCtrlPending);
-			}
-			goto cleanup;
-		}
-
-		// test for ctlr characters
-		if (data[0] > 0 && data[0] < 27)
-		{
-			haveCtrlCharacter = data[0];
-			spin_wait(&haveCtrlPending);
-
-			if (cpu_operating_mode == CPU_RUNNING)
-			{
-				goto cleanup;
+				terminalInputCharacter = 0x0d;
 			}
 		}
-
-		// upper case the first 30 chars for command processing
-		for (int i = 0; i < sizeof(command) - 1 && i < application_message_size; i++)
-		{ // -1 to allow for trailing null
-			command[i] = (char)toupper(data[i]);
-		}
-
-		// if command is loadx then try looking for in baked in samples
-		if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 &&
-			(command[application_message_size - 1] == '"'))
+		else // pass through the ctrl chars
 		{
-			command[application_message_size - 1] = 0x00; // replace the '"' with \0
-			load_application(&command[7]);
-			goto cleanup;
+			terminalInputCharacter = data[0];
 		}
+		goto cleanup;
+	}
+
+	// The web terminal must be in single char mode as char is not a ctrl or enter char
+	// so feed to Altair terminal read
+	if (application_message_size == 1)
+	{
+		if (cpu_operating_mode == CPU_RUNNING)
+		{
+			altairOutputBufReadIndex = terminalOutputMessageLen = 0;
+			haveTerminalOutputMessage                           = true;
+			terminalInputCharacter                              = data[0];
+		}
+		else
+		{
+			data[0] = toupper(data[0]);
+			data[1] = 0x00;
+			process_virtual_input(data, process_control_panel_commands);
+		}
+		goto cleanup;
+	}
+
+	// Check for loadx command
+	// upper case the first 30 chars for command processing
+	for (int i = 0; i < sizeof(command) - 1 && i < application_message_size - 1; i++)
+	{ // -1 to allow for trailing null
+		command[i] = (char)toupper(data[i]);
+	}
+
+	// if command is loadx then try looking for in baked in samples
+	if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 &&
+		(command[application_message_size - 2] == '"'))
+	{
+		command[application_message_size - 2] = 0x00; // replace the '"' with \0
+		load_application(&command[7]);
+		goto cleanup;
 	}
 
 	switch (cpu_operating_mode)
@@ -130,22 +151,16 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 		case CPU_RUNNING:
 
 			if (application_message_size > 0)
-			{ // for example just cr was send so don't try send chars to CPU
+			{
 				input_data = data;
 
 				altairInputBufReadIndex  = 0;
 				altairOutputBufReadIndex = 0;
 				terminalInputMessageLen  = (int)application_message_size;
-				terminalOutputMessageLen = (int)application_message_size;
+				terminalOutputMessageLen = (int)application_message_size - 1;
 
 				haveTerminalOutputMessage = true;
 				spin_wait(&haveTerminalInputMessage);
-			}
-
-			if (send_cr)
-			{
-				haveCtrlCharacter = 0x0d;
-				spin_wait(&haveCtrlPending);
 			}
 			break;
 		case CPU_STOPPED:
@@ -156,14 +171,14 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 	}
 
 cleanup:
-	ws_input_block.active = false;
+	in_block->active = false;
 }
 DX_ASYNC_HANDLER_END
 
 /// <summary>
 /// Sets wait for terminal io cmd to be processed and flag reset
 /// </summary>
-static void spin_wait(volatile bool *flag)
+static void spin_wait(bool *flag)
 {
 	struct timespec delay = {0, 10 * ONE_MS};
 	int retry             = 0;
@@ -226,10 +241,11 @@ static char terminal_read(void)
 	char retVal;
 	int ch;
 
-	if (haveCtrlPending)
+	if (terminalInputCharacter)
 	{
-		haveCtrlPending = false;
-		return haveCtrlCharacter;
+		retVal                 = terminalInputCharacter;
+		terminalInputCharacter = 0x00;
+		return retVal;
 	}
 
 	if (haveTerminalInputMessage)
@@ -273,10 +289,11 @@ static void terminal_write(uint8_t c)
 		altairOutputBufReadIndex++;
 
 		if (altairOutputBufReadIndex > terminalOutputMessageLen)
+		{
 			haveTerminalOutputMessage = false;
+		}
 	}
-
-	if (!haveTerminalOutputMessage)
+	else
 	{
 		publish_character(c);
 	}

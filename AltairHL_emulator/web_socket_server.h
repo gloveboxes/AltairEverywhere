@@ -16,7 +16,7 @@
 extern DX_ASYNC_BINDING async_expire_session;
 extern DX_ASYNC_BINDING async_terminal;
 extern DX_TIMER_BINDING tmr_deferred_input;
-extern volatile bool send_partial_msg;
+extern bool send_partial_msg;
 
 void print_console_banner(void);
 
@@ -28,8 +28,7 @@ typedef struct
 } WS_INPUT_BLOCK_T;
 
 extern DX_DEVICE_TWIN_BINDING dt_new_sessions;
-extern volatile CPU_OPERATING_MODE cpu_operating_mode;
-extern WS_INPUT_BLOCK_T ws_input_block;
+extern CPU_OPERATING_MODE cpu_operating_mode;
 extern DX_TIMER_BINDING tmr_partial_message;
 
 DX_DECLARE_ASYNC_HANDLER(async_expire_session_handler);

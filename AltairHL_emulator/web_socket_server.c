@@ -8,6 +8,7 @@ static void (*_client_connected_cb)(void);
 static void cleanup_session(void);
 
 static char output_buffer[512];
+static WS_INPUT_BLOCK_T ws_input_block;
 
 static DX_TIMER_BINDING tmr_expire_session = {
 	.name = "tmr_expire_session", .handler = expire_session_handler};
