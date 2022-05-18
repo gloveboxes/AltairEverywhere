@@ -6,7 +6,6 @@
 #include "dx_timer.h"
 #include "dx_utilities.h"
 #include "environment_types.h"
-#include "graphics.h"
 #include "iotc_manager.h"
 #include <applibs/storage.h>
 #include <fcntl.h>
@@ -14,6 +13,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
+
+#ifdef AZURE_SPHERE
+#include "onboard_sensors.h"
+extern ONBOARD_TELEMETRY onboard_telemetry;
+#endif
 
 DX_DECLARE_ASYNC_HANDLER(async_copyx_request_handler);
 DX_DECLARE_ASYNC_HANDLER(async_publish_json_handler);
@@ -33,13 +37,13 @@ extern DX_GPIO_BINDING gpioBlue;
 extern ALTAIR_CONFIG_T altair_config;
 extern DX_TIMER_BINDING tmr_timer_seconds_expired;
 extern DX_TIMER_BINDING tmr_timer_millisecond_expired;
-extern DX_TIMER_BINDING tmr_copyx_request;
+//extern DX_TIMER_BINDING tmr_copyx_request;
 
 extern DX_ASYNC_BINDING async_copyx_request;
 extern DX_ASYNC_BINDING async_publish_json;
 extern DX_ASYNC_BINDING async_publish_weather;
-extern DX_ASYNC_BINDING async_set_timer; 
-extern DX_ASYNC_BINDING async_set_millisencond_timer;
+extern DX_ASYNC_BINDING async_set_seconds_timer;
+extern DX_ASYNC_BINDING async_set_millisecond_timer;
 
 enum PANEL_MODE_T
 {

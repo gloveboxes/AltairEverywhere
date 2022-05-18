@@ -9,6 +9,8 @@ static const char *invalid_switches    = "\r\nError: Input switches must be eith
 static char panel_info[256]            = {0};
 static ALTAIR_COMMAND deferred_command = NOP;
 
+//static void process_control_panel_commands(void);
+
 static bool validate_input_data(const char *command)
 {
 	size_t len = strlen(command);
@@ -45,7 +47,7 @@ static void publish_virtual_input_data(void)
 	publish_message(panel_info, strlen(panel_info));
 }
 
-static void process_virtual_switches(const char *command, void (*process_control_panel_commands)(void))
+static void process_virtual_switches(const char *command)
 {
 	uint16_t temp_bus_switches = 0;
 	uint16_t mask              = 1;
@@ -69,7 +71,7 @@ static void process_virtual_switches(const char *command, void (*process_control
 	}
 }
 
-void process_virtual_input(const char *command, void (*process_control_panel_commands)(void))
+void process_virtual_input(const char *command)
 {
 	if (strlen(command) == 0)
 	{
@@ -124,7 +126,7 @@ void process_virtual_input(const char *command, void (*process_control_panel_com
 	}
 	else
 	{
-		process_virtual_switches(command, process_control_panel_commands);
+		process_virtual_switches(command);
 		publish_message("\r\nCPU MONITOR> ", 15);
 	}
 }
@@ -135,7 +137,6 @@ void disassemble(intel8080_t *cpu)
 	char address_bus_low_byte[9];
 	char data_bus_binary[9];
 	uint8_t instruction_length = 0;
-	uint16_t old_address_bus;
 
 	for (size_t instruction_count = 0; instruction_count < 20; instruction_count++)
 	{
@@ -144,7 +145,7 @@ void disassemble(intel8080_t *cpu)
 		uint8_to_binary((uint8_t)(cpu->address_bus), address_bus_low_byte, sizeof(address_bus_low_byte));
 		uint8_to_binary(cpu->data_bus, data_bus_binary, sizeof(data_bus_binary));
 
-		size_t msg_length = snprintf(panel_info, sizeof(panel_info),
+		size_t msg_length = (size_t)snprintf(panel_info, sizeof(panel_info),
 			"\r\n%15s: Address bus: %s%s (0x%04x), Data bus %s (0x%02x), %-15s  (%d byte instruction)",
 			"Disassemble", address_bus_high_byte, address_bus_low_byte, cpu->address_bus, data_bus_binary,
 			cpu->data_bus, get_i8080_instruction_name(cpu->data_bus, &instruction_length),
@@ -161,7 +162,7 @@ void disassemble(intel8080_t *cpu)
 			uint8_to_binary((uint8_t)(cpu->address_bus), address_bus_low_byte, sizeof(address_bus_low_byte));
 			uint8_to_binary(cpu->data_bus, data_bus_binary, sizeof(data_bus_binary));
 
-			msg_length = snprintf(panel_info, sizeof(panel_info),
+			msg_length = (size_t)snprintf(panel_info, sizeof(panel_info),
 				"\r\n%15s: Address bus: %s%s (0x%04x), Data bus %s (0x%02x)", "Disassemble",
 				address_bus_high_byte, address_bus_low_byte, cpu->address_bus, data_bus_binary,
 				cpu->data_bus);
@@ -181,7 +182,7 @@ void trace(intel8080_t *cpu)
 	char address_bus_low_byte[9];
 	char data_bus_binary[9];
 	uint8_t instruction_length = 0;
-	uint16_t old_address_bus;
+	//uint16_t old_address_bus;
 
 	setvbuf(stdout, NULL, _IONBF, 0); // disable stdout buffering to ensure message written
 	i8080_cycle(cpu);
@@ -193,7 +194,7 @@ void trace(intel8080_t *cpu)
 		uint8_to_binary((uint8_t)(cpu->address_bus), address_bus_low_byte, sizeof(address_bus_low_byte));
 		uint8_to_binary(cpu->data_bus, data_bus_binary, sizeof(data_bus_binary));
 
-		size_t msg_length = snprintf(panel_info, sizeof(panel_info),
+		size_t msg_length = (size_t)snprintf(panel_info, sizeof(panel_info),
 			"\r\n%15s: Address bus: %s%s (0x%04x), Data bus %s (0x%02x), %-15s  (%d byte instruction)",
 			"Trace", address_bus_high_byte, address_bus_low_byte, cpu->address_bus, data_bus_binary,
 			cpu->data_bus, get_i8080_instruction_name(cpu->data_bus, &instruction_length),
@@ -201,7 +202,7 @@ void trace(intel8080_t *cpu)
 
 		publish_message(panel_info, msg_length);
 
-		old_address_bus = cpu->address_bus;
+		//old_address_bus = cpu->address_bus;
 
 		for (size_t i = 1; i < instruction_length; i++)
 		{
@@ -212,7 +213,7 @@ void trace(intel8080_t *cpu)
 			uint8_to_binary((uint8_t)(cpu->address_bus), address_bus_low_byte, sizeof(address_bus_low_byte));
 			uint8_to_binary(cpu->data_bus, data_bus_binary, sizeof(data_bus_binary));
 
-			msg_length = snprintf(panel_info, sizeof(panel_info),
+			msg_length = (size_t)snprintf(panel_info, sizeof(panel_info),
 				"\r\n%15s: Address bus: %s%s (0x%04x), Data bus %s (0x%02x)", "Trace", address_bus_high_byte,
 				address_bus_low_byte, cpu->address_bus, data_bus_binary, cpu->data_bus);
 
@@ -237,7 +238,7 @@ void publish_cpu_state(char *command, uint16_t address_bus, uint8_t data_bus)
 	uint8_to_binary((uint8_t)(address_bus), address_bus_low_byte, sizeof(address_bus_low_byte));
 	uint8_to_binary(data_bus, data_bus_binary, sizeof(data_bus_binary));
 
-	size_t msg_length = snprintf(panel_info, sizeof(panel_info),
+	size_t msg_length = (size_t)snprintf(panel_info, sizeof(panel_info),
 		"\r\n%15s: Address bus: %s%s (0x%04x), Data bus %s (0x%02x), %-15s  (%d byte instruction)\n\rCPU "
 		"MONITOR> ",
 		command, address_bus_high_byte, address_bus_low_byte, address_bus, data_bus_binary, data_bus,
@@ -246,6 +247,23 @@ void publish_cpu_state(char *command, uint16_t address_bus, uint8_t data_bus)
 	publish_message((const char *)panel_info, msg_length);
 }
 
+#ifdef AZURE_SPHERE
+bool loadRomImage(char *romImageName, uint16_t loadAddress)
+{
+	int romFd = -1;
+	romFd     = Storage_OpenFileInImagePackage(romImageName);
+	if (romFd == -1)
+		return false;
+
+	off_t length = lseek(romFd, 0, SEEK_END);
+	lseek(romFd, 0, SEEK_SET);
+
+	ssize_t bytes = read(romFd, &memory[loadAddress], (size_t)length);
+	close(romFd);
+
+	return bytes == length;
+}
+#else
 bool loadRomImage(char *romImageName, uint16_t loadAddress)
 {
 	int romFd = -1;
@@ -261,6 +279,7 @@ bool loadRomImage(char *romImageName, uint16_t loadAddress)
 
 	return bytes == length;
 }
+#endif
 
 void load_boot_disk(void)
 {
@@ -276,9 +295,9 @@ void load_boot_disk(void)
 }
 
 /// <summary>
-/// Commands are deferred so not running on web socket thread
+/// Process Altair front panel commands
 /// </summary>
-DX_ASYNC_HANDLER(async_deferred_command_handler, handle)
+void altair_panel_command_handler(void)
 {
 	switch (deferred_command)
 	{
@@ -315,7 +334,7 @@ DX_ASYNC_HANDLER(async_deferred_command_handler, handle)
 			trace(&cpu);
 			break;
 		case RESET:
-            load_boot_disk();
+			load_boot_disk();
 			cpu_operating_mode = CPU_RUNNING;
 			break;
 		case LOAD_ALTAIR_BASIC:
@@ -334,7 +353,7 @@ DX_ASYNC_HANDLER(async_deferred_command_handler, handle)
 			break;
 	}
 }
-DX_ASYNC_HANDLER_END
+
 
 void process_control_panel_commands(void)
 {
@@ -351,14 +370,14 @@ void process_control_panel_commands(void)
 				break;
 			default:
 				deferred_command = cmd_switches;
-				dx_asyncSend(&async_deferred_command, NULL);
+				altair_panel_command_handler();
 				break;
 		}
 	}
 
-	if (cmd_switches & STOP_CMD)
-	{
-		cpu_operating_mode = CPU_STOPPED;
-	}
+	// if (cmd_switches & STOP_CMD)
+	// {
+	// 	cpu_operating_mode = CPU_STOPPED;
+	// }
 	cmd_switches = 0x00;
 }

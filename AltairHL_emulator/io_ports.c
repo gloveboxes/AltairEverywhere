@@ -198,7 +198,7 @@ void io_port_out(uint8_t port, uint8_t data)
 			{
 				delay_milliseconds_enabled = true;
 				timer_milliseconds_delay   = data;
-				dx_asyncSend(&async_set_millisencond_timer, (void *)&timer_milliseconds_delay);
+				dx_asyncSend(&async_set_millisecond_timer, (void *)&timer_milliseconds_delay);
 			}
 			break;
 		case 30:
@@ -207,7 +207,7 @@ void io_port_out(uint8_t port, uint8_t data)
 			{
 				delay_seconds_enabled = true;
 				timer_delay           = data;
-				dx_asyncSend(&async_set_timer, (void *)&timer_delay);
+				dx_asyncSend(&async_set_seconds_timer, (void *)&timer_delay);
 			}
 			break;
 		case 31:
@@ -312,7 +312,11 @@ void io_port_out(uint8_t port, uint8_t data)
 			ru.len = strnlen(ru.buffer, sizeof(ru.buffer));
 			break;
 		case 43: // get local date and time
+#ifdef AZURE_SPHERE
+			dx_getCurrentUtc(ru.buffer, sizeof(ru.buffer));
+#else
 			dx_getLocalTime(ru.buffer, sizeof(ru.buffer));
+#endif
 			ru.len = strnlen(ru.buffer, sizeof(ru.buffer));
 			break;
 		case 44: // Generate random number to seed mbasic randomize command

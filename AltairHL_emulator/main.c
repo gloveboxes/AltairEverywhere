@@ -82,7 +82,7 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 				break;
 			case CPU_STOPPED:
 				data[0] = 0x00;
-				process_virtual_input(data, process_control_panel_commands);
+				process_virtual_input(data);
 				break;
 			default:
 				break;
@@ -129,7 +129,7 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 		{
 			data[0] = (char)toupper(data[0]);
 			data[1] = 0x00;
-			process_virtual_input(data, process_control_panel_commands);
+			process_virtual_input(data);
 		}
 		goto cleanup;
 	}
@@ -169,7 +169,7 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 			}
 			break;
 		case CPU_STOPPED:
-			process_virtual_input(command, process_control_panel_commands);
+			process_virtual_input(command);
 			break;
 		default:
 			break;
