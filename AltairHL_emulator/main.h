@@ -76,7 +76,7 @@ ALTAIR_COMMAND cmd_switches;
 uint16_t bus_switches = 0x00;
 
 // basic app load helpers.
-static bool haveAppLoad       = false;
+static bool haveAppLoad            = false;
 static char terminalInputCharacter = 0x00;
 
 static bool haveTerminalInputMessage  = false;
@@ -88,13 +88,14 @@ static int terminalOutputMessageLen   = 0;
 
 static char *input_data = NULL;
 
-bool azure_connected = false;
+bool azure_connected  = false;
 bool send_partial_msg = false;
 static FILE *app_stream;
 
 static char Log_Debug_Time_buffer[128];
 
 static bool load_application(const char *fileName);
+static void send_terminal_character(char character, bool wait);
 static void spin_wait(bool *flag);
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);

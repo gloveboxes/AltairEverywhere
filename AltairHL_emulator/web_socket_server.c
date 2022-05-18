@@ -12,12 +12,12 @@ static WS_INPUT_BLOCK_T ws_input_block;
 
 static DX_TIMER_BINDING tmr_expire_session = {
 	.name = "tmr_expire_session", .handler = expire_session_handler};
-static bool cleanup_required       = false;
-static const int session_minutes   = 1 * 60 * 30; // 30 minutes
-static int session_count           = 0;
-static size_t output_buffer_length = 0;
-static struct timeval ws_timeout   = {0, 250 * 1000};
-ws_cli_conn_t *current_client      = NULL;
+static bool cleanup_required                  = false;
+static const int session_minutes              = 1 * 60 * 30; // 30 minutes
+static int session_count                      = 0;
+static volatile uint32_t output_buffer_length = 0;
+static struct timeval ws_timeout              = {0, 250 * 1000};
+ws_cli_conn_t *current_client                 = NULL;
 
 static DX_TIMER_HANDLER(expire_session_handler)
 {
@@ -122,16 +122,21 @@ void onclose(ws_cli_conn_t *client)
 
 void onmessage(ws_cli_conn_t *client, const unsigned char *msg, uint64_t size, int type)
 {
-	// marshall the incoming message off the socket thread
-	if (!ws_input_block.active)
-	{
-		ws_input_block.active = true;
-		ws_input_block.length =
-			size > sizeof(ws_input_block.buffer) ? sizeof(ws_input_block.buffer) : (size_t)size;
-		memcpy(ws_input_block.buffer, msg, ws_input_block.length);
+	size_t len = 0;
 
-		dx_asyncSend(&async_terminal, (void *)&ws_input_block);
-	}
+	pthread_mutex_lock(&ws_input_block.block_lock);
+
+	len = (size_t)size > sizeof(ws_input_block.buffer) - ws_input_block.length
+			  ? sizeof(ws_input_block.buffer) - ws_input_block.length
+			  : (size_t)size;
+
+	memcpy(ws_input_block.buffer + ws_input_block.length, msg, len);
+
+	ws_input_block.length += len;
+
+	dx_asyncSend(&async_terminal, (void *)&ws_input_block);
+
+	pthread_mutex_unlock(&ws_input_block.block_lock);
 }
 
 void init_web_socket_server(void (*client_connected_cb)(void))
@@ -139,6 +144,14 @@ void init_web_socket_server(void (*client_connected_cb)(void))
 	_client_connected_cb = client_connected_cb;
 
 	dx_timerStart(&tmr_expire_session);
+
+	if (pthread_mutex_init(&ws_input_block.block_lock, NULL) != 0)
+	{
+		printf("mutex_lock");
+		exit(1);
+	}
+
+	ws_input_block.length = 0;
 
 	struct ws_events evs;
 	evs.onopen    = &onopen;
@@ -153,7 +166,7 @@ void init_web_socket_server(void (*client_connected_cb)(void))
 /// <param name="eventLoopTimer"></param>
 DX_TIMER_HANDLER(partial_message_handler)
 {
-	if (output_buffer_length > 0)
+	if (output_buffer_length)
 	{
 		send_partial_msg = true;
 	}

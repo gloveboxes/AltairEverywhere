@@ -5,10 +5,11 @@
 
 #include "88dcdd.h"
 #include "cpu_monitor.h"
-#include "dx_device_twins.h"
-#include "dx_utilities.h"
-#include "dx_timer.h"
 #include "dx_async.h"
+#include "dx_device_twins.h"
+#include "dx_timer.h"
+#include "dx_utilities.h"
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <ws.h>
@@ -22,9 +23,9 @@ void print_console_banner(void);
 
 typedef struct
 {
-	bool active;
 	size_t length;
 	char buffer[512];
+	pthread_mutex_t block_lock;
 } WS_INPUT_BLOCK_T;
 
 extern DX_DEVICE_TWIN_BINDING dt_new_sessions;

@@ -67,6 +67,8 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 
 	WS_INPUT_BLOCK_T *in_block = (WS_INPUT_BLOCK_T *)handle->data;
 
+	pthread_mutex_lock(&in_block->block_lock);
+
 	size_t application_message_size = in_block->length;
 	char *data                      = in_block->buffer;
 
@@ -76,11 +78,12 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 		switch (cpu_operating_mode)
 		{
 			case CPU_RUNNING:
-				terminalInputCharacter = 0x0d;
+				send_terminal_character(0x0d, false);
 				break;
 			case CPU_STOPPED:
 				data[0] = 0x00;
 				process_virtual_input(data, process_control_panel_commands);
+				break;
 			default:
 				break;
 		}
@@ -101,12 +104,12 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 			}
 			else
 			{
-				terminalInputCharacter = 0x0d;
+				send_terminal_character(0x0d, false);
 			}
 		}
-		else // pass through the ctrl chars
+		else // pass through the ctrl character
 		{
-			terminalInputCharacter = data[0];
+			send_terminal_character(data[0], false);
 		}
 		goto cleanup;
 	}
@@ -117,13 +120,14 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 	{
 		if (cpu_operating_mode == CPU_RUNNING)
 		{
-			altairOutputBufReadIndex = terminalOutputMessageLen = 0;
-			haveTerminalOutputMessage                           = true;
-			terminalInputCharacter                              = data[0];
+			altairOutputBufReadIndex  = 0;
+			terminalOutputMessageLen  = 0;
+			haveTerminalOutputMessage = true;
+			send_terminal_character(data[0], false);
 		}
 		else
 		{
-			data[0] = toupper(data[0]);
+			data[0] = (char)toupper(data[0]);
 			data[1] = 0x00;
 			process_virtual_input(data, process_control_panel_commands);
 		}
@@ -159,7 +163,8 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 				terminalInputMessageLen  = (int)application_message_size;
 				terminalOutputMessageLen = (int)application_message_size - 1;
 
-				haveTerminalOutputMessage = true;
+				haveTerminalInputMessage = haveTerminalOutputMessage = true;
+
 				spin_wait(&haveTerminalInputMessage);
 			}
 			break;
@@ -171,9 +176,26 @@ DX_ASYNC_HANDLER(async_terminal_handler, handle)
 	}
 
 cleanup:
-	in_block->active = false;
+	in_block->length = 0;
+	pthread_mutex_unlock(&in_block->block_lock);
 }
 DX_ASYNC_HANDLER_END
+
+static void send_terminal_character(char character, bool wait)
+{
+	int retry              = 0;
+	terminalInputCharacter = character;
+
+	if (!wait)
+	{
+		return;
+	}
+
+	while (terminalInputCharacter && retry++ < 10)
+	{
+		nanosleep(&(struct timespec){0, 1 * ONE_MS}, NULL);
+	}
+}
 
 /// <summary>
 /// Sets wait for terminal io cmd to be processed and flag reset
@@ -258,7 +280,8 @@ static char terminal_read(void)
 		}
 		return retVal;
 	}
-	else if (haveAppLoad)
+
+	if (haveAppLoad)
 	{
 		if ((ch = fgetc(app_stream)) == EOF)
 		{
