@@ -337,6 +337,25 @@ void io_port_out(uint8_t port, uint8_t data)
 				data ? onboard_telemetry.pressure : onboard_telemetry.temperature);
 			break;
 #endif // AZURE_SPHERE
+
+#ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
+
+		case 80: // panel_mode 0 = bus data, 1 = font, 2 = bitmap
+			if (data < 3)
+			{
+				panel_mode = data;
+			}
+			break;
+		case 85: // display character
+			gfx_load_character(data, retro_click.bitmap);
+			gfx_rotate_counterclockwise(retro_click.bitmap, 1, 1, retro_click.bitmap);
+			gfx_reverse_panel(retro_click.bitmap);
+			gfx_rotate_counterclockwise(retro_click.bitmap, 1, 1, retro_click.bitmap);
+			as1115_panel_write(&retro_click);
+			break;
+
+#endif // ALTAIR_FRONT_PANEL_RETRO_CLICK
+
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 		case 80: // panel_mode 0 = bus data, 1 = font, 2 = bitmap
 			if (data < 3)
