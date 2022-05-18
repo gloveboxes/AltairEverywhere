@@ -16,8 +16,11 @@ static bool cleanup_required                  = false;
 static const int session_minutes              = 1 * 60 * 30; // 30 minutes
 static int session_count                      = 0;
 static volatile uint32_t output_buffer_length = 0;
-static struct timeval ws_timeout              = {0, 250 * 1000};
 ws_cli_conn_t *current_client                 = NULL;
+
+#ifdef ALTAIR_CLOUD
+static struct timeval ws_timeout = {0, 250 * 1000};
+#endif
 
 static DX_TIMER_HANDLER(expire_session_handler)
 {
