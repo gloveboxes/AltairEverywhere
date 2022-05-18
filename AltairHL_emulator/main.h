@@ -51,7 +51,7 @@
 
 static const char *AltairMsg = "\x1b[2J\r\nAltair 8800 Emulator ";
 
-enum PANEL_MODE_T panel_mode = 0;
+enum PANEL_MODE_T panel_mode = PANEL_BUS_MODE;
 
 char msgBuffer[MSG_BUFFER_BYTES] = {0};
 
