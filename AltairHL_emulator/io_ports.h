@@ -17,7 +17,9 @@
 #ifdef AZURE_SPHERE
 #include "onboard_sensors.h"
 extern ONBOARD_TELEMETRY onboard_telemetry;
-#else
+#endif
+
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 #include "graphics.h"
 #endif
 
