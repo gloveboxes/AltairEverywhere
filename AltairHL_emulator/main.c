@@ -374,13 +374,9 @@ static void *panel_refresh_thread(void *arg)
                                  reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] |
                                  reverse_lut[bus & 0xf] << 4);
 
-				update_panel_status_leds(status, data, bus);
-				nanosleep(&(struct timespec){0, 50 * ONE_MS}, NULL);
+				update_panel_status_leds(status, data, bus);				
 			}
-			else
-			{
-				nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
-			}
+			nanosleep(&(struct timespec){0, 50 * ONE_MS}, NULL);
 		}
 		else
 		{
