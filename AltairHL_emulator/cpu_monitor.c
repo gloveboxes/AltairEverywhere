@@ -9,7 +9,7 @@ static const char *invalid_switches    = "\r\nError: Input switches must be eith
 static char panel_info[256]            = {0};
 static ALTAIR_COMMAND deferred_command = NOP;
 
-//static void process_control_panel_commands(void);
+// static void process_control_panel_commands(void);
 
 static bool validate_input_data(const char *command)
 {
@@ -146,9 +146,12 @@ void disassemble(intel8080_t *cpu)
 		uint8_to_binary(cpu->data_bus, data_bus_binary, sizeof(data_bus_binary));
 
 		size_t msg_length = (size_t)snprintf(panel_info, sizeof(panel_info),
-			"\r\n%15s: Address bus: %s%s (0x%04x), Data bus %s (0x%02x), %-15s  (%d byte instruction)",
-			"Disassemble", address_bus_high_byte, address_bus_low_byte, cpu->address_bus, data_bus_binary,
-			cpu->data_bus, get_i8080_instruction_name(cpu->data_bus, &instruction_length),
+			"\r\n%15s: Address bus: %s%s (0x%04x) (0o%06o), Data bus %s (0x%02x) (0o%03o), %-15s  (%d byte instruction)",
+			"Disassemble", address_bus_high_byte, 
+			address_bus_low_byte, cpu->address_bus,
+			cpu->address_bus, data_bus_binary, 
+			cpu->data_bus, cpu->data_bus,
+			get_i8080_instruction_name(cpu->data_bus, &instruction_length),
 			instruction_length);
 
 		publish_message(panel_info, msg_length);
@@ -163,9 +166,11 @@ void disassemble(intel8080_t *cpu)
 			uint8_to_binary(cpu->data_bus, data_bus_binary, sizeof(data_bus_binary));
 
 			msg_length = (size_t)snprintf(panel_info, sizeof(panel_info),
-				"\r\n%15s: Address bus: %s%s (0x%04x), Data bus %s (0x%02x)", "Disassemble",
-				address_bus_high_byte, address_bus_low_byte, cpu->address_bus, data_bus_binary,
-				cpu->data_bus);
+				"\r\n%15s: Address bus: %s%s (0x%04x) (0o%06o), Data bus %s (0x%02x) (0o%03o)", "Disassemble",
+				address_bus_high_byte, address_bus_low_byte, 
+				cpu->address_bus, cpu->address_bus,
+				data_bus_binary, 
+				cpu->data_bus, cpu->data_bus);
 
 			publish_message(panel_info, msg_length);
 		}
@@ -182,7 +187,7 @@ void trace(intel8080_t *cpu)
 	char address_bus_low_byte[9];
 	char data_bus_binary[9];
 	uint8_t instruction_length = 0;
-	//uint16_t old_address_bus;
+	// uint16_t old_address_bus;
 
 	setvbuf(stdout, NULL, _IONBF, 0); // disable stdout buffering to ensure message written
 	i8080_cycle(cpu);
@@ -195,14 +200,17 @@ void trace(intel8080_t *cpu)
 		uint8_to_binary(cpu->data_bus, data_bus_binary, sizeof(data_bus_binary));
 
 		size_t msg_length = (size_t)snprintf(panel_info, sizeof(panel_info),
-			"\r\n%15s: Address bus: %s%s (0x%04x), Data bus %s (0x%02x), %-15s  (%d byte instruction)",
-			"Trace", address_bus_high_byte, address_bus_low_byte, cpu->address_bus, data_bus_binary,
-			cpu->data_bus, get_i8080_instruction_name(cpu->data_bus, &instruction_length),
+			"\r\n%15s: Address bus: %s%s (0x%04x) (0o%06o), Data bus %s (0x%02x) (0o%03o), %-15s  (%d byte instruction)",
+			"Trace", address_bus_high_byte, address_bus_low_byte, 
+			cpu->address_bus, cpu->address_bus,
+			data_bus_binary, 
+			cpu->data_bus, cpu->data_bus,
+			get_i8080_instruction_name(cpu->data_bus, &instruction_length),
 			instruction_length);
 
 		publish_message(panel_info, msg_length);
 
-		//old_address_bus = cpu->address_bus;
+		// old_address_bus = cpu->address_bus;
 
 		for (size_t i = 1; i < instruction_length; i++)
 		{
@@ -214,8 +222,10 @@ void trace(intel8080_t *cpu)
 			uint8_to_binary(cpu->data_bus, data_bus_binary, sizeof(data_bus_binary));
 
 			msg_length = (size_t)snprintf(panel_info, sizeof(panel_info),
-				"\r\n%15s: Address bus: %s%s (0x%04x), Data bus %s (0x%02x)", "Trace", address_bus_high_byte,
-				address_bus_low_byte, cpu->address_bus, data_bus_binary, cpu->data_bus);
+				"\r\n%15s: Address bus: %s%s (0x%04x) (0o%06o), Data bus %s (0x%02x) (0o%03o)", "Trace", address_bus_high_byte, address_bus_low_byte, 
+				cpu->address_bus, cpu->address_bus,
+				data_bus_binary, 
+				cpu->data_bus, cpu->data_bus);
 
 			publish_message(panel_info, msg_length);
 		}
@@ -239,9 +249,12 @@ void publish_cpu_state(char *command, uint16_t address_bus, uint8_t data_bus)
 	uint8_to_binary(data_bus, data_bus_binary, sizeof(data_bus_binary));
 
 	size_t msg_length = (size_t)snprintf(panel_info, sizeof(panel_info),
-		"\r\n%15s: Address bus: %s%s (0x%04x), Data bus %s (0x%02x), %-15s  (%d byte instruction)\n\rCPU "
+		"\r\n%15s: Address bus: %s%s (0x%04x) (0o%06o), Data bus %s (0x%02x) (0o%03o), %-15s  (%d byte instruction)\n\rCPU "
 		"MONITOR> ",
-		command, address_bus_high_byte, address_bus_low_byte, address_bus, data_bus_binary, data_bus,
+		command, address_bus_high_byte, address_bus_low_byte, 
+		address_bus, address_bus,
+		data_bus_binary, 
+		data_bus, data_bus,
 		get_i8080_instruction_name(data_bus, &instruction_length), instruction_length);
 
 	publish_message((const char *)panel_info, msg_length);
@@ -289,7 +302,7 @@ void load_boot_disk(void)
 	{
 		Log_Debug("Failed to open %s disk load ROM image\n", DISK_LOADER);
 	}
-	//print_console_banner();
+	// print_console_banner();
 
 	i8080_examine(&cpu, 0xff00); // 0xff00 loads from disk boot loader
 }
@@ -354,10 +367,9 @@ void altair_panel_command_handler(void)
 	}
 }
 
-
 void process_control_panel_commands(void)
 {
-	if (cpu_operating_mode == CPU_STOPPED)
+	if (cpu_operating_mode == CPU_STOPPED || cmd_switches == STOP_CMD)
 	{
 		switch (cmd_switches)
 		{
@@ -365,6 +377,7 @@ void process_control_panel_commands(void)
 				cpu_operating_mode = CPU_RUNNING;
 				break;
 			case STOP_CMD:
+				cpu_operating_mode = CPU_STOPPED;
 				i8080_examine(&cpu, cpu.registers.pc);
 				bus_switches = cpu.address_bus;
 				break;
