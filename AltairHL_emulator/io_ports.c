@@ -499,7 +499,7 @@ static int copy_web(char *url)
 	curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L);
 
 	// https://curl.se/libcurl/c/CURLOPT_TIMEOUT.html
-	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 4L);
+	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 8L);
 
 	/* Switch on full protocol/debug output while testing */
 	// curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
