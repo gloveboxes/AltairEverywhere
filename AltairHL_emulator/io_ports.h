@@ -14,24 +14,30 @@
 #include <stdio.h>
 #include <unistd.h>
 
+extern const char ALTAIR_EMULATOR_VERSION[];
+
 #ifdef AZURE_SPHERE
 #include "onboard_sensors.h"
-extern ONBOARD_TELEMETRY onboard_telemetry;
-#endif
-
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+#else
 #include "graphics.h"
 #endif
+
+#ifdef AVNET_LIGHT_SENSOR
+#include "light_sensor.h"
+#endif // AVNET_LIGHT_SENSOR
 
 #ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
 #include "front_panel_retro_click.h"
 #endif
 
+DX_DECLARE_ASYNC_HANDLER(async_accelerometer_start_handler);
+DX_DECLARE_ASYNC_HANDLER(async_accelerometer_stop_handler);
 DX_DECLARE_ASYNC_HANDLER(async_copyx_request_handler);
 DX_DECLARE_ASYNC_HANDLER(async_publish_json_handler);
 DX_DECLARE_ASYNC_HANDLER(async_publish_weather_handler);
 DX_DECLARE_ASYNC_HANDLER(async_set_timer_millisecond_handler);
 DX_DECLARE_ASYNC_HANDLER(async_set_timer_seconds_handler);
+DX_DECLARE_TIMER_HANDLER(read_accelerometer_handler);
 DX_DECLARE_TIMER_HANDLER(tick_count_handler);
 DX_DECLARE_TIMER_HANDLER(timer_millisecond_expired_handler);
 DX_DECLARE_TIMER_HANDLER(timer_seconds_expired_handler);
@@ -43,15 +49,17 @@ extern DX_GPIO_BINDING gpioBlue;
 #endif
 
 extern ALTAIR_CONFIG_T altair_config;
-extern DX_TIMER_BINDING tmr_timer_seconds_expired;
+extern DX_TIMER_BINDING tmr_read_accelerometer;
 extern DX_TIMER_BINDING tmr_timer_millisecond_expired;
-//extern DX_TIMER_BINDING tmr_copyx_request;
+extern DX_TIMER_BINDING tmr_timer_seconds_expired;
 
+extern DX_ASYNC_BINDING async_accelerometer_start;
+extern DX_ASYNC_BINDING async_accelerometer_stop;
 extern DX_ASYNC_BINDING async_copyx_request;
 extern DX_ASYNC_BINDING async_publish_json;
 extern DX_ASYNC_BINDING async_publish_weather;
-extern DX_ASYNC_BINDING async_set_seconds_timer;
 extern DX_ASYNC_BINDING async_set_millisecond_timer;
+extern DX_ASYNC_BINDING async_set_seconds_timer;
 
 enum PANEL_MODE_T
 {

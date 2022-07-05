@@ -42,6 +42,10 @@ static volatile bool publish_weather_pending    = false;
 // set tick_count to 1 as the tick count timer doesn't kick in until 1 second after startup
 static uint32_t tick_count = 1;
 
+#ifdef OEM_AVNET
+static float x, y, z;
+#endif // OEM_AVNET
+
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 // Font buffers
 static uint8_t bitmap[8];
@@ -115,6 +119,15 @@ static void format_string(const void *value)
 	ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%s", (char *)value);
 }
 
+DX_TIMER_HANDLER(read_accelerometer_handler)
+{
+#ifdef OEM_AVNET
+	avnet_get_acceleration(&x, &y, &z);
+	dx_timerOneShotSet(&tmr_read_accelerometer, &(struct timespec){0, 10 * ONE_MS});
+#endif // OEM_AVNET	
+}
+DX_TIMER_HANDLER_END
+
 DX_TIMER_HANDLER(timer_seconds_expired_handler)
 {
 	delay_seconds_enabled = false;
@@ -132,6 +145,23 @@ DX_TIMER_HANDLER(tick_count_handler)
 	tick_count++;
 }
 DX_TIMER_HANDLER_END
+
+DX_ASYNC_HANDLER(async_accelerometer_start_handler, handle)
+{
+#ifdef OEM_AVNET
+	dx_timerStart(&tmr_read_accelerometer);
+	dx_timerOneShotSet(&tmr_read_accelerometer, &(struct timespec){0, 10 * ONE_MS});
+#endif // OEM_AVNET
+}
+DX_ASYNC_HANDLER_END
+
+DX_ASYNC_HANDLER(async_accelerometer_stop_handler, handle)
+{
+#ifdef OEM_AVNET
+	dx_timerStop(&tmr_read_accelerometer);
+#endif // OEM_AVNET
+}
+DX_ASYNC_HANDLER_END
 
 DX_ASYNC_HANDLER(async_copyx_request_handler, handle)
 {
@@ -332,11 +362,59 @@ void io_port_out(uint8_t port, uint8_t data)
 		case 62: // Blue LEB
 			dx_gpioStateSet(&gpioBlue, (bool)data);
 			break;
-		case 63: // Onboard temperature
-			ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d",
-				data ? onboard_telemetry.pressure : onboard_telemetry.temperature);
+		case 63: // Onboard sensors temperature, pressure, and light
+			switch (data)
+			{
+				case 0:
+					// Temperature minus 9 is super rough calibration
+					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)onboard_get_temperature() - 9);
+					break;
+				case 1:
+					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)onboard_get_pressure());
+					break;
+				case 2:
+#ifdef OEM_AVNET
+					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", avnet_get_light_level() * 2);
+#else
+					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", 0);
+#endif // OEM_AVNET
+					break;
+			}
+
 			break;
 #endif // AZURE_SPHERE
+
+#ifdef OEM_AVNET
+		case 64:
+			switch (data)
+			{
+				case 0:
+					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%f", x);
+					break;
+				case 1:
+					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%f", y);
+					break;
+				case 2:
+					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%f", z);
+					break;
+				case 3:
+					dx_asyncSend(&async_accelerometer_stop, NULL);
+					avnet_calibrate_angular_rate();
+					dx_asyncSend(&async_accelerometer_start, NULL);
+					break;
+				case 4:
+					dx_asyncSend(&async_accelerometer_stop, NULL);
+					break;
+				case 5:
+					avnet_get_acceleration(&x, &y, &z);
+					break;
+			}
+			break;
+#endif // OEM_AVNET
+
+		case 70:
+			ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%s", ALTAIR_EMULATOR_VERSION);
+			break;
 
 #ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
 
@@ -499,7 +577,7 @@ static int copy_web(char *url)
 	curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L);
 
 	// https://curl.se/libcurl/c/CURLOPT_TIMEOUT.html
-	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 8L);
+	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 12L);
 
 	/* Switch on full protocol/debug output while testing */
 	// curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
