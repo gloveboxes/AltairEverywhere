@@ -22,14 +22,14 @@ endif(ALTAIR_CLOUD)
 # overide wsServer MAX_CLIENTS
 add_compile_definitions(MAX_CLIENTS=1)
 
-set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO mocking for AzureSphereRemoteX.Client" FORCE )
+# set(DISABLE_IO_MOCKING ON CACHE  BOOL "DISABLE IO mocking for AzureSphereRemoteX.Client" FORCE )
 
 # ENABLE_EDGE_DEVX_REMOTEX is enabled as Log_Debug found in appslib is required.
-set(ENABLE_EDGE_DEVX_REMOTEX ON CACHE  BOOL "DISABLE EdgeDevX RemoteX peripheral support" FORCE )
+# set(ENABLE_EDGE_DEVX_REMOTEX ON CACHE  BOOL "DISABLE EdgeDevX RemoteX peripheral support" FORCE )
 
-if(DISABLE_IO_MOCKING)
-    add_compile_definitions(DISABLE_IO_MOCKING=TRUE)
-endif(DISABLE_IO_MOCKING)
+#if(DISABLE_IO_MOCKING)
+#    add_compile_definitions(DISABLE_IO_MOCKING=TRUE)
+#endif(DISABLE_IO_MOCKING)
 
 if (ALTAIR_FRONT_PI_SENSE_HAT)
 
