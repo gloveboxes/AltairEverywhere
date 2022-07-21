@@ -44,13 +44,27 @@ static uint32_t tick_count = 1;
 
 #ifdef OEM_AVNET
 static float x, y, z;
+static bool accelerometer_running = false;
+static char PREDICTION[20]        = {'n', 'o', 'r', 'm', 'a', 'l'};
 #endif // OEM_AVNET
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 // Font buffers
 static uint8_t bitmap[8];
 uint16_t panel_8x8_buffer[64];
+
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
+
+#if defined(ALTAIR_FRONT_PANEL_RETRO_CLICK) || defined(ALTAIR_FRONT_PANEL_PI_SENSE)
+
+typedef union {
+	uint8_t bitmap[8];
+	uint64_t bitmap64;
+} PIXEL_MAP;
+
+PIXEL_MAP pixel_map;
+
+#endif // ALTAIR_FRONT_PANEL_RETRO_CLICK
 
 // clang-format off
 DX_MESSAGE_PROPERTY *json_msg_properties[] = {
@@ -119,12 +133,55 @@ static void format_string(const void *value)
 	ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%s", (char *)value);
 }
 
+/// <summary>
+/// Callback handler for Asynchronous Inter-Core Messaging Pattern
+/// </summary>
+void intercore_classify_response_handler(void *data_block, ssize_t message_length)
+{
+#ifdef OEM_AVNET
+
+	INTERCORE_PREDICTION_BLOCK_T *ic_message_block = (INTERCORE_PREDICTION_BLOCK_T *)data_block;
+
+	switch (ic_message_block->cmd)
+	{
+		case IC_PREDICTION:
+			//Log_Debug("Prediction %s\n", ic_message_block->PREDICTION);
+			memcpy(PREDICTION, ic_message_block->PREDICTION, sizeof(PREDICTION));
+			break;
+		default:
+			break;
+	}
+
+#endif // OEM_AVNET
+}
+
 DX_TIMER_HANDLER(read_accelerometer_handler)
 {
 #ifdef OEM_AVNET
-	avnet_get_acceleration(&x, &y, &z);
+	float xx, yy, zz;
+
+	avnet_get_acceleration(&xx, &yy, &zz);
+
+	//Log_Debug("now x %f, y %f, z %f\n", xx, yy, zz);
+
+	x += xx;
+	y += yy;
+	z += zz;
+	x /= 2;
+	y /= 2;
+	z /= 2;
+
+	intercore_ml_classify_block.x = x;
+	intercore_ml_classify_block.y = y;
+	intercore_ml_classify_block.z = z;
+
+	dx_intercorePublish(
+		&intercore_ml_classify_ctx, &intercore_ml_classify_block, sizeof(intercore_ml_classify_block));
+
+	//dx_Log_Debug("avg x %f, y %f, z %f\n", x, y, z);
+
 	dx_timerOneShotSet(&tmr_read_accelerometer, &(struct timespec){0, 10 * ONE_MS});
-#endif // OEM_AVNET	
+#endif // OEM_AVNET
 }
 DX_TIMER_HANDLER_END
 
@@ -149,6 +206,7 @@ DX_TIMER_HANDLER_END
 DX_ASYNC_HANDLER(async_accelerometer_start_handler, handle)
 {
 #ifdef OEM_AVNET
+	avnet_get_temperature_lps22h(); // This is a hack to initialize the accelerometer :)
 	dx_timerStart(&tmr_read_accelerometer);
 	dx_timerOneShotSet(&tmr_read_accelerometer, &(struct timespec){0, 10 * ONE_MS});
 #endif // OEM_AVNET
@@ -219,6 +277,13 @@ void io_port_out(uint8_t port, uint8_t data)
 	memset(&ru, 0x00, sizeof(REQUEST_UNIT_T));
 	static int timer_delay;
 	static int timer_milliseconds_delay;
+
+#if defined(ALTAIR_FRONT_PANEL_RETRO_CLICK) || defined(ALTAIR_FRONT_PANEL_PI_SENSE)
+	union {
+		uint32_t mask[2];
+		uint64_t mask64;
+	} pixel_mask;
+#endif
 
 	switch (port)
 	{
@@ -367,14 +432,17 @@ void io_port_out(uint8_t port, uint8_t data)
 			{
 				case 0:
 					// Temperature minus 9 is super rough calibration
-					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)onboard_get_temperature() - 9);
+					ru.len = (size_t)snprintf(
+						ru.buffer, sizeof(ru.buffer), "%d", (int)onboard_get_temperature() - 9);
 					break;
 				case 1:
-					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)onboard_get_pressure());
+					ru.len =
+						(size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)onboard_get_pressure());
 					break;
 				case 2:
 #ifdef OEM_AVNET
-					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", avnet_get_light_level() * 2);
+					ru.len =
+						(size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", avnet_get_light_level() * 2);
 #else
 					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", 0);
 #endif // OEM_AVNET
@@ -398,15 +466,39 @@ void io_port_out(uint8_t port, uint8_t data)
 					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%f", z);
 					break;
 				case 3:
-					dx_asyncSend(&async_accelerometer_stop, NULL);
-					avnet_calibrate_angular_rate();
-					dx_asyncSend(&async_accelerometer_start, NULL);
+					if (!accelerometer_running)
+					{
+						dx_asyncSend(&async_accelerometer_start, NULL);
+						accelerometer_running = true;
+					}
 					break;
 				case 4:
-					dx_asyncSend(&async_accelerometer_stop, NULL);
+					if (accelerometer_running)
+					{
+						dx_asyncSend(&async_accelerometer_stop, NULL);
+						accelerometer_running = false;
+					}
 					break;
 				case 5:
-					avnet_get_acceleration(&x, &y, &z);
+					if (!accelerometer_running)
+					{
+						avnet_get_acceleration(&x, &y, &z);
+					}
+					break;
+				case 6:
+					if (!accelerometer_running)
+					{
+						avnet_calibrate_angular_rate();
+					}
+					break;
+				case 7:
+					if (!accelerometer_running)
+					{
+						avnet_get_angular_rate(&x, &y, &z);
+					}
+					break;
+				case 8:
+					ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%s", PREDICTION);
 					break;
 			}
 			break;
@@ -454,6 +546,84 @@ void io_port_out(uint8_t port, uint8_t data)
 			memset(panel_8x8_buffer, 0x00, sizeof(panel_8x8_buffer));
 			gfx_load_character(data, bitmap);
 			gfx_rotate_counterclockwise(bitmap, 1, 1, bitmap);
+			gfx_reverse_panel(bitmap);
+			gfx_rotate_counterclockwise(bitmap, 1, 1, bitmap);
+			gfx_bitmap_to_rgb(bitmap, panel_8x8_buffer, sizeof(panel_8x8_buffer));
+			pi_sense_8x8_panel_update(panel_8x8_buffer, sizeof(panel_8x8_buffer));
+			break;
+#endif // PI SENSE HAT
+
+#if defined(ALTAIR_FRONT_PANEL_RETRO_CLICK) || defined(ALTAIR_FRONT_PANEL_PI_SENSE)
+
+		case 90: // Bitmap row 0
+			pixel_map.bitmap[0] = data;
+			break;
+		case 91: // Bitmap row 1
+			pixel_map.bitmap[1] = data;
+			break;
+		case 92: // Bitmap row 2
+			pixel_map.bitmap[2] = data;
+			break;
+		case 93: // Bitmap row 3
+			pixel_map.bitmap[3] = data;
+			break;
+		case 94: // Bitmap row 4
+			pixel_map.bitmap[4] = data;
+			break;
+		case 95: // Bitmap row 5
+			pixel_map.bitmap[5] = data;
+			break;
+		case 96: // Bitmap row 6
+			pixel_map.bitmap[6] = data;
+			break;
+		case 97: // Bitmap row 7
+			pixel_map.bitmap[7] = data;
+			break;
+		case 98: // Pixel on
+			if (data < 64)
+			{
+				pixel_mask.mask64                 = 0;
+				pixel_mask.mask[(int)(data / 32)] = data < 32 ? 1u << data : 1u << (data - 32);
+				pixel_map.bitmap64                = pixel_map.bitmap64 | pixel_mask.mask64;
+			}
+			break;
+		case 99: // Pixel off
+			if (data < 64)
+			{
+				pixel_mask.mask64                 = 0;
+				pixel_mask.mask[(int)(data / 32)] = data < 32 ? 1u << data : 1u << (data - 32);
+				pixel_mask.mask64 ^= 0xFFFFFFFFFFFFFFFF;
+				pixel_map.bitmap64 = pixel_map.bitmap64 & pixel_mask.mask64;
+			}
+			break;
+		case 100: // Pixel flip
+			if (data < 64)
+			{
+				pixel_mask.mask64                 = 0;
+				pixel_mask.mask[(int)(data / 32)] = data < 32 ? 1u << data : 1u << (data - 32);
+				pixel_map.bitmap64                = pixel_map.bitmap64 ^ pixel_mask.mask64;
+			}
+			break;
+		case 101:
+			pixel_map.bitmap64 = 0;
+			break;
+
+#endif // defined(ALTAIR_FRONT_PANEL_RETRO_CLICK) || defined(ALTAIR_FRONT_PANEL_PI_SENSE)
+
+#ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
+		case 102: // Bitmap draw
+			gfx_rotate_counterclockwise(pixel_map.bitmap, 1, 1, retro_click.bitmap);
+			gfx_reverse_panel(retro_click.bitmap);
+			gfx_rotate_counterclockwise(retro_click.bitmap, 1, 1, retro_click.bitmap);
+			// retro_click.bitmap64 = pixel_map.bitmap64;
+			as1115_panel_write(&retro_click);
+			break;
+
+#endif // ALTAIR_FRONT_PANEL_RETRO_CLICK
+
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+		case 102: // Bitmap draw
+			gfx_rotate_counterclockwise(pixel_map.bitmap, 1, 1, bitmap);
 			gfx_reverse_panel(bitmap);
 			gfx_rotate_counterclockwise(bitmap, 1, 1, bitmap);
 			gfx_bitmap_to_rgb(bitmap, panel_8x8_buffer, sizeof(panel_8x8_buffer));

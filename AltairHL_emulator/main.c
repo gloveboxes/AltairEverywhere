@@ -267,6 +267,7 @@ static char terminal_read(void)
 	{
 		retVal                 = terminalInputCharacter;
 		terminalInputCharacter = 0x00;
+		retVal &= 0x7F; // take first 7 bits (127 ascii chars)
 		return retVal;
 	}
 
@@ -278,6 +279,7 @@ static char terminal_read(void)
 		{
 			haveTerminalInputMessage = false;
 		}
+		retVal &= 0x7F; // take first 7 bits (127 ascii chars)
 		return retVal;
 	}
 
@@ -298,6 +300,7 @@ static char terminal_read(void)
 				retVal = 0x0D;
 			}
 		}
+		retVal &= 0x7F; // take first 7 bits (127 ascii chars)
 		return retVal;
 	}
 	return 0;
@@ -305,7 +308,7 @@ static char terminal_read(void)
 
 static void terminal_write(uint8_t c)
 {
-	c &= 0x7F;
+	c &= 0x7F; // take first 7 bits (127 ascii chars) only and discard 8th bit.
 
 	if (haveTerminalOutputMessage)
 	{
