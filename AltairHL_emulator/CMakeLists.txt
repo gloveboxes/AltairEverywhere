@@ -100,7 +100,7 @@ target_link_libraries(${PROJECT_NAME} "edge_devx")
 ################################################################################
 
 # target_compile_definitions(${PROJECT_NAME} PUBLIC AZURE_IOT_HUB_CONFIGURED)
-target_link_libraries(${PROJECT_NAME} applibs pthread c edge_devx curl)
+target_link_libraries(${PROJECT_NAME} pthread c edge_devx curl)
 
 target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
 target_link_options(${PROJECT_NAME} PUBLIC "-L/usr/local/lib")

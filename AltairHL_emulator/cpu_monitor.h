@@ -9,7 +9,6 @@
 #include "utils.h"
 #include "web_socket_server.h"
 #include <applibs/log.h>
-#include <applibs/storage.h>
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
