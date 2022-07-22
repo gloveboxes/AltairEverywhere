@@ -36,7 +36,8 @@ DX_TIMER_HANDLER(ws_ping_pong_handler)
 {
 	if (session_count > 0)
 	{
-		ws_ping(NULL, 2);
+		// allow for up to 60 seconds of no pong response before closing the ws connection
+		ws_ping(NULL, 6);
 	}
 }
 DX_TIMER_HANDLER_END
