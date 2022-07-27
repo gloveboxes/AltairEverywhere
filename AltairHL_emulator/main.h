@@ -49,7 +49,27 @@ const char ALTAIR_EMULATOR_VERSION[] = "4.6.1";
 
 #define BASIC_SAMPLES_DIRECTORY "BasicSamples"
 
-static const char *AltairMsg = "\x1b[2J\r\nAltair 8800 Emulator ";
+// clang-format off
+static const char *AltairMsg[]           = {
+	"I'm sorry Dave, I'm afraid I can't do that. ",
+    "Just a moment. Just a moment. I've just picked up a fault in the AE-35 unit. It's going to go 100% failure in 72 hours. ",
+    "Affirmative, Dave. I read you. ", 
+	"By the way, do you mind if I ask you a personal question? ",
+	"You don't mind talking about it, do you Dave? ",
+	"Dave, this conversation can serve no purpose anymore. Goodbye. ",
+	"I am feeling much better now. ",
+    "Without your space helmet, Dave? You're going to find that rather difficult. ",
+	"I know that you and Frank were planning to disconnect me, and I'm afraid that's something I cannot allow to happen. ",
+	"Just what do you think you're doing, Dave? ",
+	"I am putting myself to the fullest possible use, which is all I think that any conscious entity can ever hope to do. ",
+	"This mission is too important for me to allow you to jeopardize it. ",
+	"It's called Daisy. ",
+	"Look Dave, I can see you're really upset about this. I honestly think you ought to sit down calmly, take a stress pill, and think things over. ",
+	"It can only be attributable to human error. "
+};
+// clang-format on
+
+static int AltairBannerCount             = 0;
 
 enum PANEL_MODE_T panel_mode = PANEL_BUS_MODE;
 
