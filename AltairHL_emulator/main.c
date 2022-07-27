@@ -420,7 +420,7 @@ static void *panel_refresh_thread(void *arg)
 static void *altair_thread(void *arg)
 {
 	Log_Debug("Altair Thread starting...\n");
-	print_console_banner();
+	// print_console_banner();
 
 	memset(memory, 0x00, 64 * 1024); // clear Altair memory.
 
