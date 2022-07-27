@@ -16,7 +16,9 @@
 #ifdef AZURE_SPHERE
 #include "onboard_sensors.h"
 #else
+#ifdef ALTAIR_FRONT_PI_SENSE_HAT
 #include "graphics.h"
+#endif
 #endif
 
 #ifdef AVNET_LIGHT_SENSOR
