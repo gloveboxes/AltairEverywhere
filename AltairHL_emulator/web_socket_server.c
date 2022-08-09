@@ -126,21 +126,21 @@ void onclose(ws_cli_conn_t *client)
 
 void onmessage(ws_cli_conn_t *client, const unsigned char *msg, uint64_t size, int type)
 {
-	size_t len = 0;
+    size_t len = 0;
 
-	pthread_mutex_lock(&ws_input_block.block_lock);
+    pthread_mutex_lock(&ws_input_block.block_lock);
 
-	len = (size_t)size > sizeof(ws_input_block.buffer) - ws_input_block.length
-			  ? sizeof(ws_input_block.buffer) - ws_input_block.length
-			  : (size_t)size;
+    len = (size_t)size > sizeof(ws_input_block.buffer) - ws_input_block.length
+              ? sizeof(ws_input_block.buffer) - ws_input_block.length
+              : (size_t)size;
 
-	memcpy(ws_input_block.buffer + ws_input_block.length, msg, len);
+    memcpy(ws_input_block.buffer + ws_input_block.length, msg, len);
 
-	ws_input_block.length += len;
+    ws_input_block.length += len;
 
-	dx_asyncSend(&async_terminal, (void *)&ws_input_block);
+    pthread_mutex_unlock(&ws_input_block.block_lock);
 
-	pthread_mutex_unlock(&ws_input_block.block_lock);
+    terminal_handler(&ws_input_block);
 }
 
 void init_web_socket_server(void (*client_connected_cb)(void))

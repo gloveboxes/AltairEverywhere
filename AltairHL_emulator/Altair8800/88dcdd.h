@@ -54,6 +54,8 @@ typedef struct
 {
 	disk_t disk1;
 	disk_t disk2;
+	disk_t disk3;
+	disk_t disk4;
 	disk_t nodisk;
 	disk_t *current;
 	uint8_t currentDisk;

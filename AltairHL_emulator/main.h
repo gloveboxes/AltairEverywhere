@@ -146,7 +146,6 @@ DX_ASYNC_BINDING async_publish_json = {.name = "async_publish_json", .handler = 
 DX_ASYNC_BINDING async_publish_weather = {.name = "async_publish_weather", .handler = async_publish_weather_handler};
 DX_ASYNC_BINDING async_set_millisecond_timer = {.name = "async_set_millisecond_timer", .handler = async_set_timer_millisecond_handler};
 DX_ASYNC_BINDING async_set_seconds_timer = {.name = "async_set_seconds_timer", .handler = async_set_timer_seconds_handler};
-DX_ASYNC_BINDING async_terminal = {.name = "async_terminal", .handler = async_terminal_handler};
 
 // Azure IoT Central Properties (Device Twins)
 
@@ -190,7 +189,6 @@ static DX_ASYNC_BINDING *async_bindings[] = {
 	&async_publish_weather,
 	&async_set_millisecond_timer,
 	&async_set_seconds_timer,
-	&async_terminal,
 };
 
 // initialize bindings

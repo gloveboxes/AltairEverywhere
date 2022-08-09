@@ -60,126 +60,124 @@ DX_TIMER_HANDLER_END
 /// <summary>
 /// Handler called to process inbound message
 /// </summary>
-DX_ASYNC_HANDLER(async_terminal_handler, handle)
+void terminal_handler(WS_INPUT_BLOCK_T *in_block)
 {
-	char command[30];
-	memset(command, 0x00, sizeof(command));
+    char command[30];
+    memset(command, 0x00, sizeof(command));
 
-	WS_INPUT_BLOCK_T *in_block = (WS_INPUT_BLOCK_T *)handle->data;
+    pthread_mutex_lock(&in_block->block_lock);
 
-	pthread_mutex_lock(&in_block->block_lock);
+    size_t application_message_size = in_block->length;
+    char *data                      = in_block->buffer;
 
-	size_t application_message_size = in_block->length;
-	char *data                      = in_block->buffer;
+    // Was just enter pressed
+    if (data[0] == '\r')
+    {
+        switch (cpu_operating_mode)
+        {
+            case CPU_RUNNING:
+                send_terminal_character(0x0d, false);
+                break;
+            case CPU_STOPPED:
+                data[0] = 0x00;
+                process_virtual_input(data);
+                break;
+            default:
+                break;
+        }
+        goto cleanup;
+    }
 
-	// Was just enter pressed
-	if (data[0] == '\r')
-	{
-		switch (cpu_operating_mode)
-		{
-			case CPU_RUNNING:
-				send_terminal_character(0x0d, false);
-				break;
-			case CPU_STOPPED:
-				data[0] = 0x00;
-				process_virtual_input(data);
-				break;
-			default:
-				break;
-		}
-		goto cleanup;
-	}
+    // Is it a ctrl character
+    if (application_message_size == 1 && data[0] > 0 && data[0] < 29)
+    {
+        // ctrl-m is mapped to ascii 28 to get around ctrl-m being /r
+        if (data[0] == 28)
+        {
+            cpu_operating_mode = cpu_operating_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
+            if (cpu_operating_mode == CPU_STOPPED)
+            {
+                bus_switches = cpu.address_bus;
+                publish_message("\r\nCPU MONITOR> ", 15);
+            }
+            else
+            {
+                send_terminal_character(0x0d, false);
+            }
+        }
+        else // pass through the ctrl character
+        {
+            send_terminal_character(data[0], false);
+        }
+        goto cleanup;
+    }
 
-	// Is it a ctrl character
-	if (application_message_size == 1 && data[0] > 0 && data[0] < 29)
-	{
-		// ctrl-m is mapped to ascii 28 to get around ctrl-m being /r
-		if (data[0] == 28)
-		{
-			cpu_operating_mode = cpu_operating_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
-			if (cpu_operating_mode == CPU_STOPPED)
-			{
-				bus_switches = cpu.address_bus;
-				publish_message("\r\nCPU MONITOR> ", 15);
-			}
-			else
-			{
-				send_terminal_character(0x0d, false);
-			}
-		}
-		else // pass through the ctrl character
-		{
-			send_terminal_character(data[0], false);
-		}
-		goto cleanup;
-	}
+    // The web terminal must be in single char mode as char is not a ctrl or enter char
+    // so feed to Altair terminal read
+    if (application_message_size == 1)
+    {
+        if (cpu_operating_mode == CPU_RUNNING)
+        {
+            altairOutputBufReadIndex  = 0;
+            terminalOutputMessageLen  = 0;
+            terminalInputCharacter    = data[0];
+            haveTerminalOutputMessage = true;
+            // send_terminal_character(data[0], false);
+        }
+        else
+        {
+            data[0] = (char)toupper(data[0]);
+            data[1] = 0x00;
+            process_virtual_input(data);
+        }
+        goto cleanup;
+    }
 
-	// The web terminal must be in single char mode as char is not a ctrl or enter char
-	// so feed to Altair terminal read
-	if (application_message_size == 1)
-	{
-		if (cpu_operating_mode == CPU_RUNNING)
-		{
-			altairOutputBufReadIndex  = 0;
-			terminalOutputMessageLen  = 0;
-			haveTerminalOutputMessage = true;
-			send_terminal_character(data[0], false);
-		}
-		else
-		{
-			data[0] = (char)toupper(data[0]);
-			data[1] = 0x00;
-			process_virtual_input(data);
-		}
-		goto cleanup;
-	}
+    // Check for loadx command
+    // upper case the first 30 chars for command processing
+    for (int i = 0; i < sizeof(command) - 1 && i < application_message_size - 1; i++)
+    { // -1 to allow for trailing null
+        command[i] = (char)toupper(data[i]);
+    }
 
-	// Check for loadx command
-	// upper case the first 30 chars for command processing
-	for (int i = 0; i < sizeof(command) - 1 && i < application_message_size - 1; i++)
-	{ // -1 to allow for trailing null
-		command[i] = (char)toupper(data[i]);
-	}
+    // if command is loadx then try looking for in baked in samples
+    if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 &&
+        (command[application_message_size - 2] == '"'))
+    {
+        command[application_message_size - 2] = 0x00; // replace the '"' with \0
+        load_application(&command[7]);
+        goto cleanup;
+    }
 
-	// if command is loadx then try looking for in baked in samples
-	if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 &&
-		(command[application_message_size - 2] == '"'))
-	{
-		command[application_message_size - 2] = 0x00; // replace the '"' with \0
-		load_application(&command[7]);
-		goto cleanup;
-	}
+    switch (cpu_operating_mode)
+    {
+        case CPU_RUNNING:
 
-	switch (cpu_operating_mode)
-	{
-		case CPU_RUNNING:
+            if (application_message_size > 0)
+            {
+                input_data = data;
 
-			if (application_message_size > 0)
-			{
-				input_data = data;
+                altairInputBufReadIndex  = 0;
+                altairOutputBufReadIndex = 0;
+                terminalInputMessageLen  = (int)application_message_size;
+                terminalOutputMessageLen = (int)application_message_size - 1;
 
-				altairInputBufReadIndex  = 0;
-				altairOutputBufReadIndex = 0;
-				terminalInputMessageLen  = (int)application_message_size;
-				terminalOutputMessageLen = (int)application_message_size - 1;
+                haveTerminalInputMessage = haveTerminalOutputMessage = true;
 
-				haveTerminalInputMessage = haveTerminalOutputMessage = true;
-
-				spin_wait(&haveTerminalInputMessage);
-			}
-			break;
-		case CPU_STOPPED:
-			process_virtual_input(command);
-			break;
-		default:
-			break;
-	}
+                spin_wait(&haveTerminalInputMessage);
+            }
+            break;
+        case CPU_STOPPED:
+            process_virtual_input(command);
+            break;
+        default:
+            break;
+    }
 
 cleanup:
-	in_block->length = 0;
-	pthread_mutex_unlock(&in_block->block_lock);
+    in_block->length = 0;
+    pthread_mutex_unlock(&in_block->block_lock);
 }
-DX_ASYNC_HANDLER_END
 
 static void send_terminal_character(char character, bool wait)
 {
@@ -453,7 +451,7 @@ static void *altair_thread(void *arg)
 #ifdef ALTAIR_CLOUD
 	if ((disk_drive.disk2.fp = open(DISK_B, O_RDONLY)) == -1)
 	{
-		Log_Debug("Failed to open %s disk image\n", DISK_A);
+		Log_Debug("Failed to open %s disk image\n", DISK_B);
 		exit(-1);
 	}
 #else
@@ -466,6 +464,40 @@ static void *altair_thread(void *arg)
 	disk_drive.disk2.diskPointer = 0;
 	disk_drive.disk2.sector      = 0;
 	disk_drive.disk2.track       = 0;
+
+#ifdef ALTAIR_CLOUD
+	if ((disk_drive.disk3.fp = open(DISK_C, O_RDONLY)) == -1)
+	{
+		Log_Debug("Failed to open %s disk image\n", DISK_C);
+		exit(-1);
+	}
+#else
+	if ((disk_drive.disk3.fp = open(DISK_C, O_RDWR)) == -1)
+	{
+		Log_Debug("Failed to open %s disk image\n", DISK_C);
+		exit(-1);
+	}
+#endif // ALTAIR_CLOUD
+	disk_drive.disk3.diskPointer = 0;
+	disk_drive.disk3.sector      = 0;
+	disk_drive.disk3.track       = 0;
+
+#ifdef ALTAIR_CLOUD
+	if ((disk_drive.disk4.fp = open(DISK_D, O_RDONLY)) == -1)
+	{
+		Log_Debug("Failed to open %s disk image\n", DISK_D);
+		exit(-1);
+	}
+#else
+	if ((disk_drive.disk4.fp = open(DISK_D, O_RDWR)) == -1)
+	{
+		Log_Debug("Failed to open %s disk image\n", DISK_D);
+		exit(-1);
+	}
+#endif // ALTAIR_CLOUD
+	disk_drive.disk4.diskPointer = 0;
+	disk_drive.disk4.sector      = 0;
+	disk_drive.disk4.track       = 0;
 
 	i8080_reset(&cpu, (port_in)terminal_read, (port_out)terminal_write, sense, &disk_controller,
 		(azure_sphere_port_in)io_port_in, (azure_sphere_port_out)io_port_out);
