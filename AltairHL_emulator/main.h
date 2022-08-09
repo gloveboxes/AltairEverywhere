@@ -40,14 +40,14 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
-const char ALTAIR_EMULATOR_VERSION[] = "4.6.1";
+const char ALTAIR_EMULATOR_VERSION[] = "4.7.0";
 #define Log_Debug(f_, ...)      dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED      FALSE
 
 // https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play
 #define IOT_PLUG_AND_PLAY_MODEL_ID "dtmi:com:example:climatemonitor;1"
 
-#define BASIC_SAMPLES_DIRECTORY "BasicSamples"
+#define APP_SAMPLES_DIRECTORY   "AppSamples"
 
 // clang-format off
 static const char *AltairMsg[]           = {
@@ -108,9 +108,11 @@ static int terminalOutputMessageLen   = 0;
 
 static char *input_data = NULL;
 
-bool azure_connected  = false;
-bool send_partial_msg = false;
-static FILE *app_stream;
+bool azure_connected             = false;
+bool send_partial_msg            = false;
+static FILE *app_stream          = NULL;
+static bool altair_i8080_running = false;
+static bool stop_cpu             = false;
 
 static char Log_Debug_Time_buffer[128];
 

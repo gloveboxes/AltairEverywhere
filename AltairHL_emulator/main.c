@@ -230,7 +230,7 @@ static bool load_application(const char *fileName)
 {
 	int retry = 0;
 	char filePathAndName[50];
-	snprintf(filePathAndName, sizeof(filePathAndName), "%s/%s", BASIC_SAMPLES_DIRECTORY, fileName);
+	snprintf(filePathAndName, sizeof(filePathAndName), "%s/%s", APP_SAMPLES_DIRECTORY, fileName);
 
 	// precaution
 	if (app_stream != NULL)
@@ -413,9 +413,9 @@ static void *panel_refresh_thread(void *arg)
 }
 
 /// <summary>
-/// Main Altair CPU execution thread
+/// Intialize the Altair disks and i8080 cpu
 /// </summary>
-static void *altair_thread(void *arg)
+static void init_altair(void)
 {
 	Log_Debug("Altair Thread starting...\n");
 	// print_console_banner();
@@ -509,22 +509,38 @@ static void *altair_thread(void *arg)
 	}
 
 	i8080_examine(&cpu, 0xff00); // 0xff00 loads from disk, 0x0000 loads basic
+}
 
-	while (1)
-	{
-		if (cpu_operating_mode == CPU_RUNNING)
-		{
-			i8080_cycle(&cpu);
-		}
+/// <summary>
+/// Thread to run the i8080 cpu emulator on
+/// </summary>
+static void *altair_thread(void *arg)
+{
+    // Log_Debug("Altair Thread starting...\n");
+    if (altair_i8080_running)
+    {
+        return NULL;
+    }
 
-		if (send_partial_msg)
-		{
-			send_partial_message();
-			send_partial_msg = false;
-		}
-	}
+    altair_i8080_running = true;
 
-	return NULL;
+    while (!stop_cpu)
+    {
+        if (cpu_operating_mode == CPU_RUNNING)
+        {
+            i8080_cycle(&cpu);
+        }
+
+        if (send_partial_msg)
+        {
+            send_partial_message();
+            send_partial_msg = false;
+        }
+    }
+
+    altair_i8080_running = false;
+
+    return NULL;
 }
 
 /// <summary>
@@ -592,11 +608,17 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 	dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));
 	init_web_socket_server(client_connected_cb);
 	dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
-	dx_startThreadDetached(altair_thread, NULL, "altair_thread");
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 	dx_startThreadDetached(panel_refresh_thread, NULL, "panel_refresh_thread");
 #endif
+
+    init_altair();
+    dx_startThreadDetached(altair_thread, NULL, "altair_thread");
+    while (!altair_i8080_running) // spin until i8080 thread starts
+    {
+        nanosleep(&(struct timespec){0, 1 * ONE_MS}, NULL);
+    }
 }
 
 /// <summary>
