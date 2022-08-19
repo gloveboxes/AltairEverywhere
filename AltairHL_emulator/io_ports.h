@@ -19,7 +19,9 @@
 #include "onboard_sensors.h"
 #include <applibs/applications.h>
 #include <applibs/storage.h>
-#else
+#endif
+
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 #include "graphics.h"
 #endif
 
