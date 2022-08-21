@@ -40,7 +40,7 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
-const char ALTAIR_EMULATOR_VERSION[] = "4.7.2";
+const char ALTAIR_EMULATOR_VERSION[] = "4.7.3";
 #define Log_Debug(f_, ...)      dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED      FALSE
 
@@ -151,32 +151,9 @@ DX_ASYNC_BINDING async_set_seconds_timer = {.name = "async_set_seconds_timer", .
 
 // Azure IoT Central Properties (Device Twins)
 
-DX_DEVICE_TWIN_BINDING dt_air_quality_index = {.propertyName = "AirQualityIndexUS", .twinType = DX_DEVICE_TWIN_FLOAT};
-DX_DEVICE_TWIN_BINDING dt_carbon_monoxide = {.propertyName = "CarbonMonoxide", .twinType = DX_DEVICE_TWIN_FLOAT};
-DX_DEVICE_TWIN_BINDING dt_nitrogen_monoxide = {.propertyName = "NitrogenMonoxide", .twinType = DX_DEVICE_TWIN_FLOAT};
-DX_DEVICE_TWIN_BINDING dt_nitrogen_dioxide = {.propertyName = "NitrogenDioxide", .twinType = DX_DEVICE_TWIN_FLOAT};
-DX_DEVICE_TWIN_BINDING dt_ozone = {.propertyName = "Ozone", .twinType = DX_DEVICE_TWIN_FLOAT};
-DX_DEVICE_TWIN_BINDING dt_sulphur_dioxide = {.propertyName = "SulphurDioxide", .twinType = DX_DEVICE_TWIN_FLOAT};
-DX_DEVICE_TWIN_BINDING dt_ammonia = {.propertyName = "Ammonia", .twinType = DX_DEVICE_TWIN_FLOAT};
-DX_DEVICE_TWIN_BINDING dt_pm2_5 = {.propertyName = "PM2_5", .twinType = DX_DEVICE_TWIN_FLOAT};
-DX_DEVICE_TWIN_BINDING dt_pm10 = {.propertyName = "PM10", .twinType = DX_DEVICE_TWIN_FLOAT};
-
-DX_DEVICE_TWIN_BINDING dt_humidity = {.propertyName = "Humidity", .twinType = DX_DEVICE_TWIN_INT};
-DX_DEVICE_TWIN_BINDING dt_pressure = {.propertyName = "Pressure", .twinType = DX_DEVICE_TWIN_INT};
-DX_DEVICE_TWIN_BINDING dt_temperature = {.propertyName = "Temperature", .twinType = DX_DEVICE_TWIN_INT};
-DX_DEVICE_TWIN_BINDING dt_weather = {.propertyName = "Weather", .twinType = DX_DEVICE_TWIN_STRING};
-DX_DEVICE_TWIN_BINDING dt_wind_direction = {.propertyName = "WindDirection", .twinType = DX_DEVICE_TWIN_INT};
-DX_DEVICE_TWIN_BINDING dt_wind_speed = {.propertyName = "WindSpeed", .twinType = DX_DEVICE_TWIN_FLOAT};
-
-DX_DEVICE_TWIN_BINDING dt_ledBrightness = {.propertyName = "LedBrightness", .twinType = DX_DEVICE_TWIN_INT, .handler = set_led_brightness_handler};
-
 DX_DEVICE_TWIN_BINDING dt_city = {.propertyName = "City", .twinType = DX_DEVICE_TWIN_STRING};
 DX_DEVICE_TWIN_BINDING dt_country = {.propertyName = "Country", .twinType = DX_DEVICE_TWIN_STRING};
 DX_DEVICE_TWIN_BINDING dt_location = {.propertyName = "Location", .twinType = DX_DEVICE_TWIN_JSON_OBJECT};
-
-DX_DEVICE_TWIN_BINDING dt_filesystem_reads = {.propertyName = "FilesystemReads", .twinType = DX_DEVICE_TWIN_INT};
-DX_DEVICE_TWIN_BINDING dt_difference_disk_reads = {.propertyName = "DifferenceDiskReads", .twinType = DX_DEVICE_TWIN_INT};
-DX_DEVICE_TWIN_BINDING dt_difference_disk_writes = {.propertyName = "DifferenceDiskWrites", .twinType = DX_DEVICE_TWIN_INT};
 DX_DEVICE_TWIN_BINDING dt_new_sessions = {.propertyName = "NewSessions", .twinType = DX_DEVICE_TWIN_INT};
 
 static DX_DEVICE_TWIN_BINDING dt_deviceStartTimeUtc = {.propertyName = "StartTimeUTC", .twinType = DX_DEVICE_TWIN_STRING};
@@ -206,31 +183,13 @@ static DX_TIMER_BINDING *timer_bindings[] = {
 };
 
 static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {
-	&dt_deviceStartTimeUtc,
-	&dt_softwareVersion,
-	&dt_ledBrightness,
-	&dt_temperature,
-	&dt_pressure,
-	&dt_humidity,
-	&dt_wind_speed,
-	&dt_wind_direction,
-	&dt_weather,
-	&dt_location,
-	&dt_country,
-	&dt_city,
-	&dt_heartbeatUtc,
-	&dt_air_quality_index,
-	&dt_carbon_monoxide,
-	&dt_nitrogen_monoxide,
-	&dt_nitrogen_dioxide,
-	&dt_ozone,
-	&dt_sulphur_dioxide,
-	&dt_ammonia,
-	&dt_pm2_5,
-	&dt_pm10,
+    &dt_deviceStartTimeUtc,
+    &dt_heartbeatUtc,
+    &dt_softwareVersion,
 
-	&dt_filesystem_reads,
-	&dt_difference_disk_reads,
-	&dt_difference_disk_writes,
-	&dt_new_sessions,
+    &dt_location,
+    &dt_country,
+    &dt_city,
+
+    &dt_new_sessions,
 };

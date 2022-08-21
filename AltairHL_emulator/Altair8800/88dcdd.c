@@ -197,7 +197,6 @@ uint8_t disk_read()
 			disk_drive.current->haveSectorData = true;
 			memset(disk_drive.current->sectorData, 0x00, SECTOR_SIZE);
 			memcpy(disk_drive.current->sectorData, sector, SECTOR_SIZE);
-			(*(int *)dt_difference_disk_reads.propertyValue)++;
 		}
 #endif // ALTAIR_CLOUD
 
@@ -211,7 +210,6 @@ uint8_t disk_read()
 			{
 				Log_Debug("Sector read failed. Read %d\n", bytes);
 			}
-			(*(int *)dt_filesystem_reads.propertyValue)++;
 			disk_drive.current->haveSectorData = SECTOR_SIZE == bytes;
 		}
 	}
@@ -226,7 +224,6 @@ void writeSector(disk_t *pDisk, uint8_t drive_number)
 #ifdef ALTAIR_CLOUD
 
 	add_to_cache(disk_drive.current == &disk_drive.disk1 ? 0 : 1, requested_sector_number, pDisk->sectorData);
-	(*(int *)dt_difference_disk_writes.propertyValue)++;
 
 #else
 

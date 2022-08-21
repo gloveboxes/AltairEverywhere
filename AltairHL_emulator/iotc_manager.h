@@ -9,7 +9,6 @@
 #include "dx_json_serializer.h"
 #include "dx_utilities.h"
 #include "environment.h"
-#include "front_panel_pi_sense_hat.h"
 #include "web_socket_server.h"
 
 extern DX_DEVICE_TWIN_BINDING dt_air_quality_index;
@@ -35,7 +34,8 @@ extern DX_DEVICE_TWIN_BINDING dt_weather;
 extern bool azure_connected;
 extern char msgBuffer[MSG_BUFFER_BYTES];
 
-// void publish_properties(ENVIRONMENT_TELEMETRY *environment);
 DX_DECLARE_DEVICE_TWIN_HANDLER(set_led_brightness_handler);
+
+// void publish_properties(ENVIRONMENT_TELEMETRY *environment);
 void publish_telemetry(ENVIRONMENT_TELEMETRY *environment);
-void update_geo_properties(ENVIRONMENT_TELEMETRY *environment);
+void update_geo_location(ENVIRONMENT_TELEMETRY *environment);

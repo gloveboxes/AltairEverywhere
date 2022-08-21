@@ -9,17 +9,12 @@
 /// </summary>
 static DX_TIMER_HANDLER(update_environment_handler)
 {
-	update_weather();
+    if (dx_isNetworkConnected(altair_config.user_config.network_interface))
+    {
+        update_weather();
+    }
 
-	if (azure_connected && environment.locationInfo.updated)
-	{
-		update_geo_properties(&environment);
-		dx_timerOneShotSet(&tmr_update_environment, &(struct timespec){60, 0});
-	}
-	else
-	{
-		dx_timerOneShotSet(&tmr_update_environment, &(struct timespec){10, 0});
-	}
+    dx_timerOneShotSet(&tmr_update_environment, &(struct timespec){30 * 60, 0});
 }
 DX_TIMER_HANDLER_END
 
@@ -49,9 +44,6 @@ static DX_TIMER_HANDLER(heart_beat_handler)
 	{
 		dx_deviceTwinReportValue(
 			&dt_heartbeatUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
-		dx_deviceTwinReportValue(&dt_filesystem_reads, dt_filesystem_reads.propertyValue);
-		dx_deviceTwinReportValue(&dt_difference_disk_reads, dt_difference_disk_reads.propertyValue);
-		dx_deviceTwinReportValue(&dt_difference_disk_writes, dt_difference_disk_writes.propertyValue);
 		dx_deviceTwinReportValue(&dt_new_sessions, dt_new_sessions.propertyValue);
 	}
 }
