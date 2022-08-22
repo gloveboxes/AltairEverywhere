@@ -9,7 +9,7 @@ static DX_MESSAGE_PROPERTY *weather_msg_properties[] = {
     &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
 
 static DX_MESSAGE_CONTENT_PROPERTIES weather_content_properties = {
-    .contentEncoding = "utf-8", .contentType = "application/json"};Í
+    .contentEncoding = "utf-8", .contentType = "application/json"};
 
 static void device_twin_update_location(
     double latitude, double longitude, DX_DEVICE_TWIN_BINDING *device_twin)
