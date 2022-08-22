@@ -23,6 +23,7 @@
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 #include "graphics.h"
+#include "front_panel_pi_sense_hat.h"
 #endif
 
 #ifdef OEM_AVNET
