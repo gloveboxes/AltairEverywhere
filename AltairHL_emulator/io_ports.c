@@ -3,7 +3,7 @@
 
 #include "io_ports.h"
 #define GAMES_REPO        "https://raw.githubusercontent.com/AzureSphereCloudEnabledAltair8800/RetroGames/main"
-#define PERSONAL_REPO     "http://192.168.10.136:5555"
+#define DEFAULT_CUSTOM_ENDPOINT     "http://localhost:5555"
 #define ENDPOINT_LEN      128
 #define ENDPOINT_ELEMENTS 2
 
@@ -884,7 +884,15 @@ void io_port_out(uint8_t port, uint8_t data)
                 webget.index                           = 0;
             }
             break;
-        case 111: // Load getfile (gf) customer endpoint url
+        case 111: // Load getfile (gf) custom endpoint url
+
+#ifndef AZURE_SPHERE
+            if (dx_isStringNullOrEmpty(webget.personal_endpoint))
+            {
+                strcpy(webget.personal_endpoint, DEFAULT_CUSTOM_ENDPOINT);
+            }
+#endif
+
             ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%s", webget.personal_endpoint);
             break;
         case 112: // Select getfile (gf) endpoint to use
@@ -1100,7 +1108,11 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
     size_t realsize = size * nmemb;
     WEBGET_T *wg    = (WEBGET_T *)webget;
 
-    if (pthread_mutex_timedlock(&webget_mutex, &(struct timespec){20, 0}))
+    struct timespec timeoutTime;
+    clock_gettime(CLOCK_REALTIME, &timeoutTime);
+    timeoutTime.tv_sec += 20;
+
+    if (pthread_mutex_timedlock(&webget_mutex, &timeoutTime) != 0)
     {
         wg->status = WEBGET_FAILED;
     }
