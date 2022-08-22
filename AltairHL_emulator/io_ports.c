@@ -411,32 +411,32 @@ void io_port_out(uint8_t port, uint8_t data)
                 }
             }
             break;
-        case 33: // copy file from web server to mutable storage
-            if (webget.index == 0)
-            {
-                memset(webget.filename, 0x00, sizeof(webget.filename));
-            }
+        // case 33: // copy file from web server to mutable storage
+        //     if (webget.index == 0)
+        //     {
+        //         memset(webget.filename, 0x00, sizeof(webget.filename));
+        //     }
 
-            if (data != 0 && webget.index < sizeof(webget.filename))
-            {
-                webget.filename[webget.index] = data;
-                webget.index++;
-            }
+        //     if (data != 0 && webget.index < sizeof(webget.filename))
+        //     {
+        //         webget.filename[webget.index] = data;
+        //         webget.index++;
+        //     }
 
-            if (data == 0) // NULL TERMINATION
-            {
-                webget.index              = 0;
-                webget.status             = WEBGET_WAITING;
-                webget.byte_stream_length = 0;
-                webget.end_of_file        = false;
-                pthread_mutex_unlock(&webget_mutex);
+        //     if (data == 0) // NULL TERMINATION
+        //     {
+        //         webget.index              = 0;
+        //         webget.status             = WEBGET_WAITING;
+        //         webget.byte_stream_length = 0;
+        //         webget.end_of_file        = false;
+        //         pthread_mutex_unlock(&webget_mutex);
 
-                memset(webget.url, 0x00, sizeof(webget.url));
-                snprintf(webget.url, sizeof(webget.url), "%s/%s", PERSONAL_REPO, webget.filename);
+        //         memset(webget.url, 0x00, sizeof(webget.url));
+        //         snprintf(webget.url, sizeof(webget.url), "%s/%s", PERSONAL_REPO, webget.filename);
 
-                dx_asyncSend(&async_copyx_request, NULL);
-            }
-            break;
+        //         dx_asyncSend(&async_copyx_request, NULL);
+        //     }
+        //     break;
         case 32:
             if (!publish_weather_pending)
             {
@@ -810,7 +810,7 @@ void io_port_out(uint8_t port, uint8_t data)
             pi_sense_8x8_panel_update(panel_8x8_buffer, sizeof(panel_8x8_buffer));
             break;
 #endif // PI SENSE HAT
-        case 110:
+        case 110:  // Set getfile custom endpoint url
             if (webget.index == 0)
             {
                 memset(webget.personal_endpoint, 0x00, ENDPOINT_LEN);
@@ -827,16 +827,16 @@ void io_port_out(uint8_t port, uint8_t data)
                 webget.index                           = 0;
             }
             break;
-        case 111:
+        case 111: // Load getfile (gf) customer endpoint url
             ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%s", webget.personal_endpoint);
             break;
-        case 112:
+        case 112: // Select getfile (gf) endpoint to use
             if (data < ENDPOINT_ELEMENTS)
             {
                 webget.selected_endpoint = data;
             }
             break;
-        case 113:
+        case 113: // Load getfile (gf) selected endpoint
             ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", webget.selected_endpoint);
             break;
         case 114: // copy file from web server to mutable storage
