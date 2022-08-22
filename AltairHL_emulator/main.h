@@ -69,11 +69,10 @@ static const char *AltairMsg[]           = {
 };
 // clang-format on
 
-static int AltairBannerCount             = 0;
-
-enum PANEL_MODE_T panel_mode = PANEL_BUS_MODE;
-
+static int AltairBannerCount     = 0;
+enum PANEL_MODE_T panel_mode     = PANEL_BUS_MODE;
 char msgBuffer[MSG_BUFFER_BYTES] = {0};
+const char *network_interface    = NULL;
 
 static DX_MESSAGE_PROPERTY *diag_msg_properties[] = {
 	&(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"},

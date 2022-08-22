@@ -9,7 +9,7 @@
 /// </summary>
 static DX_TIMER_HANDLER(update_environment_handler)
 {
-    if (dx_isNetworkConnected(altair_config.user_config.network_interface))
+    if (dx_isNetworkConnected(network_interface))
     {
         update_weather();
     }
@@ -576,10 +576,12 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
 	parse_altair_cmd_line_arguments(argc, argv, &altair_config);
 
+	network_interface = altair_config.user_config.network_interface;
+
 	init_environment(&altair_config);
 
-	dx_Log_Debug("Network interface %s %s\n", altair_config.user_config.network_interface,
-		dx_isNetworkConnected(altair_config.user_config.network_interface) ? "connected" : "NOT connected");
+	dx_Log_Debug("Network interface %s %s\n", network_interface,
+		dx_isNetworkConnected(network_interface) ? "connected" : "NOT connected");
 
 	init_altair_hardware();
 
@@ -590,8 +592,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 	if (!dx_isStringNullOrEmpty(altair_config.user_config.idScope) ||
 		!dx_isStringNullOrEmpty(altair_config.user_config.connection_string))
 	{
-		dx_azureConnect(&altair_config.user_config, altair_config.user_config.network_interface,
-			IOT_PLUG_AND_PLAY_MODEL_ID);
+		dx_azureConnect(&altair_config.user_config, network_interface, IOT_PLUG_AND_PLAY_MODEL_ID);
 
 		dx_azureRegisterConnectionChangedNotification(azure_connection_state);
 		dx_azureRegisterConnectionChangedNotification(report_software_version);
