@@ -1,5 +1,11 @@
 # Welcome to the Cloud-Enabled Altair 8800 Emulator wiki
 
+## Documentation
+
+Navigate to the [Altair 8800 Project docs](https://gloveboxes.github.io/altair_8800_posix_docs/) for the complete documentation.
+
+## Introduction
+
 Welcome to the Altair 8800 emulator repo. If you are interested in [retrocomputing](https://en.wikipedia.org/wiki/Retrocomputing), software development, computer fundamentals, and cloud services you've arrived at the right repo.
 
 The Altair 8800 kick-started the personal computer revolution. You can learn more about the Altair on the [Altair 8800 Wikipedia page](https://en.wikipedia.org/wiki/Altair_8800?azure-portal=true).
@@ -10,9 +16,8 @@ The project introduces computer fundamentals with a climate sustainability theme
 
 Optionally, the project integrates with free cloud services from [Open Weather Map](http://openweathermap.org) weather and pollution services, along with [Azure IoT Central](https://azure.microsoft.com/en-au/services/iot-central/), and [Azure Anomaly Detection Cognitive Service](https://azure.microsoft.com/services/cognitive-services/anomaly-detector/).
 
-## Documentation
 
-Navigate to the [Altair 8800 Project Wiki](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki) and read the complete documentation.
+## What you'll learn
 
 What will you learn about:
 
