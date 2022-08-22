@@ -1054,7 +1054,7 @@ uint8_t io_port_in(uint8_t port)
     return retVal;
 }
 
-#ifdef __APPLE_CC__
+#ifdef __APPLE__
 
 /*
  * A pthread_mutex_timedlock() impl for OSX/macOS, which lacks the real thing.
@@ -1093,7 +1093,7 @@ static int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec
     return rv;
 }
 
-#endif // __APPLE_CC__
+#endif // __APPLE__
 
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
 {
