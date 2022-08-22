@@ -20,9 +20,9 @@ extern bool send_partial_msg;
 
 typedef struct
 {
-	size_t length;
-	char buffer[512];
-	pthread_mutex_t block_lock;
+    size_t length;
+    char buffer[512];
+    pthread_mutex_t block_lock;
 } WS_INPUT_BLOCK_T;
 
 void print_console_banner(void);

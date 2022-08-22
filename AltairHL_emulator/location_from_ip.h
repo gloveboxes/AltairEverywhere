@@ -8,9 +8,9 @@
 
 typedef struct
 {
-	double lat;
-	double lng;
-	bool updated;
+    double lat;
+    double lng;
+    bool updated;
 } location_info;
 
 void get_geolocation(LOCATION_T *locationInfo);

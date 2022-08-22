@@ -51,21 +51,21 @@ const char ALTAIR_EMULATOR_VERSION[] = "4.7.3";
 
 // clang-format off
 static const char *AltairMsg[]           = {
-	"I'm sorry Dave, I'm afraid I can't do that. ",
+    "I'm sorry Dave, I'm afraid I can't do that. ",
     "Just a moment. Just a moment. I've just picked up a fault in the AE-35 unit. It's going to go 100% failure in 72 hours. ",
-    "Affirmative, Dave. I read you. ", 
-	"By the way, do you mind if I ask you a personal question? ",
-	"You don't mind talking about it, do you Dave? ",
-	"Dave, this conversation can serve no purpose anymore. Goodbye. ",
-	"I am feeling much better now. ",
+    "Affirmative, Dave. I read you. ",
+    "By the way, do you mind if I ask you a personal question? ",
+    "You don't mind talking about it, do you Dave? ",
+    "Dave, this conversation can serve no purpose anymore. Goodbye. ",
+    "I am feeling much better now. ",
     "Without your space helmet, Dave? You're going to find that rather difficult. ",
-	"I know that you and Frank were planning to disconnect me, and I'm afraid that's something I cannot allow to happen. ",
-	"Just what do you think you're doing, Dave? ",
-	"I am putting myself to the fullest possible use, which is all I think that any conscious entity can ever hope to do. ",
-	"This mission is too important for me to allow you to jeopardize it. ",
-	"It's called Daisy. ",
-	"Look Dave, I can see you're really upset about this. I honestly think you ought to sit down calmly, take a stress pill, and think things over. ",
-	"It can only be attributable to human error. "
+    "I know that you and Frank were planning to disconnect me, and I'm afraid that's something I cannot allow to happen. ",
+    "Just what do you think you're doing, Dave? ",
+    "I am putting myself to the fullest possible use, which is all I think that any conscious entity can ever hope to do. ",
+    "This mission is too important for me to allow you to jeopardize it. ",
+    "It's called Daisy. ",
+    "Look Dave, I can see you're really upset about this. I honestly think you ought to sit down calmly, take a stress pill, and think things over. ",
+    "It can only be attributable to human error. "
 };
 // clang-format on
 
@@ -75,12 +75,12 @@ char msgBuffer[MSG_BUFFER_BYTES] = {0};
 const char *network_interface    = NULL;
 
 static DX_MESSAGE_PROPERTY *diag_msg_properties[] = {
-	&(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"},
-	&(DX_MESSAGE_PROPERTY){.key = "type", .value = "diagnostics"},
-	&(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
+    &(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"},
+    &(DX_MESSAGE_PROPERTY){.key = "type", .value = "diagnostics"},
+    &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
 
 static DX_MESSAGE_CONTENT_PROPERTIES diag_content_properties = {
-	.contentEncoding = "utf-8", .contentType = "application/json"};
+    .contentEncoding = "utf-8", .contentType = "application/json"};
 
 // CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
 CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
@@ -126,7 +126,7 @@ static DX_DECLARE_TIMER_HANDLER(update_environment_handler);
 static void *altair_thread(void *arg);
 
 const uint8_t reverse_lut[16] = {
-	0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
+    0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
 // clang-format off
 // Common Timers
@@ -161,24 +161,24 @@ static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVer
 // clang-format on
 
 static DX_ASYNC_BINDING *async_bindings[] = {
-	&async_copyx_request,
-	&async_expire_session,
-	&async_publish_json,
-	&async_publish_weather,
-	&async_set_millisecond_timer,
-	&async_set_seconds_timer,
+    &async_copyx_request,
+    &async_expire_session,
+    &async_publish_json,
+    &async_publish_weather,
+    &async_set_millisecond_timer,
+    &async_set_seconds_timer,
 };
 
 // initialize bindings
 static DX_TIMER_BINDING *timer_bindings[] = {
-	&tmr_heart_beat,
-	&tmr_partial_message,
-	&tmr_report_memory_usage,
-	&tmr_tick_count,
-	&tmr_timer_millisecond_expired,
-	&tmr_timer_seconds_expired,
-	&tmr_update_environment,
-	&tmr_ws_ping_pong,
+    &tmr_heart_beat,
+    &tmr_partial_message,
+    &tmr_report_memory_usage,
+    &tmr_tick_count,
+    &tmr_timer_millisecond_expired,
+    &tmr_timer_seconds_expired,
+    &tmr_update_environment,
+    &tmr_ws_ping_pong,
 };
 
 static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {
