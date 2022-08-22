@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
 
 #ifdef AZURE_SPHERE

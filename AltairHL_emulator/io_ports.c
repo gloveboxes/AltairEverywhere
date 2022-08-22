@@ -116,29 +116,90 @@ static void format_string(const void *value);
 
 // Weather definitions
 static const void *w_key[] = {
-    "Celsius", "Millibar", "Humidity %", "Wind km/h", "Wind degrees", "Observation"};
-static const void *w_value[] = {&environment.latest.weather.temperature, &environment.latest.weather.pressure,
-    &environment.latest.weather.humidity, &environment.latest.weather.wind_speed,
-    &environment.latest.weather.wind_direction, &environment.latest.weather.description};
+    "Celsius",
+    "Millibar",
+    "Humidity %",
+    "Wind km/h",
+    "Wind degrees",
+    "Observation",
+};
+
+static const void *w_value[] = {
+    &environment.latest.weather.temperature,
+    &environment.latest.weather.pressure,
+    &environment.latest.weather.humidity,
+    &environment.latest.weather.wind_speed,
+    &environment.latest.weather.wind_direction,
+    &environment.latest.weather.description,
+};
+
 static void (*w_formatter[])(const void *value) = {
-    format_int, format_int, format_int, format_float2, format_int, format_string};
+    format_int,
+    format_int,
+    format_int,
+    format_float2,
+    format_int,
+    format_string,
+};
 
 // Location definitions
-static const void *l_key[]   = {"Latitude", "Longitude", "Country", "City"};
-static const void *l_value[] = {&environment.locationInfo.lat, &environment.locationInfo.lng,
-    &environment.locationInfo.country, &environment.locationInfo.city};
+static const void *l_key[] = {
+    "Latitude",
+    "Longitude",
+    "Country",
+    "City",
+};
+
+static const void *l_value[] = {
+    &environment.locationInfo.lat,
+    &environment.locationInfo.lng,
+    &environment.locationInfo.country,
+    &environment.locationInfo.city,
+};
+
 static void (*l_formatter[])(const void *value) = {
-    format_double4, format_double4, format_string, format_string};
+    format_double4,
+    format_double4,
+    format_string,
+    format_string,
+};
 
 // Pollution defintions
-static const void *p_key[]   = {"AQI(CAQI)", "CO", "NO", "NO2", "O3", "SO2", "NH3", "PM2.5", "PM1.0"};
-static const void *p_value[] = {&environment.latest.pollution.air_quality_index,
-    &environment.latest.pollution.carbon_monoxide, &environment.latest.pollution.nitrogen_monoxide,
-    &environment.latest.pollution.nitrogen_dioxide, &environment.latest.pollution.ozone,
-    &environment.latest.pollution.sulphur_dioxide, &environment.latest.pollution.ammonia,
-    &environment.latest.pollution.pm2_5, &environment.latest.pollution.pm10};
-static void (*p_formatter[])(const void *value) = {format_float0, format_float2, format_float2, format_float2,
-    format_float2, format_float2, format_float2, format_float2, format_float2};
+static const void *p_key[] = {
+    "AQI(CAQI)",
+    "CO",
+    "NO",
+    "NO2",
+    "O3",
+    "SO2",
+    "NH3",
+    "PM2.5",
+    "PM1.0",
+};
+
+static const void *p_value[] = {
+    &environment.latest.pollution.air_quality_index,
+    &environment.latest.pollution.carbon_monoxide,
+    &environment.latest.pollution.nitrogen_monoxide,
+    &environment.latest.pollution.nitrogen_dioxide,
+    &environment.latest.pollution.ozone,
+    &environment.latest.pollution.sulphur_dioxide,
+    &environment.latest.pollution.ammonia,
+    &environment.latest.pollution.pm2_5,
+    &environment.latest.pollution.pm10,
+};
+
+static void (*p_formatter[])(const void *value) = {
+    format_float0,
+    format_float2,
+    format_float2,
+    format_float2,
+    format_float2,
+    format_float2,
+    format_float2,
+    format_float2,
+    format_float2,
+};
 
 static void format_float0(const void *value)
 {
@@ -207,8 +268,7 @@ DX_TIMER_HANDLER(read_accelerometer_handler)
     intercore_ml_classify_block.y = y;
     intercore_ml_classify_block.z = z;
 
-    dx_intercorePublish(
-        &intercore_ml_classify_ctx, &intercore_ml_classify_block, sizeof(intercore_ml_classify_block));
+    dx_intercorePublish(&intercore_ml_classify_ctx, &intercore_ml_classify_block, sizeof(intercore_ml_classify_block));
 
     // dx_Log_Debug("avg x %f, y %f, z %f\n", x, y, z);
 
@@ -335,8 +395,7 @@ DX_ASYNC_HANDLER(async_publish_json_handler, handle)
     if (azure_connected)
     {
 #ifndef ALTAIR_CLOUD
-        dx_azurePublish(ju.buffer, strlen(ju.buffer), json_msg_properties, NELEMS(json_msg_properties),
-            &json_content_properties);
+        dx_azurePublish(ju.buffer, strlen(ju.buffer), json_msg_properties, NELEMS(json_msg_properties), &json_content_properties);
 #endif
     }
     publish_json_pending = false;
@@ -513,17 +572,14 @@ void io_port_out(uint8_t port, uint8_t data)
             {
                 case 0:
                     // Temperature minus 9 is super rough calibration
-                    ru.len = (size_t)snprintf(
-                        ru.buffer, sizeof(ru.buffer), "%d", (int)onboard_get_temperature() - 9);
+                    ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)onboard_get_temperature() - 9);
                     break;
                 case 1:
-                    ru.len =
-                        (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)onboard_get_pressure());
+                    ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)onboard_get_pressure());
                     break;
                 case 2:
 #ifdef OEM_AVNET
-                    ru.len =
-                        (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", avnet_get_light_level() * 2);
+                    ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", avnet_get_light_level() * 2);
 #else
                     ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", 0);
 #endif // OEM_AVNET
@@ -809,8 +865,9 @@ void io_port_out(uint8_t port, uint8_t data)
             gfx_bitmap_to_rgb(bitmap, panel_8x8_buffer, sizeof(panel_8x8_buffer));
             pi_sense_8x8_panel_update(panel_8x8_buffer, sizeof(panel_8x8_buffer));
             break;
-#endif // PI SENSE HAT
-        case 110:  // Set getfile custom endpoint url
+#endif // ALTAIR_FRONT_PANEL_PI_SENSE
+
+        case 110: // Set getfile custom endpoint url
             if (webget.index == 0)
             {
                 memset(webget.personal_endpoint, 0x00, ENDPOINT_LEN);
@@ -868,8 +925,7 @@ void io_port_out(uint8_t port, uint8_t data)
                         break;
 
                     case 1:
-                        snprintf(webget.url, sizeof(webget.url), "%s/%s", webget.personal_endpoint,
-                            webget.filename);
+                        snprintf(webget.url, sizeof(webget.url), "%s/%s", webget.personal_endpoint, webget.filename);
                         break;
                     default:
                         break;
@@ -959,8 +1015,7 @@ uint8_t io_port_in(uint8_t port)
                 if (!devget.file_opened)
                 {
                     /* open the file */
-                    snprintf(devget_path_and_filename, sizeof(devget_path_and_filename), "%s/%s",
-                        APP_SAMPLES_DIRECTORY, devget.filename);
+                    snprintf(devget_path_and_filename, sizeof(devget_path_and_filename), "%s/%s", APP_SAMPLES_DIRECTORY, devget.filename);
 
                     if ((devget.fd = Storage_OpenFileInImagePackage(devget_path_and_filename)) != -1)
                     {
@@ -999,18 +1054,64 @@ uint8_t io_port_in(uint8_t port)
     return retVal;
 }
 
+#ifdef __APPLE_CC__
+
+/*
+ * A pthread_mutex_timedlock() impl for OSX/macOS, which lacks the real thing.
+ * NOTE: Unlike the real McCoy, won't return EOWNERDEAD, EDEADLK, or EOWNERDEAD
+ */
+static int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abs_timeout)
+{
+    int rv;
+    struct timespec remaining, slept, ts;
+
+    remaining = *abs_timeout;
+    while ((rv = pthread_mutex_trylock(mutex)) == EBUSY)
+    {
+        ts.tv_sec  = 0;
+        ts.tv_nsec = (remaining.tv_sec > 0 ? 10000000 : (remaining.tv_nsec < 10000000 ? remaining.tv_nsec : 10000000));
+
+        nanosleep(&ts, &slept);
+
+        ts.tv_nsec -= slept.tv_nsec;
+        if (ts.tv_nsec <= remaining.tv_nsec)
+        {
+            remaining.tv_nsec -= ts.tv_nsec;
+        }
+        else
+        {
+            remaining.tv_sec--;
+            remaining.tv_nsec = (1000000 - (ts.tv_nsec - remaining.tv_nsec));
+        }
+
+        if (remaining.tv_sec < 0 || (!remaining.tv_sec && remaining.tv_nsec <= 0))
+        {
+            return ETIMEDOUT;
+        }
+    }
+
+    return rv;
+}
+
+#endif // __APPLE_CC__
+
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
 {
     size_t realsize = size * nmemb;
     WEBGET_T *wg    = (WEBGET_T *)webget;
 
-    pthread_mutex_lock(&webget_mutex);
+    if (pthread_mutex_timedlock(&webget_mutex, &(struct timespec){20, 0}))
+    {
+        wg->status = WEBGET_FAILED;
+    }
+    else
+    {
+        memcpy(wg->bytes, ptr, realsize);
 
-    memcpy(wg->bytes, ptr, realsize);
-
-    wg->byte_stream        = wg->bytes;
-    wg->byte_stream_length = realsize;
-    wg->status             = WEBGET_DATA_READY;
+        wg->byte_stream        = wg->bytes;
+        wg->byte_stream_length = realsize;
+        wg->status             = WEBGET_DATA_READY;
+    }
 
     return realsize;
 }
