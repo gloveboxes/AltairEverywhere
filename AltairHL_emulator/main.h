@@ -41,13 +41,13 @@
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 const char ALTAIR_EMULATOR_VERSION[] = "4.7.3";
-#define Log_Debug(f_, ...)      dx_Log_Debug((f_), ##__VA_ARGS__)
-#define DX_LOGGING_ENABLED      FALSE
+#define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
+#define DX_LOGGING_ENABLED FALSE
 
 // https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play
 #define IOT_PLUG_AND_PLAY_MODEL_ID "dtmi:com:example:climatemonitor;1"
 
-#define APP_SAMPLES_DIRECTORY   "AppSamples"
+#define APP_SAMPLES_DIRECTORY "AppSamples"
 
 // clang-format off
 static const char *AltairMsg[]           = {
@@ -74,13 +74,10 @@ enum PANEL_MODE_T panel_mode     = PANEL_BUS_MODE;
 char msgBuffer[MSG_BUFFER_BYTES] = {0};
 const char *network_interface    = NULL;
 
-static DX_MESSAGE_PROPERTY *diag_msg_properties[] = {
-    &(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"},
-    &(DX_MESSAGE_PROPERTY){.key = "type", .value = "diagnostics"},
-    &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
+static DX_MESSAGE_PROPERTY *diag_msg_properties[] = {&(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"},
+    &(DX_MESSAGE_PROPERTY){.key = "type", .value = "diagnostics"}, &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
 
-static DX_MESSAGE_CONTENT_PROPERTIES diag_content_properties = {
-    .contentEncoding = "utf-8", .contentType = "application/json"};
+static DX_MESSAGE_CONTENT_PROPERTIES diag_content_properties = {.contentEncoding = "utf-8", .contentType = "application/json"};
 
 // CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
 CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
@@ -125,8 +122,7 @@ static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
 static DX_DECLARE_TIMER_HANDLER(update_environment_handler);
 static void *altair_thread(void *arg);
 
-const uint8_t reverse_lut[16] = {
-    0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
+const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
 // clang-format off
 // Common Timers

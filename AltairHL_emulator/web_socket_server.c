@@ -10,8 +10,7 @@ static void cleanup_session(void);
 static char output_buffer[512];
 static WS_INPUT_BLOCK_T ws_input_block;
 
-static DX_TIMER_BINDING tmr_expire_session = {
-    .name = "tmr_expire_session", .handler = expire_session_handler};
+static DX_TIMER_BINDING tmr_expire_session    = {.name = "tmr_expire_session", .handler = expire_session_handler};
 static bool cleanup_required                  = false;
 static const int session_minutes              = 1 * 60 * 30; // 30 minutes
 static int session_count                      = 0;
@@ -130,9 +129,8 @@ void onmessage(ws_cli_conn_t *client, const unsigned char *msg, uint64_t size, i
 
     pthread_mutex_lock(&ws_input_block.block_lock);
 
-    len = (size_t)size > sizeof(ws_input_block.buffer) - ws_input_block.length
-              ? sizeof(ws_input_block.buffer) - ws_input_block.length
-              : (size_t)size;
+    len = (size_t)size > sizeof(ws_input_block.buffer) - ws_input_block.length ? sizeof(ws_input_block.buffer) - ws_input_block.length
+                                                                               : (size_t)size;
 
     memcpy(ws_input_block.buffer + ws_input_block.length, msg, len);
 

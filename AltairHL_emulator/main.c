@@ -26,11 +26,9 @@ static DX_TIMER_HANDLER(report_memory_usage)
     struct rusage r_usage;
     getrusage(RUSAGE_SELF, &r_usage);
 
-    if (azure_connected &&
-        dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1, DX_JSON_INT, "memoryUsage", r_usage.ru_maxrss))
+    if (azure_connected && dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1, DX_JSON_INT, "memoryUsage", r_usage.ru_maxrss))
     {
-        dx_azurePublish(msgBuffer, strlen(msgBuffer), diag_msg_properties, NELEMS(diag_msg_properties),
-            &diag_content_properties);
+        dx_azurePublish(msgBuffer, strlen(msgBuffer), diag_msg_properties, NELEMS(diag_msg_properties), &diag_content_properties);
     }
 }
 DX_TIMER_HANDLER_END
@@ -42,8 +40,7 @@ static DX_TIMER_HANDLER(heart_beat_handler)
 {
     if (azure_connected)
     {
-        dx_deviceTwinReportValue(
-            &dt_heartbeatUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
+        dx_deviceTwinReportValue(&dt_heartbeatUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
         dx_deviceTwinReportValue(&dt_new_sessions, dt_new_sessions.propertyValue);
     }
 }
@@ -133,8 +130,7 @@ void terminal_handler(WS_INPUT_BLOCK_T *in_block)
     }
 
     // if command is loadx then try looking for in baked in samples
-    if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 &&
-        (command[application_message_size - 2] == '"'))
+    if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 && (command[application_message_size - 2] == '"'))
     {
         command[application_message_size - 2] = 0x00; // replace the '"' with \0
         load_application(&command[7]);
@@ -326,8 +322,8 @@ static inline uint8_t sense(void)
 void print_console_banner(void)
 {
     static bool first = true;
-    //char reset[] = "\x1b[2J\r\n";
-    const char reset[] = "\r\n\r\n";
+    // char reset[] = "\x1b[2J\r\n";
+    const char reset[]          = "\r\n\r\n";
     const char altair_version[] = "\r\nAltair version: ";
 
     for (int x = 0; x < strlen(reset); x++)
@@ -388,9 +384,8 @@ static void *panel_refresh_thread(void *arg)
 
                 status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
                 data   = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
-                bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 |
-                                 reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] |
-                                 reverse_lut[bus & 0xf] << 4);
+                bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 |
+                                 reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
 
                 update_panel_status_leds(status, data, bus);
             }
@@ -491,8 +486,8 @@ static void init_altair(void)
     disk_drive.disk4.sector      = 0;
     disk_drive.disk4.track       = 0;
 
-    i8080_reset(&cpu, (port_in)terminal_read, (port_out)terminal_write, sense, &disk_controller,
-        (azure_sphere_port_in)io_port_in, (azure_sphere_port_out)io_port_out);
+    i8080_reset(&cpu, (port_in)terminal_read, (port_out)terminal_write, sense, &disk_controller, (azure_sphere_port_in)io_port_in,
+        (azure_sphere_port_out)io_port_out);
 
     // load Disk Loader at 0xff00
     if (!loadRomImage(DISK_LOADER, 0xff00))
@@ -543,11 +538,9 @@ static void report_software_version(bool connected)
 {
     if (connected)
     {
-        snprintf(msgBuffer, sizeof(msgBuffer), "Altair emulator: %s, DevX: %s", ALTAIR_EMULATOR_VERSION,
-            AZURE_SPHERE_DEVX_VERSION);
+        snprintf(msgBuffer, sizeof(msgBuffer), "Altair emulator: %s, DevX: %s", ALTAIR_EMULATOR_VERSION, AZURE_SPHERE_DEVX_VERSION);
         dx_deviceTwinReportValue(&dt_softwareVersion, msgBuffer);
-        dx_deviceTwinReportValue(
-            &dt_deviceStartTimeUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
+        dx_deviceTwinReportValue(&dt_deviceStartTimeUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
 
         dx_azureUnregisterConnectionChangedNotification(report_software_version);
     }
@@ -580,8 +573,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     init_environment(&altair_config);
 
-    dx_Log_Debug("Network interface %s %s\n", network_interface,
-        dx_isNetworkConnected(network_interface) ? "connected" : "NOT connected");
+    dx_Log_Debug("Network interface %s %s\n", network_interface, dx_isNetworkConnected(network_interface) ? "connected" : "NOT connected");
 
     init_altair_hardware();
 
@@ -589,8 +581,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     // if there is no ID Scope or connection string then don't attempt to start connection to Azure IoT
     // Central
-    if (!dx_isStringNullOrEmpty(altair_config.user_config.idScope) ||
-        !dx_isStringNullOrEmpty(altair_config.user_config.connection_string))
+    if (!dx_isStringNullOrEmpty(altair_config.user_config.idScope) || !dx_isStringNullOrEmpty(altair_config.user_config.connection_string))
     {
         dx_azureConnect(&altair_config.user_config, network_interface, IOT_PLUG_AND_PLAY_MODEL_ID);
 
