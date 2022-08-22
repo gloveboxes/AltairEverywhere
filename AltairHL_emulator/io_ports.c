@@ -1109,7 +1109,12 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
     WEBGET_T *wg    = (WEBGET_T *)webget;
 
     struct timespec timeoutTime;
+    memset(&timeoutTime, 0, sizeof(struct timespec));
+
+#ifndef __APPLE__
     clock_gettime(CLOCK_REALTIME, &timeoutTime);
+#endif // __APPLE__
+
     timeoutTime.tv_sec += 20;
 
     if (pthread_mutex_timedlock(&webget_mutex, &timeoutTime) != 0)
