@@ -602,6 +602,12 @@ void io_port_out(uint8_t port, uint8_t data)
             break;
 #endif
 
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+        case 65: // Set brightness of the 8x8 LED Panel
+            set_led_panel_color(data);
+            break;
+#endif
+
 #ifdef AZURE_SPHERE
         case 66: // enable/disable power management
 

@@ -10,7 +10,7 @@ void init_altair_hardware(void)
 
 void set_led_panel_color(int color)
 {
-    if (color < 3) {
+    if (color != 0 && color < 3) {
         color = 3;
     }
     if (color > 15) {
