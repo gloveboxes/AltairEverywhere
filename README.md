@@ -1,4 +1,4 @@
-# Welcome to the Cloud-Enabled Altair 8800 Emulator wiki
+# Welcome to the AI and Cloud powered Altair 8800 Everywhere project
 
 ## Documentation
 
