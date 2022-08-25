@@ -1,8 +1,8 @@
-# Welcome to the Cloud-Enabled Altair 8800 Emulator wiki
+# Welcome to the AI and Cloud powered Altair 8800 Everywhere project
 
 ## Documentation
 
-Navigate to the [Altair 8800 Project docs](https://gloveboxes.github.io/altair_8800_posix_docs/) for the complete documentation.
+Navigate to the [Altair 8800 Project docs](https://gloveboxes.github.io/altair_8800_docs/) for the complete documentation.
 
 ## Introduction
 
