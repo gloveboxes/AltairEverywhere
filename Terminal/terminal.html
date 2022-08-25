@@ -82,7 +82,7 @@
       term.on("key", function (key, ev) {
 
         if (ev.ctrlKey) {    // ctrl keys
-          if (ev.keyCode === 76) {   // hook ctrl L as toggel between line mode and wordmaster mode
+          if (ev.keyCode === 76) {   // hook ctrl L as toggle between line and Word Master mode
             character_mode = !character_mode;
             if (character_mode) {
               document.getElementById("inputmode").innerHTML = "Character input mode : Wordmaster (Ctrl+L to toggle)";
@@ -124,9 +124,6 @@
             case 13:  // Enter
               term.prompt("\r");
               current_line = "";
-              return;
-            case 45:  // Insert
-              sendControl(String.fromCharCode(79));
               return;
             case 8:  // Backspace
               sendControl(String.fromCharCode(72));
@@ -248,8 +245,8 @@
     </div>
     <div id="docs">
       <a href="https://github.com/AzureSphereCloudEnabledAltair8800/RetroGames" target="_blank">Games</a>
-      <a href="https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki" target="_blank">Documentation</a>
-      <a href="https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki/03-Reference-manuals" target="_blank">Manuals</a>
+      <a href="https://gloveboxes.github.io/altair_8800_docs/" target="_blank">Documentation</a>
+      <a href="https://gloveboxes.github.io/altair_8800_docs/start/programming/Manuals" target="_blank">Manuals</a>
     </div>
   </div>
 
