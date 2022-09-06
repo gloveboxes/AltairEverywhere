@@ -7,7 +7,6 @@
 #include "dx_utilities.h"
 #include "environment_types.h"
 #include "iotc_manager.h"
-#include "sense_hat.h"
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -15,6 +14,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+#include "sense_hat.h"
+#endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 #ifdef AZURE_SPHERE
 #include "device_id.h"
