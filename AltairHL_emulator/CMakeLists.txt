@@ -41,6 +41,7 @@ if (ALTAIR_FRONT_PI_SENSE_HAT)
         "FrontPanels/front_panel_pi_sense_hat.c"
         "Drivers/pi_sense_hat/led_panel.c"
         "Drivers/pi_sense_hat/graphics.c"
+        "Drivers/sensehat-driver/src/sense_hat.c"
     )
     source_group("Oem" FILES ${Oem})
 
@@ -107,6 +108,7 @@ target_link_options(${PROJECT_NAME} PUBLIC "-L/usr/local/lib")
 target_include_directories(${PROJECT_NAME} PUBLIC AzureSphereDevX/include )
 target_include_directories(${PROJECT_NAME} PRIVATE wsServer/include)
 target_include_directories(${PROJECT_NAME} PUBLIC Drivers/pi_sense_hat)
+target_include_directories(${PROJECT_NAME} PUBLIC Drivers/sensehat-driver/src)
 target_include_directories(${PROJECT_NAME} PUBLIC uthash/include)
 
 
