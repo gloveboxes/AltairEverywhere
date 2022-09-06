@@ -7,6 +7,7 @@
 #include "dx_utilities.h"
 #include "environment_types.h"
 #include "iotc_manager.h"
+#include "sense_hat.h"
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdbool.h>

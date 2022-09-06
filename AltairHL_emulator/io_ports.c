@@ -589,6 +589,29 @@ void io_port_out(uint8_t port, uint8_t data)
             break;
 #endif // AZURE_SPHERE
 
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+
+        case 63: // Onboard sensors temperature, pressure, and light
+            switch (data)
+            {
+                case 0: // Temperature
+                    ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)get_temperature_from_lps25h());
+                    break;
+                case 1: // pressure
+                    ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", get_pressure());
+                    break;
+                case 2: // light
+                    ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", 0);
+                    break;
+                case 3: // humidity
+                    ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)get_humidity());
+                    break;
+            }
+
+            break;
+
+#endif // ALTAIR_FRONT_PANEL_PI_SENSE
+
 #ifdef OEM_AVNET
         case 64:
             switch (data)

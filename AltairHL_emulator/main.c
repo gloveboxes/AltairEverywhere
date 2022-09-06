@@ -614,6 +614,10 @@ static void ClosePeripheralAndHandlers(void)
     dx_deviceTwinUnsubscribe();
     dx_timerEventLoopStop();
 
+#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+    pi_sense_hat_sensors_close();
+#endif
+
     curl_global_cleanup();
 }
 

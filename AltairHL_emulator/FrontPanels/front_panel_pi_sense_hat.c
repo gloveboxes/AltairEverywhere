@@ -5,6 +5,7 @@ static int rgb_color = 19 << 1;
 
 void init_altair_hardware(void)
 {
+    pi_sense_hat_sensors_init(1);
     pi_sense_hat_init();
 }
 

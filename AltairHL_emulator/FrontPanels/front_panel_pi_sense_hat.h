@@ -4,6 +4,7 @@
 
 #include "led_panel.h"
 #include "altair_panel.h"
+#include "sense_hat.h"
 
 #define NUM_OF_LEDS 64
 
