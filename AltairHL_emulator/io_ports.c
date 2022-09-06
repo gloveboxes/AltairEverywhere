@@ -594,8 +594,8 @@ void io_port_out(uint8_t port, uint8_t data)
         case 63: // Onboard sensors temperature, pressure, and light
             switch (data)
             {
-                case 0: // Temperature
-                    ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)get_temperature_from_lps25h());
+                case 0: // Temperature minus 1 for very rough calibration
+                    ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", (int)get_temperature_from_lps25h() - 1);
                     break;
                 case 1: // pressure
                     ru.len = (size_t)snprintf(ru.buffer, sizeof(ru.buffer), "%d", get_pressure());
