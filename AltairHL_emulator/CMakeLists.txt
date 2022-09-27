@@ -109,7 +109,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC AzureSphereDevX/include )
 target_include_directories(${PROJECT_NAME} PRIVATE wsServer/include)
 target_include_directories(${PROJECT_NAME} PUBLIC Drivers/pi_sense_hat)
 target_include_directories(${PROJECT_NAME} PUBLIC Drivers/sensehat-driver/src)
-target_include_directories(${PROJECT_NAME} PUBLIC uthash/include)
+target_include_directories(${PROJECT_NAME} PUBLIC uthash/src)
 
 
 include_directories(${CMAKE_SOURCE_DIR} FrontPanels)
