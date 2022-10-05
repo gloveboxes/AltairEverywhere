@@ -17,7 +17,7 @@ typedef struct
 {
     size_t len;
     size_t count;
-    char buffer[64];
+    char buffer[128];
 } REQUEST_UNIT_T;
 
 typedef struct
