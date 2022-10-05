@@ -2,6 +2,7 @@
    Licensed under the MIT License. */
 
 #include "altair_config.h"
+#include <stdio.h>
 
 // Usage text for command line arguments in application manifest.
 static const char *cmdLineArgsUsageText =
