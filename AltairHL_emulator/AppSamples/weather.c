@@ -48,6 +48,11 @@ main()
         print_k_v(w_key, w_value, w_items);
         print_k_v(p_key, p_value, p_items);
 
+        /* Wait on Port 32 to go false to signify no pending Azure IoT Publish */
+        while(inp(32));
+        /* Call port 32 to publish weather data to Azure IoT */
+        outp(32, 0);
+
         sleep(2); /* Sleep for 2 seconds */
     }
 }
