@@ -10,7 +10,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "${workspaceFolder}/build/Altair_emulator",
-            "args": [  ],
+            "args": [ ],
             "cwd": "${workspaceFolder}"            
         },
         {
