@@ -19,7 +19,7 @@ int p_key;
 int p_value;
 int p_items;
 
-#define DELAY       5
+#define DELAY       10
 #define JSON_LENGTH 256
 
 char json[JSON_LENGTH];
@@ -52,8 +52,8 @@ main()
 
     for (c = 0; c < 65535; c++)
     {
-        printf("%c[91;22;24m----------------------------------------------------", 27);
-        printf("---------------------------------------------------------------------------------%c[0m\n", 27);
+        printf("%c[91;22;24m---------------------------------------------------------------", 27);
+        printf("----------------------------------------------------------------------%c[0m\n", 27);
 
         printf("Reading: %u\t%s\n", c, get_port_data(43, 0, buffer, 50));
 
@@ -71,8 +71,13 @@ main()
 
         publish_json();
 
-        printf("Sleeping for %d seconds\n\n", DELAY);
-        sleep(DELAY); /* Sleep for 2 seconds */
+        printf("Sleeping for %d seconds\n", DELAY);
+        for (i = 0; i < DELAY; i++)
+        {
+            sleep(1);
+            printf(".");
+        }
+        printf("\n\n");
     }
 }
 
@@ -124,7 +129,7 @@ void publish_json()
     sprintf(json, "{\"temperature\":%s,\"pressure\":%s,\"humidity\":%s,\"latitude\":%s,\"longitude\":%s,\"aqi\":%s}", temperature, pressure,
         humidity, latitude, longitude, aqi);
 
-    printf("%s\n\n", json);
+    printf("\n%s\n\n", json);
 
     /* Wait on Port 31 to go false to signify no pending Azure IoT Publish */
     while (inp(31))

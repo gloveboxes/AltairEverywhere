@@ -3,6 +3,8 @@
 
 /* C application to demonstrate use of Intel 8080 IO Ports */
 
+#define DELAY 10
+
 /*
 w = weather
 l = location
@@ -40,8 +42,8 @@ main()
 
     for (c = 0; c < 65535; c++)
     {
-        printf("%c[91;22;24m-------------------------------------------------------------------------------------------------------------------------------------%c[0m\n", 27,
-            27);
+        printf("%c[91;22;24m---------------------------------------------------------------", 27);
+        printf("----------------------------------------------------------------------%c[0m\n", 27);
         printf("Reading: %u\t%s\n", c, get_port_data(43, 0, buffer, 50));
 
         print_k_v(l_key, l_value, l_items);
@@ -49,11 +51,18 @@ main()
         print_k_v(p_key, p_value, p_items);
 
         /* Wait on Port 32 to go false to signify no pending Azure IoT Publish */
-        while(inp(32));
+        while (inp(32))
+            ;
         /* Call port 32 to publish weather data to Azure IoT */
         outp(32, 0);
 
-        sleep(2); /* Sleep for 2 seconds */
+        printf("Sleeping for %d seconds\n", DELAY);
+        for (i = 0; i < DELAY; i++)
+        {
+            sleep(1);
+            printf(".");
+        }
+        printf("\n\n");
     }
 }
 
