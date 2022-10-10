@@ -19,7 +19,7 @@ void update_geo_location(ENVIRONMENT_TELEMETRY *environment)
 {
     static bool updated = false;
 
-    if (!updated)
+    if (!updated && environment->locationInfo.updated)
     {
         updated = true;
         device_twin_update_location(environment->locationInfo.lat, environment->locationInfo.lng, &dt_location);

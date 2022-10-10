@@ -29,6 +29,7 @@ static DX_TIMER_HANDLER(report_memory_usage)
     if (azure_connected && dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1, DX_JSON_INT, "memoryUsage", r_usage.ru_maxrss))
     {
         dx_azurePublish(msgBuffer, strlen(msgBuffer), diag_msg_properties, NELEMS(diag_msg_properties), &diag_content_properties);
+        update_geo_location(&environment);  // Hitch a ride on the report_memory_usage event. Only publishes once.
     }
 }
 DX_TIMER_HANDLER_END
