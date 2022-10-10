@@ -25,7 +25,15 @@
         "version.h": "c",
         "event.h": "c",
         "stdbool.h": "c",
-        "event_struct.h": "c"
+        "event_struct.h": "c",
+        "stdio.h": "c",
+        "dx_timer.h": "c",
+        "time_io.h": "c",
+        "file_io.h": "c",
+        "weather_io.h": "c",
+        "led_matrix_io.h": "c",
+        "chrono": "c",
+        "variant": "c"
     },
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#65c89b",

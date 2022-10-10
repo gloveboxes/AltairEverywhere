@@ -73,7 +73,14 @@ set(Source
     "env_open_weather_map.c"
     "location_from_ip.c"
     "utils.c"  
-)
+    "PortDrivers/led_matrix_io.c"
+    "PortDrivers/weather_io.c"
+    "PortDrivers/time_io.c"
+    "PortDrivers/file_io.c"
+    "PortDrivers/utility_io.c"
+    "PortDrivers/onboard_io.c"
+    "PortDrivers/power_io.c"
+    )
 source_group("Source" FILES ${Source})
 
 set(wsServer
