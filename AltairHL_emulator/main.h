@@ -43,7 +43,7 @@
 #include "front_panel_none.h"
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
-const char ALTAIR_EMULATOR_VERSION[] = "4.7.6";
+const char ALTAIR_EMULATOR_VERSION[] = "4.7.7";
 #define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED FALSE
 
