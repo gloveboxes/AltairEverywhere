@@ -48,7 +48,9 @@ size_t led_matrix_output(int port_number, int data, char *buffer, size_t buffer_
 
 #ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
 
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             // ##TODO THESE SHOULD BE ASYNC
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         case 65: // Enable/Disable 8x8 LED Panel and 4x4 keypad
             if (data == 0)
