@@ -29,6 +29,7 @@ void io_port_out(uint8_t port, uint8_t data)
 
     switch (port)
     {
+        // Time IO Ports
         case 29: // Set milliseconds timer
         case 30: // Set seconds timer
         case 41: // Load system tick count
@@ -37,6 +38,7 @@ void io_port_out(uint8_t port, uint8_t data)
             ru.len = time_output(port, data, ru.buffer, sizeof(ru.buffer));
             break;
 
+        // Weather IO Ports
         case 31: // Publish weather json
         case 32: // Publish weather
         case 34: // Load weather key
@@ -48,6 +50,7 @@ void io_port_out(uint8_t port, uint8_t data)
             ru.len = weather_output(port, data, ru.buffer, sizeof(ru.buffer));
             break;
 
+        // Utility IO Ports
         case 44: // Load random number to seed Microsoft/Altair BASIC randomize command
         case 70: // Load Altair version number
         case 71: // Load OS Version
@@ -55,6 +58,7 @@ void io_port_out(uint8_t port, uint8_t data)
             ru.len = utility_output(port, data, ru.buffer, sizeof(ru.buffer));
             break;
 
+        // Onboard IO Ports
         case 60: // Red LEB
         case 61: // Green LEB
         case 62: // Blue LEB
@@ -63,11 +67,13 @@ void io_port_out(uint8_t port, uint8_t data)
             ru.len = onboard_output(port, data, ru.buffer, sizeof(ru.buffer));
             break;
 
+        // Power IO Ports
         case 66: // Set Azure Sphere enable/disable/sleep power management
         case 67: // Set Azure Sphere wake from sleep in X seconds
             ru.len = power_output(port, data, ru.buffer, sizeof(ru.buffer));
             break;
 
+        // LED Matrix IO Ports
         case 65:  // Set brightness of the 8x8 LED Panel
         case 80:  // Panel_mode 0 = bus data, 1 = font, 2 = bitmap
         case 81:  // Set font color
@@ -91,6 +97,7 @@ void io_port_out(uint8_t port, uint8_t data)
             led_matrix_output(port, data, ru.buffer, sizeof(ru.buffer));
             break;
 
+        // File transfer IO Ports
         case 68:  // Set devget filename
         case 110: // Set getfile custom endpoint url
         case 111: // Load getfile (gf) custom endpoint url
@@ -116,16 +123,19 @@ uint8_t io_port_in(uint8_t port)
 
     switch (port)
     {
+        // Time IO Ports
         case 29: // Has milliseconds timer expired
         case 30: // Has seconds timer expired
             retVal = time_input(port);
             break;
 
+        // Weather IO Ports
         case 31: // Is publish weather json pending
         case 32: // Is publish weather pending
             retVal = weather_input(port);
             break;
 
+        // File transfer IO Ports
         case 33:  // Is copyx file need copied and loaded
         case 68:  // Is devget eof
         case 201: // Read file from http(s) web server
@@ -133,10 +143,12 @@ uint8_t io_port_in(uint8_t port)
             retVal = file_input(port);
             break;
 
+        // Utility IO Ports
         case 69: // Is network ready
             retVal = utility_input(port);
             break;
 
+        // Request Unit IO Ports
         case 200: // Get next request unit byte
             retVal = ru.count < ru.len && ru.count < sizeof(ru.buffer) ? ru.buffer[ru.count++] : 0x00;
             break;
