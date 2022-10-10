@@ -94,7 +94,7 @@ void io_port_out(uint8_t port, uint8_t data)
         case 100: // Pixel flip
         case 101: // Clear all pixels
         case 102: // Bitmap draw
-            led_matrix_output(port, data, ru.buffer, sizeof(ru.buffer));
+            ru.len = led_matrix_output(port, data, ru.buffer, sizeof(ru.buffer));
             break;
 
         // File transfer IO Ports
