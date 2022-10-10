@@ -6,6 +6,7 @@
 #include "dx_utilities.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 static volatile bool delay_milliseconds_enabled = false;
 static volatile bool delay_seconds_enabled      = false;
