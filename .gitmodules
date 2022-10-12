@@ -14,3 +14,6 @@
 [submodule "AltairHL_emulator/wsServer"]
 	path = AltairHL_emulator/wsServer
 	url = https://github.com/Theldus/wsServer.git
+[submodule "AltairHL_emulator/Drivers/spidev-lib"]
+	path = AltairHL_emulator/Drivers/spidev-lib
+	url = https://github.com/milekium/spidev-lib.git
