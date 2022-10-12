@@ -29,7 +29,7 @@ static DX_TIMER_HANDLER(report_memory_usage)
     if (azure_connected && dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1, DX_JSON_INT, "memoryUsage", r_usage.ru_maxrss))
     {
         dx_azurePublish(msgBuffer, strlen(msgBuffer), diag_msg_properties, NELEMS(diag_msg_properties), &diag_content_properties);
-        update_geo_location(&environment);  // Hitch a ride on the report_memory_usage event. Only publishes once.
+        update_geo_location(&environment); // Hitch a ride on the report_memory_usage event. Only publishes once.
     }
 }
 DX_TIMER_HANDLER_END
@@ -44,6 +44,18 @@ static DX_TIMER_HANDLER(heart_beat_handler)
         dx_deviceTwinReportValue(&dt_heartbeatUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
         dx_deviceTwinReportValue(&dt_new_sessions, dt_new_sessions.propertyValue);
     }
+}
+DX_TIMER_HANDLER_END
+
+/// <summary>
+/// Read panel input
+/// </summary>
+static DX_TIMER_HANDLER(read_panel_handler)
+{
+#ifdef ALTAIR_FRONT_PANEL_KIT
+    read_altair_panel_switches(process_control_panel_commands);
+    dx_timerOneShotSet(&tmr_read_panel, &(struct timespec){0, 150 * ONE_MS});
+#endif
 }
 DX_TIMER_HANDLER_END
 
@@ -377,8 +389,8 @@ static void *panel_refresh_thread(void *arg)
             uint8_t data   = cpu.data_bus;
             uint16_t bus   = cpu.address_bus;
 
-            if (status != last_status || data != last_data || bus != last_bus)
-            {
+            // if (status != last_status || data != last_data || bus != last_bus)
+            // {
                 last_status = status;
                 last_data   = data;
                 last_bus    = bus;
@@ -389,8 +401,8 @@ static void *panel_refresh_thread(void *arg)
                                  reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
 
                 update_panel_status_leds(status, data, bus);
-            }
-            nanosleep(&(struct timespec){0, 50 * ONE_MS}, NULL);
+            // }
+            nanosleep(&(struct timespec){0, 5 * ONE_MS}, NULL);
         }
         else
         {
@@ -594,7 +606,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
     init_web_socket_server(client_connected_cb);
     dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+#if defined(ALTAIR_FRONT_PANEL_PI_SENSE) || defined(ALTAIR_FRONT_PANEL_KIT)
     dx_startThreadDetached(panel_refresh_thread, NULL, "panel_refresh_thread");
 #endif
 

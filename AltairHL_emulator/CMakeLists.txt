@@ -7,6 +7,7 @@ project (Altair_emulator C)
 # SELECT FRONT PANEL CONFIG #######################################################################################
 #
 # set(ALTAIR_FRONT_PI_SENSE_HAT TRUE "Enable Raspberry Pi Sense HAT")
+# set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")
 #
 ###################################################################################################################
 
@@ -55,6 +56,20 @@ else()
     source_group("Oem" FILES ${Oem})
 
 endif(ALTAIR_FRONT_PI_SENSE_HAT)
+
+if (ALTAIR_FRONT_PANEL_KIT)
+
+    add_compile_definitions(ALTAIR_FRONT_PANEL_KIT)
+    add_compile_definitions(DEVICE_PANEL="Front Panel Kit")
+
+    set(Oem
+        "FrontPanels/front_panel_kit.c"
+        "Drivers/front_panel/graphics.c"
+        "Drivers/front_panel/dx_gpio.c"
+        "Drivers/spidev-lib/src/spidev_lib.c"
+    )
+    source_group("Oem" FILES ${Oem})
+endif(ALTAIR_FRONT_PANEL_KIT)
 
 
 set(Source
@@ -115,6 +130,8 @@ target_link_options(${PROJECT_NAME} PUBLIC "-L/usr/local/lib")
 target_include_directories(${PROJECT_NAME} PUBLIC AzureSphereDevX/include )
 target_include_directories(${PROJECT_NAME} PRIVATE wsServer/include)
 target_include_directories(${PROJECT_NAME} PUBLIC Drivers/pi_sense_hat)
+target_include_directories(${PROJECT_NAME} PUBLIC Drivers/front_panel)
+target_include_directories(${PROJECT_NAME} PUBLIC Drivers/spidev-lib/src)
 target_include_directories(${PROJECT_NAME} PUBLIC Drivers/sensehat-driver/src)
 target_include_directories(${PROJECT_NAME} PUBLIC uthash/src)
 

@@ -9,8 +9,8 @@
 #define MSG_BUFFER_BYTES 128 * 4 // Number of bytes to allocate for the JSON telemetry message for IoT Central
 #define OneMS            1000000 // used to simplify timer defn.
 
-#define LOW  false
-#define HIGH true
+// #define LOW  false
+// #define HIGH true
 
 //#define SWITCHES_LOAD   42
 //#define SWITCHES_CS     41

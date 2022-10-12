@@ -33,7 +33,8 @@
         "weather_io.h": "c",
         "led_matrix_io.h": "c",
         "chrono": "c",
-        "variant": "c"
+        "variant": "c",
+        "dx_gpio.h": "c"
     },
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#65c89b",
