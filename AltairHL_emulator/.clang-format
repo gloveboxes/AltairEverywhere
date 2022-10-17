@@ -10,7 +10,7 @@ AllowShortCaseLabelsOnASingleLine: 'false'
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: 'false'
 BinPackParameters: 'false'
-ColumnLimit: '140'
+ColumnLimit: '160'
 IndentCaseLabels: 'true'
 IndentWidth: '4'
 Language: Cpp
