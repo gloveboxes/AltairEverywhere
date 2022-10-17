@@ -65,7 +65,6 @@ if (ALTAIR_FRONT_PANEL_KIT)
     set(Oem
         "FrontPanels/front_panel_kit.c"
         "Drivers/front_panel/graphics.c"
-        "Drivers/front_panel/dx_gpio.c"
         "Drivers/spidev-lib/src/spidev_lib.c"
     )
     source_group("Oem" FILES ${Oem})

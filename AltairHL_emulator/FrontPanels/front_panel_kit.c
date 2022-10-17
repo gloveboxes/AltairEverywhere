@@ -4,6 +4,7 @@
 #include "front_panel_kit.h"
 
 #include "dx_gpio.h"
+#include <dx_utilities.h>
 #include <spidev_lib.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -12,30 +13,59 @@
 #include <string.h>
 #include <time.h>
 
-#define ONE_MS 1000000
-
 #define SWITCHES_LOAD        05
 #define SWITCHES_CHIP_SELECT 00
 #define LED_MASTER_RESET     22
 #define LED_STORE            27
 #define LED_OUTPUT_ENABLE    17
 
+// clang-format off
+static DX_GPIO_BINDING gpio_switches_load = {
+    .chip_number = 0,
+    .line_number = SWITCHES_LOAD,
+    .initial_state = DX_GPIO_HIGH,
+    .direction = DX_GPIO_OUTPUT,
+    .name = "altair_switches_load"};
+
+static DX_GPIO_BINDING gpio_switches_chip_select = {
+    .chip_number = 0,
+    .line_number = SWITCHES_CHIP_SELECT,
+    .initial_state = DX_GPIO_HIGH,
+    .direction = DX_GPIO_OUTPUT,
+    .name = "altair_switches_chip_select"};
+
+static DX_GPIO_BINDING gpio_led_master_reset = {
+    .chip_number = 0,
+    .line_number = LED_MASTER_RESET,
+    .initial_state = DX_GPIO_HIGH,
+    .direction = DX_GPIO_OUTPUT,
+    .name = "altair_led_master_reset"};
+
+static DX_GPIO_BINDING gpio_led_store = {
+    .chip_number = 0,
+    .line_number = LED_STORE,
+    .initial_state = DX_GPIO_HIGH,
+    .direction = DX_GPIO_OUTPUT,
+    .name = "altair_led_store"};
+
+static DX_GPIO_BINDING gpio_output_enable = {
+    .chip_number = 0,
+    .line_number = LED_OUTPUT_ENABLE,
+    .initial_state = DX_GPIO_LOW,
+    .direction = DX_GPIO_OUTPUT,
+    .name = "altair_output_enable"};
+// clang-format on
+
 static int altair_spi_fd;
 static const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
 bool init_altair_hardware(void)
 {
-    dx_gpioClose(SWITCHES_LOAD);
-    dx_gpioClose(SWITCHES_CHIP_SELECT);
-    dx_gpioClose(LED_MASTER_RESET);
-    dx_gpioClose(LED_STORE);
-    dx_gpioClose(LED_OUTPUT_ENABLE);
-
-    dx_gpioOpenOutput(SWITCHES_LOAD, HIGH);
-    dx_gpioOpenOutput(SWITCHES_CHIP_SELECT, HIGH);
-    dx_gpioOpenOutput(LED_MASTER_RESET, HIGH);
-    dx_gpioOpenOutput(LED_STORE, HIGH);
-    dx_gpioOpenOutput(LED_OUTPUT_ENABLE, LOW);
+    dx_gpioOpen(&gpio_switches_load);
+    dx_gpioOpen(&gpio_switches_chip_select);
+    dx_gpioOpen(&gpio_led_master_reset);
+    dx_gpioOpen(&gpio_led_store);
+    dx_gpioOpen(&gpio_output_enable);
 
     spi_config_t spi_config;
 
@@ -67,14 +97,14 @@ void read_switches(uint16_t *address, uint8_t *cmd)
     uint8_t rx_buffer[3];
     uint32_t out = 0;
 
-    dx_gpioStateSet(SWITCHES_CHIP_SELECT, LOW);
+    dx_gpioStateSet(&gpio_switches_chip_select, DX_GPIO_LOW);
 
-    dx_gpioStateSet(SWITCHES_LOAD, LOW);
-    dx_gpioStateSet(SWITCHES_LOAD, HIGH);
+    dx_gpioStateSet(&gpio_switches_load, DX_GPIO_LOW);
+    dx_gpioStateSet(&gpio_switches_load, DX_GPIO_HIGH);
 
     int numRead = spi_read(altair_spi_fd, rx_buffer, sizeof(rx_buffer));
 
-    dx_gpioStateSet(SWITCHES_CHIP_SELECT, HIGH);
+    dx_gpioStateSet(&gpio_switches_chip_select, DX_GPIO_HIGH);
 
     if (numRead == sizeof(rx_buffer))
     {
@@ -83,8 +113,8 @@ void read_switches(uint16_t *address, uint8_t *cmd)
         *cmd = (out >> 16) & 0xff;
 
         *address = out & 0xffff;
-        *address = reverse_lut[(*address & 0xf000) >> 12] << 8 | reverse_lut[(*address & 0x0f00) >> 8] << 12 |
-                   reverse_lut[(*address & 0xf0) >> 4] | reverse_lut[*address & 0xf] << 4;
+        *address = reverse_lut[(*address & 0xf000) >> 12] << 8 | reverse_lut[(*address & 0x0f00) >> 8] << 12 | reverse_lut[(*address & 0xf0) >> 4] |
+                   reverse_lut[*address & 0xf] << 4;
         *address = (uint16_t) ~*address;
     }
     else
@@ -96,7 +126,7 @@ void read_switches(uint16_t *address, uint8_t *cmd)
 void read_altair_panel_switches(void (*process_control_panel_commands)(void))
 {
     static ALTAIR_COMMAND last_command = NOP;
-    
+
     uint16_t address = 0;
     uint8_t cmd      = 0;
 
@@ -126,11 +156,11 @@ void update_panel_status_leds(uint8_t status, uint8_t data, uint16_t bus)
 
     out_data.out = status << 24 | data << 16 | bus;
 
-    dx_gpioStateSet(LED_STORE, LOW);
+    dx_gpioStateSet(&gpio_led_store, DX_GPIO_LOW);
 
     int bytes = spi_write(altair_spi_fd, out_data.bytes, 4);
 
-    dx_gpioStateSet(LED_STORE, HIGH);
+    dx_gpioStateSet(&gpio_led_store, DX_GPIO_HIGH);
 
     if (bytes != 4)
     {
