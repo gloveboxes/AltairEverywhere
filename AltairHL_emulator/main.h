@@ -126,10 +126,8 @@ static void send_terminal_character(char character, bool wait);
 static void spin_wait(bool *flag);
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
-// static DX_DECLARE_TIMER_HANDLER(panel_refresh_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
 static DX_DECLARE_TIMER_HANDLER(update_environment_handler);
-static DX_DECLARE_TIMER_HANDLER(read_panel_handler);
 static void *altair_thread(void *arg);
 
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
@@ -146,12 +144,6 @@ static DX_TIMER_BINDING tmr_heart_beat = {.repeat = &(struct timespec){60, 0}, .
 static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){45, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
 static DX_TIMER_BINDING tmr_tick_count = {.repeat = &(struct timespec){1, 0}, .name = "tmr_tick_count", .handler = tick_count_handler};
 static DX_TIMER_BINDING tmr_update_environment = {.delay = &(struct timespec){2, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
-
-#ifdef ALTAIR_FRONT_PANEL_KIT
-static DX_TIMER_BINDING tmr_read_panel = {.delay = &(struct timespec){1, 0}, .name = "tmr_read_panel", .handler = read_panel_handler};
-#else
-static DX_TIMER_BINDING tmr_read_panel = {.name = "tmr_read_panel", .handler = read_panel_handler};
-#endif
 
 DX_ASYNC_BINDING async_copyx_request = {.name = "async_copyx_request", .handler = async_copyx_request_handler};
 DX_ASYNC_BINDING async_expire_session = { .name = "async_expire_session", .handler = async_expire_session_handler};
@@ -188,7 +180,6 @@ static DX_TIMER_BINDING *timer_bindings[] = {
     &tmr_report_memory_usage,
     &tmr_tick_count,
     &tmr_timer_millisecond_expired,
-    &tmr_read_panel,
     &tmr_timer_seconds_expired,
     &tmr_update_environment,
     &tmr_ws_ping_pong,

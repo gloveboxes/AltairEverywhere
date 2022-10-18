@@ -79,91 +79,62 @@ bool init_altair_hardware(void)
         return false;
     }
 
-    update_panel_status_leds(0xff, 0xff, 0xffff);
+    front_panel_io(0xff, 0xff, 0xffff, NULL);
     nanosleep(&(struct timespec){0, 500 * ONE_MS}, NULL);
-    update_panel_status_leds(0xaa, 0xaa, 0xaaaa);
+    front_panel_io(0xaa, 0xaa, 0xaaaa, NULL);
     nanosleep(&(struct timespec){0, 500 * ONE_MS}, NULL);
 
     return true;
 }
 
-void read_switches(uint16_t *address, uint8_t *cmd)
+void front_panel_io(uint8_t status, uint8_t data, uint16_t bus, void (*process_control_panel_commands)(void))
 {
+    static ALTAIR_COMMAND last_command = NOP;
+    uint16_t address                   = 0;
+    uint8_t cmd                        = 0;
+
+    uint8_t in[3];
+    uint32_t out = status << 24 | data << 16 | bus;
+
     if (altair_spi_fd == -1)
     {
         return;
     }
 
-    uint8_t rx_buffer[3];
-    uint32_t out = 0;
+    memset(in, 0x00, sizeof(in));
 
+    dx_gpioStateSet(&gpio_led_store, DX_GPIO_LOW);
     dx_gpioStateSet(&gpio_switches_chip_select, DX_GPIO_LOW);
-
     dx_gpioStateSet(&gpio_switches_load, DX_GPIO_LOW);
     dx_gpioStateSet(&gpio_switches_load, DX_GPIO_HIGH);
 
-    int numRead = spi_read(altair_spi_fd, rx_buffer, sizeof(rx_buffer));
+    int bytes = spi_xfer(altair_spi_fd, (uint8_t *)&out, 4, in, 3);
 
     dx_gpioStateSet(&gpio_switches_chip_select, DX_GPIO_HIGH);
-
-    if (numRead == sizeof(rx_buffer))
-    {
-        memcpy(&out, rx_buffer, 3);
-
-        *cmd = (out >> 16) & 0xff;
-
-        *address = out & 0xffff;
-        *address = reverse_lut[(*address & 0xf000) >> 12] << 8 | reverse_lut[(*address & 0x0f00) >> 8] << 12 | reverse_lut[(*address & 0xf0) >> 4] |
-                   reverse_lut[*address & 0xf] << 4;
-        *address = (uint16_t) ~*address;
-    }
-    else
-    {
-        exit(4);
-    }
-}
-
-void read_altair_panel_switches(void (*process_control_panel_commands)(void))
-{
-    static ALTAIR_COMMAND last_command = NOP;
-
-    uint16_t address = 0;
-    uint8_t cmd      = 0;
-
-    read_switches(&address, &cmd);
-
-    bus_switches = address;
-
-    if (cmd != last_command)
-    {
-        last_command = cmd;
-        cmd_switches = cmd;
-        process_control_panel_commands();
-    }
-}
-
-void update_panel_status_leds(uint8_t status, uint8_t data, uint16_t bus)
-{
-    if (altair_spi_fd == -1)
-    {
-        return;
-    }
-
-    union Data {
-        uint32_t out;
-        uint8_t bytes[4];
-    } out_data;
-
-    out_data.out = status << 24 | data << 16 | bus;
-
-    dx_gpioStateSet(&gpio_led_store, DX_GPIO_LOW);
-
-    int bytes = spi_write(altair_spi_fd, out_data.bytes, 4);
-
     dx_gpioStateSet(&gpio_led_store, DX_GPIO_HIGH);
 
-    if (bytes != 4)
+    if (bytes == 4)
     {
-        printf("Front panel write failed.\n");
+        out = 0;
+        memcpy(&out, in, 3);
+
+        cmd = (out >> 16) & 0xff;
+
+        address = out & 0xffff;
+        address = reverse_lut[(address & 0xf000) >> 12] << 8 | reverse_lut[(address & 0x0f00) >> 8] << 12 | reverse_lut[(address & 0xf0) >> 4] |
+                  reverse_lut[address & 0xf] << 4;
+        address = (uint16_t)~address;
+
+        bus_switches = address;
+
+        if (cmd != last_command)
+        {
+            last_command = cmd;
+            cmd_switches = cmd;
+            if (process_control_panel_commands && cmd)
+            {
+                process_control_panel_commands();
+            }
+        }
     }
 }

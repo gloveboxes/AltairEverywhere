@@ -12,9 +12,7 @@
 extern ALTAIR_COMMAND cmd_switches;
 extern uint16_t bus_switches;
 
-void update_panel_status_leds(uint8_t status, uint8_t data, uint16_t bus);
-void read_altair_panel_switches(void (*process_control_panel_commands)(void));
-void read_switches(uint16_t *address, uint8_t *cmd);
+void front_panel_io(uint8_t status, uint8_t data, uint16_t bus, void (*process_control_panel_commands)(void));
 bool init_altair_hardware(void);
 
 #endif

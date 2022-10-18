@@ -11,6 +11,6 @@ void read_altair_panel_switches(void (*process_control_panel_commands)(void)) {
 
 }
 
-void update_panel_status_leds(uint8_t status, uint8_t data, uint16_t bus) {
+void front_panel_io(uint8_t status, uint8_t data, uint16_t bus, void (*process_control_panel_commands)(void)) {
 
 }

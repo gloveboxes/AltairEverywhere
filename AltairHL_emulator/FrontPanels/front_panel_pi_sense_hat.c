@@ -33,7 +33,7 @@ static void uint8_to_uint16_t(uint8_t bitmap, uint16_t *buffer)
     }
 }
 
-void update_panel_status_leds(uint8_t status, uint8_t data, uint16_t bus)
+void front_panel_io(uint8_t status, uint8_t data, uint16_t bus, void (*process_control_panel_commands)(void))
 {
     uint8_to_uint16_t(status, panel_buffer);
     uint8_to_uint16_t(data, panel_buffer + (3 * 8));

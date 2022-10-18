@@ -48,18 +48,6 @@ static DX_TIMER_HANDLER(heart_beat_handler)
 DX_TIMER_HANDLER_END
 
 /// <summary>
-/// Read panel input
-/// </summary>
-static DX_TIMER_HANDLER(read_panel_handler)
-{
-#ifdef ALTAIR_FRONT_PANEL_KIT
-    read_altair_panel_switches(process_control_panel_commands);
-    dx_timerOneShotSet(&tmr_read_panel, &(struct timespec){0, 150 * ONE_MS});
-#endif
-}
-DX_TIMER_HANDLER_END
-
-/// <summary>
 /// Handler called to process inbound message
 /// </summary>
 void terminal_handler(WS_INPUT_BLOCK_T *in_block)
@@ -400,7 +388,7 @@ static void *panel_refresh_thread(void *arg)
                 bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 |
                                  reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
 
-                update_panel_status_leds(status, data, bus);
+                front_panel_io(status, data, bus, process_control_panel_commands);
             // }
             nanosleep(&(struct timespec){0, 5 * ONE_MS}, NULL);
         }

@@ -13,7 +13,7 @@ extern CPU_OPERATING_MODE cpu_operating_mode;
 extern uint16_t bus_switches;
 
 void init_altair_hardware(void);
-void update_panel_status_leds(uint8_t status, uint8_t data, uint16_t bus);
+void front_panel_io(uint8_t status, uint8_t data, uint16_t bus, void (*process_control_panel_commands)(void));
 void set_led_panel_color(int color);
 
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
