@@ -47,15 +47,14 @@ DX_ASYNC_HANDLER(async_set_timer_millisecond_handler, handle)
 }
 DX_ASYNC_HANDLER_END
 
-size_t time_output(int port, int data, char *buffer, size_t buffer_length)
+size_t time_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 {
     size_t len = 0;
 
     switch (port)
     {
         case 29: // Set milliseconds timer
-            delay_milliseconds_enabled = false;
-            if (data > 0)
+            if (!delay_milliseconds_enabled)
             {
                 delay_milliseconds_enabled = true;
                 timer_milliseconds_delay   = data;
@@ -63,8 +62,7 @@ size_t time_output(int port, int data, char *buffer, size_t buffer_length)
             }
             break;
         case 30: // set seconds timer
-            delay_seconds_enabled = false;
-            if (data > 0)
+            if (!delay_seconds_enabled)
             {
                 delay_seconds_enabled = true;
                 timer_delay           = data;
@@ -80,7 +78,7 @@ size_t time_output(int port, int data, char *buffer, size_t buffer_length)
             break;
         case 43: // get local date and time
 #ifdef AZURE_SPHERE
-            dx_getCurrentUtc(ru.buffer, sizeof(ru.buffer));
+            dx_getCurrentUtc(buffer, buffer_length);
 #else
             dx_getLocalTime(buffer, buffer_length);
 #endif
@@ -93,14 +91,14 @@ size_t time_output(int port, int data, char *buffer, size_t buffer_length)
 
 uint8_t time_input(uint8_t port)
 {
-    int retVal = 0;
+    uint8_t retVal = 0;
     switch (port)
     {
         case 29: // Has milliseconds timer expired
-            retVal = (uint8_t)delay_milliseconds_enabled;
+            retVal = delay_milliseconds_enabled;
             break;
         case 30: // Has seconds timer expired
-            retVal = (uint8_t)delay_seconds_enabled;
+            retVal = delay_seconds_enabled;
             break;
     }
     return retVal;

@@ -11,5 +11,5 @@ DX_DECLARE_ASYNC_HANDLER(async_copyx_request_handler);
 
 extern DX_ASYNC_BINDING async_copyx_request;
 
-size_t file_output(int port, int data, char *buffer, size_t buffer_length);
+size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length);
 uint8_t file_input(uint8_t port);

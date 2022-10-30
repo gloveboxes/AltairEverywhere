@@ -3,12 +3,6 @@
 
 #include "io_ports.h"
 
-#include "PortDrivers/onboard_io.h"
-#include "PortDrivers/power_io.h"
-#include "PortDrivers/time_io.h"
-#include "PortDrivers/utility_io.h"
-#include "PortDrivers/weather_io.h"
-
 typedef struct
 {
     size_t len;
@@ -38,9 +32,13 @@ void io_port_out(uint8_t port, uint8_t data)
             ru.len = time_output(port, data, ru.buffer, sizeof(ru.buffer));
             break;
 
-        // Weather IO Ports
+        // Azure IoT IO Ports
         case 31: // Publish weather json
         case 32: // Publish weather
+            ru.len = azure_output(port, data, ru.buffer, sizeof(ru.buffer));
+            break;
+
+        // Weather IO Ports
         case 34: // Load weather key
         case 35: // Load weather value
         case 36: // Load location key
@@ -132,7 +130,7 @@ uint8_t io_port_in(uint8_t port)
         // Weather IO Ports
         case 31: // Is publish weather json pending
         case 32: // Is publish weather pending
-            retVal = weather_input(port);
+            retVal = azure_input(port);
             break;
 
         // File transfer IO Ports

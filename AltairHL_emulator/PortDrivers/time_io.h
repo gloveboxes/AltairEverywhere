@@ -19,5 +19,5 @@ extern DX_ASYNC_BINDING async_set_seconds_timer;
 extern DX_TIMER_BINDING tmr_timer_millisecond_expired;
 extern DX_TIMER_BINDING tmr_timer_seconds_expired;
 
-size_t time_output(int port, int data, char *buffer, size_t buffer_length);
+size_t time_output(int port, uint8_t data, char *buffer, size_t buffer_length);
 uint8_t time_input(uint8_t port);

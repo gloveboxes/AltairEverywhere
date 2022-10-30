@@ -52,7 +52,7 @@ DX_ASYNC_HANDLER(async_power_management_wake_handler, handle)
 }
 DX_ASYNC_HANDLER_END
 
-size_t power_output(int port, int data, char *buffer, size_t buffer_length)
+size_t power_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 {
     size_t len = 0;
 

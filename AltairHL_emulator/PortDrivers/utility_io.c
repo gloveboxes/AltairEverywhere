@@ -6,11 +6,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef AZURE_SPHERE
+#include "device_id.h"
+#include <applibs/applications.h>
+#endif
+
 // Device ID is 128 bytes. But we are only taking the first 8 bytes and allowing a terminating NULL;
 #define DEVICE_ID_BUFFER_SIZE 9
 static char azsphere_device_id[DEVICE_ID_BUFFER_SIZE];
 
-size_t utility_output(int port, int data, char *buffer, size_t buffer_length)
+size_t utility_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 {
     size_t len = 0;
 #ifdef AZURE_SPHERE
@@ -40,6 +45,7 @@ size_t utility_output(int port, int data, char *buffer, size_t buffer_length)
             }
             else
             {
+                // Failed to get device ID so return random ID
                 len = (size_t)snprintf(buffer, buffer_length, "%s", "A7B43940");
             }
             break;

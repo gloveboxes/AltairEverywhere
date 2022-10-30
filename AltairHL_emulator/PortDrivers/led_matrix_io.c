@@ -4,9 +4,16 @@
 #include "led_matrix_io.h"
 
 #ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
+
 #include "front_panel_retro_click.h"
+
+extern DX_ASYNC_BINDING async_start_panel_io;
+extern DX_ASYNC_BINDING async_stop_panel_io;
 extern DX_TIMER_BINDING tmr_read_panel;
 extern DX_TIMER_BINDING tmr_refresh_panel;
+
+static int led_brightness = 0;
+
 #endif
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
@@ -23,13 +30,11 @@ uint16_t panel_8x8_buffer[64];
 #endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 #if defined(ALTAIR_FRONT_PANEL_RETRO_CLICK) || defined(ALTAIR_FRONT_PANEL_PI_SENSE)
+
 union {
     uint32_t mask[2];
     uint64_t mask64;
 } pixel_mask;
-#endif
-
-#if defined(ALTAIR_FRONT_PANEL_RETRO_CLICK) || defined(ALTAIR_FRONT_PANEL_PI_SENSE)
 
 typedef union {
     uint8_t bitmap[8];
@@ -40,7 +45,34 @@ PIXEL_MAP pixel_map;
 
 #endif // ALTAIR_FRONT_PANEL_RETRO_CLICK
 
-size_t led_matrix_output(int port_number, int data, char *buffer, size_t buffer_length)
+DX_ASYNC_HANDLER(async_stop_panel_io_handler, handle)
+{
+#ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
+
+    dx_timerStop(&tmr_read_panel);
+    dx_timerStop(&tmr_refresh_panel);
+    as1115_clear(&retro_click);
+
+#endif // ALTAIR_FRONT_PANEL_RETRO_CLICK
+}
+DX_ASYNC_HANDLER_END
+
+DX_ASYNC_HANDLER(async_start_panel_io_handler, handle)
+{
+#ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
+
+    int brightness = *((int *)handle->data);
+    dx_timerStart(&tmr_read_panel);
+    dx_timerStart(&tmr_refresh_panel);
+
+    brightness = (brightness < 0) ? 0 : brightness;
+    as1115_set_brightness(&retro_click, (unsigned char)brightness);
+
+#endif // ALTAIR_FRONT_PANEL_RETRO_CLICK
+}
+DX_ASYNC_HANDLER_END
+
+size_t led_matrix_output(int port_number, uint8_t data, char *buffer, size_t buffer_length)
 {
 
     switch (port_number)
@@ -48,22 +80,15 @@ size_t led_matrix_output(int port_number, int data, char *buffer, size_t buffer_
 
 #ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
 
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            // ##TODO THESE SHOULD BE ASYNC
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
         case 65: // Enable/Disable 8x8 LED Panel and 4x4 keypad
             if (data == 0)
             {
-                dx_timerStop(&tmr_read_panel);
-                dx_timerStop(&tmr_refresh_panel);
-                as1115_clear(&retro_click);
+                dx_asyncSend(&async_stop_panel_io, NULL);
             }
             else
             {
-                dx_timerStart(&tmr_read_panel);
-                dx_timerStart(&tmr_refresh_panel);
-                as1115_set_brightness(&retro_click, (unsigned char)(data - 1));
+                led_brightness = data - 1;
+                dx_asyncSend(&async_start_panel_io, &led_brightness);
             }
             break;
 #endif

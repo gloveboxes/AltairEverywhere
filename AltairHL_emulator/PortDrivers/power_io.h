@@ -23,5 +23,5 @@ extern DX_ASYNC_BINDING async_power_management_wake;
 extern DX_TIMER_BINDING tmr_i8080_wakeup;
 extern DX_TIMER_BINDING tmr_terminal_io_monitor;
 
-size_t power_output(int port, int data, char *buffer, size_t buffer_length);
+size_t power_output(int port, uint8_t data, char *buffer, size_t buffer_length);
 uint8_t power_input(uint8_t port);

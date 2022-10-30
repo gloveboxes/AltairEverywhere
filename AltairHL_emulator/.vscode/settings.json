@@ -34,7 +34,9 @@
         "led_matrix_io.h": "c",
         "chrono": "c",
         "variant": "c",
-        "dx_gpio.h": "c"
+        "dx_gpio.h": "c",
+        "string.h": "c",
+        "stddef.h": "c"
     },
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#65c89b",

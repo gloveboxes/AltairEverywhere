@@ -4,9 +4,15 @@
 #pragma once
 
 #include "dx_async.h"
+#include "dx_gpio.h"
 #include "dx_timer.h"
 #include <stddef.h>
 #include <stdint.h>
+
+#ifdef AZURE_SPHERE
+#include "dx_intercore.h"
+#include "intercore_contract.h"
+#endif
 
 DX_DECLARE_ASYNC_HANDLER(async_accelerometer_start_handler);
 DX_DECLARE_ASYNC_HANDLER(async_accelerometer_stop_handler);
@@ -28,5 +34,5 @@ void intercore_classify_response_handler(void *data_block, ssize_t message_lengt
 
 #endif
 
-size_t onboard_output(int port, int data, char *buffer, size_t buffer_length);
+size_t onboard_output(int port, uint8_t data, char *buffer, size_t buffer_length);
 uint8_t onboard_input(uint8_t port);

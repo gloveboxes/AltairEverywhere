@@ -9,10 +9,13 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef AZURE_SPHERE
+#include <applibs/storage.h>
+#endif // AZURE_SPHERE
+
 #define APP_SAMPLES_DIRECTORY "AppSamples"
 
 #define GAMES_REPO              "https://raw.githubusercontent.com/AzureSphereCloudEnabledAltair8800/RetroGames/main"
-#define DEFAULT_CUSTOM_ENDPOINT "http://localhost:5555"
 #define ENDPOINT_LEN            128
 #define ENDPOINT_ELEMENTS       2
 
@@ -63,7 +66,7 @@ DX_ASYNC_HANDLER(async_copyx_request_handler, handle)
 }
 DX_ASYNC_HANDLER_END
 
-size_t file_output(int port, int data, char *buffer, size_t buffer_length)
+size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 {
     size_t len = 0;
     switch (port)
@@ -112,14 +115,6 @@ size_t file_output(int port, int data, char *buffer, size_t buffer_length)
             }
             break;
         case 111: // Load getfile (gf) custom endpoint url
-
-#ifndef AZURE_SPHERE
-            if (dx_isStringNullOrEmpty(webget.personal_endpoint))
-            {
-                strcpy(webget.personal_endpoint, DEFAULT_CUSTOM_ENDPOINT);
-            }
-#endif
-
             len = (size_t)snprintf(buffer, buffer_length, "%s", webget.personal_endpoint);
             break;
         case 112: // Select getfile (gf) endpoint to use

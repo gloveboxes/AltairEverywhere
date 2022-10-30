@@ -2,6 +2,8 @@
    Licensed under the MIT License. */
 
 #include "onboard_io.h"
+#include "dx_utilities.h"
+
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 #include "sense_hat.h"
@@ -92,7 +94,7 @@ DX_ASYNC_HANDLER(async_accelerometer_stop_handler, handle)
 }
 DX_ASYNC_HANDLER_END
 
-size_t onboard_output(int port, int data, char *buffer, size_t buffer_length)
+size_t onboard_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 {
     size_t len = 0;
 
@@ -120,7 +122,7 @@ size_t onboard_output(int port, int data, char *buffer, size_t buffer_length)
                     len = (size_t)snprintf(buffer, buffer_length, "%d", (int)onboard_get_pressure());
                     break;
                 case 2:
-#ifdef OEM_AVNET
+#if defined(OEM_AVNET) && !defined(ALTAIR_FRONT_PANEL_KIT)
                     len = (size_t)snprintf(buffer, buffer_length, "%d", avnet_get_light_level() * 2);
 #else
                     len = (size_t)snprintf(buffer, buffer_length, "%d", 0);
@@ -171,6 +173,7 @@ size_t onboard_output(int port, int data, char *buffer, size_t buffer_length)
                     {
                         dx_asyncSend(&async_accelerometer_start, NULL);
                         accelerometer_running = true;
+                        nanosleep(&(struct timespec){1, 0}, NULL); // sleep for 1 second to allow accelerometer to start
                     }
                     break;
                 case 4: // accelerometer stop feeding TinyML model running on real-time core
@@ -178,6 +181,7 @@ size_t onboard_output(int port, int data, char *buffer, size_t buffer_length)
                     {
                         dx_asyncSend(&async_accelerometer_stop, NULL);
                         accelerometer_running = false;
+                        nanosleep(&(struct timespec){1, 0}, NULL); // sleep for 1 second to allow accelerometer to stop
                     }
                     break;
                 case 5: // Load accelerometer x,y,z
@@ -211,7 +215,7 @@ size_t onboard_output(int port, int data, char *buffer, size_t buffer_length)
 
 uint8_t onboard_input(uint8_t port)
 {
-    int retVal = 0;
+    uint8_t retVal = 0;
 
     return retVal;
 }
