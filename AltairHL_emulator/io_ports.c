@@ -2,6 +2,7 @@
    Licensed under the MIT License. */
 
 #include "io_ports.h"
+#include <string.h>
 
 typedef struct
 {
