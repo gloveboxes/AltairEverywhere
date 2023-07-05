@@ -149,8 +149,7 @@ size_t openai_output(int port, uint8_t data, char *buffer, size_t buffer_length)
                 openai.content_length = 0;
                 openai.content_index  = 0;
                 openai.end_of_stream  = false;
-                pthread_mutex_unlock(&openai_mutex);
-                // dx_asyncSend(&async_openai_request, NULL);
+
                 dx_startThreadDetached(openai_thread, NULL, "OpenAI Thread");
             }
 
