@@ -266,7 +266,8 @@ static int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec
 
         nanosleep(&ts, &slept);
 
-        ts.tv_nsec -= slept.tv_nsec;
+        // ts.tv_nsec -= slept.tv_nsec;
+
         if (ts.tv_nsec <= remaining.tv_nsec)
         {
             remaining.tv_nsec -= ts.tv_nsec;
@@ -274,10 +275,10 @@ static int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec
         else
         {
             remaining.tv_sec--;
-            remaining.tv_nsec = (1000000 - (ts.tv_nsec - remaining.tv_nsec));
+            remaining.tv_nsec = (10000000 - (ts.tv_nsec - remaining.tv_nsec));
         }
 
-        if (remaining.tv_sec < 0 || (!remaining.tv_sec && remaining.tv_nsec <= 0))
+        if (remaining.tv_sec < 0L || (!remaining.tv_sec && remaining.tv_nsec <= 0L))
         {
             return ETIMEDOUT;
         }
@@ -305,6 +306,7 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
     if (pthread_mutex_timedlock(&webget_mutex, &timeoutTime) != 0)
     {
         wg->status = WEBGET_FAILED;
+        realsize = -1;
     }
     else
     {

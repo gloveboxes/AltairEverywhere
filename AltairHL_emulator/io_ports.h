@@ -7,6 +7,7 @@
 #include "PortDrivers/file_io.h"
 #include "PortDrivers/led_matrix_io.h"
 #include "PortDrivers/onboard_io.h"
+#include "PortDrivers/openai.h"
 #include "PortDrivers/power_io.h"
 #include "PortDrivers/time_io.h"
 #include "PortDrivers/utility_io.h"

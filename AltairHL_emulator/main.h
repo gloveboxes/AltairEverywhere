@@ -34,8 +34,6 @@
 #include "io_ports.h"
 #include "memory.h"
 
-#include "PortDrivers/time_io.h"
-#include "PortDrivers/weather_io.h"
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 #include "front_panel_pi_sense_hat.h"

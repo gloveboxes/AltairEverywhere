@@ -106,6 +106,16 @@ void io_port_out(uint8_t port, uint8_t data)
             ru.len = file_output(port, data, ru.buffer, sizeof(ru.buffer));
             break;
 
+        // OpenAI IO Ports
+        case 120: // Set system message
+        case 121: // Set user Message
+        case 122: // Set assistant message
+        case 123: // Clear all messages
+        case 124: // Load OpenAI stream
+        case 125: // Cancel ChatGPT stream
+            ru.len = openai_output(port, data, ru.buffer, sizeof(ru.buffer));
+            break;
+
         default:
             break;
     }
@@ -150,6 +160,12 @@ uint8_t io_port_in(uint8_t port)
         // Request Unit IO Ports
         case 200: // Get next request unit byte
             retVal = ru.count < ru.len && ru.count < sizeof(ru.buffer) ? ru.buffer[ru.count++] : 0x00;
+            break;
+
+        // OpenAI IO Ports
+        case 120: // get system message
+        case 121: // get message
+            retVal = openai_input(port);
             break;
 
         default:
