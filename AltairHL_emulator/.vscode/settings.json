@@ -36,7 +36,10 @@
         "variant": "c",
         "dx_gpio.h": "c",
         "string.h": "c",
-        "stddef.h": "c"
+        "stddef.h": "c",
+        "ctime": "c",
+        "__config": "c",
+        "altair_config.h": "c"
     },
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#65c89b",
