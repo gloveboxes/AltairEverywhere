@@ -44,6 +44,7 @@ typedef struct
     int content_length;
     int content_index;
     char last_finish_reason[10];
+    int last_finish_reason_length;
     char system_message[1024];
     enum OPENAI_STATUS status;
 } OPENAI_T;
@@ -146,6 +147,7 @@ size_t openai_output(int port, uint8_t data, char *buffer, size_t buffer_length)
             if (headers)
             {
                 openai.status = OPENAI_WAITING;
+                pthread_mutex_unlock(&openai_mutex);
                 dx_startThreadDetached(openai_thread, NULL, "OpenAI Thread");
             }
 
@@ -169,21 +171,24 @@ uint8_t openai_input(uint8_t port)
             retVal = openai.status;
             break;
         case 121: // get message
-            if (openai.content_length > 0)
+
+            if (openai.content_index < openai.content_length)
             {
                 retVal = openai.content[openai.content_index++];
-                openai.content_length--;
-
-                if (openai.content_length == 0)
-                {
-                    openai.status = OPENAI_WAITING;
-                    pthread_mutex_unlock(&openai_mutex);
-                }
             }
             else
             {
-                retVal = 0x00;
+                retVal        = 0x00;
+                openai.status = OPENAI_WAITING;
                 pthread_mutex_unlock(&openai_mutex);
+            }
+
+            break;
+
+        case 122: // get finished status
+            if (openai.last_finish_reason_length < strlen(openai.last_finish_reason))
+            {
+                retVal = openai.last_finish_reason[openai.last_finish_reason_length++];
             }
             break;
     }
@@ -277,16 +282,17 @@ static size_t StreamOpenAICallback(void *contents, size_t size, size_t nmemb, vo
 #else // __APPLE__
 
     // Max wait is 500ms
-    timeoutTime.tv_sec  = 0;
-    timeoutTime.tv_nsec = 500 * ONE_MS;
+    timeoutTime.tv_sec  = 2;
+    timeoutTime.tv_nsec = 0;
 
 #endif // __APPLE__
 
-        if (pthread_mutex_timedlock(&openai_mutex, &timeoutTime) != 0)
+    if (pthread_mutex_timedlock(&openai_mutex, &timeoutTime) != 0)
     {
         chat->status = OPENAI_END_OF_STREAM;
         // setting this to -1 will cause the curl request to fail and end
         realsize = -1;
+        strcpy(chat->last_finish_reason, "lock tout");
         goto cleanup;
     }
 
@@ -299,6 +305,7 @@ static size_t StreamOpenAICallback(void *contents, size_t size, size_t nmemb, vo
         ptr = strstr(ptr, "data: ");
         if (ptr != NULL)
         {
+            // skip past the word data:
             ptr += 6;
 
             root_value = json_parse_string(ptr);
@@ -375,6 +382,7 @@ static int stream_openai(struct curl_slist *headers, const char *postData, long 
     CURL *curl_handle;
 
     strcpy(openai.last_finish_reason, "failed");
+    openai.last_finish_reason_length = 0;
 
     /* init the curl session */
     curl_handle = curl_easy_init();

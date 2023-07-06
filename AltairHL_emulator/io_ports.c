@@ -165,6 +165,7 @@ uint8_t io_port_in(uint8_t port)
         // OpenAI IO Ports
         case 120: // get system message
         case 121: // get message
+        case 122: // get finished status
             retVal = openai_input(port);
             break;
 
