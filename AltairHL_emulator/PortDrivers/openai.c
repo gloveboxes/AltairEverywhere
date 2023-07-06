@@ -201,28 +201,27 @@ static int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec
 {
     int rv;
     struct timespec remaining, slept, ts;
-
     remaining = *abs_timeout;
+
+    long nsecs = remaining.tv_sec * 1000 * ONE_MS;
+    nsecs += remaining.tv_nsec;
+    printf("\n");
+
     while ((rv = pthread_mutex_trylock(mutex)) == EBUSY)
     {
-        ts.tv_sec  = 0;
-        ts.tv_nsec = (remaining.tv_sec > 0 ? 10000000 : (remaining.tv_nsec < 10000000 ? remaining.tv_nsec : 10000000));
-
-        nanosleep(&ts, &slept);
-
-        // ts.tv_nsec -= slept.tv_nsec;
-
-        if (ts.tv_nsec <= remaining.tv_nsec)
+        printf(".");
+        if (nsecs > 10 * ONE_MS)
         {
-            remaining.tv_nsec -= ts.tv_nsec;
+            nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
+            nsecs -= 10 * ONE_MS;
         }
         else
         {
-            remaining.tv_sec--;
-            remaining.tv_nsec = (10000000 - (ts.tv_nsec - remaining.tv_nsec));
+            nanosleep(&(struct timespec){0, nsecs}, NULL);
+            nsecs = 0;
         }
 
-        if (remaining.tv_sec < 0L || (!remaining.tv_sec && remaining.tv_nsec <= 0L))
+        if (nsecs <= 0)
         {
             return ETIMEDOUT;
         }
@@ -264,7 +263,7 @@ static size_t StreamOpenAICallback(void *contents, size_t size, size_t nmemb, vo
     const char *content    = NULL;
 
     size_t realsize = size * nmemb;
-    OPENAI_T *chat    = (OPENAI_T *)openai;
+    OPENAI_T *chat  = (OPENAI_T *)openai;
 
     struct timespec timeoutTime;
     memset(&timeoutTime, 0, sizeof(struct timespec));
@@ -277,9 +276,9 @@ static size_t StreamOpenAICallback(void *contents, size_t size, size_t nmemb, vo
 
 #else // __APPLE__
 
-    // Max wait is 100ms
-    timeoutTime.tv_sec = 0;
-    timeoutTime.tv_nsec += 100 * ONE_MS;
+    // Max wait is 500ms
+    timeoutTime.tv_sec  = 0;
+    timeoutTime.tv_nsec = 500 * ONE_MS;
 
 #endif // __APPLE__
 
@@ -293,7 +292,7 @@ static size_t StreamOpenAICallback(void *contents, size_t size, size_t nmemb, vo
 
     chat->content_index  = 0;
     chat->content_length = 0;
-    char *ptr          = (char *)contents;
+    char *ptr            = (char *)contents;
 
     while (ptr != NULL)
     {
