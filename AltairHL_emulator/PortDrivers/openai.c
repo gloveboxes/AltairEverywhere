@@ -15,8 +15,8 @@
 #endif // AZURE_SPHERE
 
 static const char system_message[] = "You are an intelligent assistant";
-static const char user_message[]   = "What is the meaning of life in 5 bullet points followed by a summary";
-static const int max_tokens        = 1024;
+static const char user_message[]   = "What is the meaning of life in 5 short bullet points followed by a summary";
+static const int max_tokens        = 128;
 
 // "write Microsoft BASIC-80 Rev. 5.21 syntax code with line numbers and single letter variable names. Just write code no explanation",
 // "Calculate prime numbers from 0 to 100", 256);
@@ -27,18 +27,19 @@ static void *openai_thread(void *arg);
 static const char *openai_endpoint = "https://api.openai.com/v1/chat/completions";
 static char *openai_prompt         = NULL;
 static struct curl_slist *headers  = NULL;
+static bool streaming              = false;
 
 enum OPENAI_STATUS
 {
     OPENAI_END_OF_STREAM,
     OPENAI_WAITING,
     OPENAI_DATA_READY,
-    OPENAI_FAILED
+    // OPENAI_FAILED
 };
 
 typedef struct
 {
-    bool end_of_stream;
+    // bool end_of_stream;
     char content[128];
     int content_length;
     int content_index;
@@ -144,12 +145,7 @@ size_t openai_output(int port, uint8_t data, char *buffer, size_t buffer_length)
         case 124: // Load OpenAI stream
             if (headers)
             {
-                // openai.index          = 0;
-                openai.status         = OPENAI_WAITING;
-                openai.content_length = 0;
-                openai.content_index  = 0;
-                openai.end_of_stream  = false;
-
+                openai.status = OPENAI_WAITING;
                 dx_startThreadDetached(openai_thread, NULL, "OpenAI Thread");
             }
 
@@ -169,7 +165,7 @@ uint8_t openai_input(uint8_t port)
 
     switch (port)
     {
-        case 120: // get system message
+        case 120: // get streaming status
             retVal = openai.status;
             break;
         case 121: // get message
@@ -180,8 +176,7 @@ uint8_t openai_input(uint8_t port)
 
                 if (openai.content_length == 0)
                 {
-                    openai.content_index = 0;
-                    openai.status        = openai.end_of_stream ? OPENAI_END_OF_STREAM : OPENAI_WAITING;
+                    openai.status = OPENAI_WAITING;
                     pthread_mutex_unlock(&openai_mutex);
                 }
             }
@@ -269,31 +264,37 @@ static size_t StreamOpenAICallback(void *contents, size_t size, size_t nmemb, vo
     const char *content    = NULL;
 
     size_t realsize = size * nmemb;
-    OPENAI_T *wg    = (OPENAI_T *)openai;
+    OPENAI_T *chat    = (OPENAI_T *)openai;
 
     struct timespec timeoutTime;
     memset(&timeoutTime, 0, sizeof(struct timespec));
 
 #ifndef __APPLE__
+
     clock_gettime(CLOCK_REALTIME, &timeoutTime);
-#endif // __APPLE__
+    timeoutTime.tv_sec += 1;
+    timeoutTime.tv_nsec = 0
+
+#else // __APPLE__
 
     // Max wait is 100ms
-    timeoutTime.tv_sec += 0;
+    timeoutTime.tv_sec = 0;
     timeoutTime.tv_nsec += 100 * ONE_MS;
 
-    if (pthread_mutex_timedlock(&openai_mutex, &timeoutTime) != 0)
+#endif // __APPLE__
+
+        if (pthread_mutex_timedlock(&openai_mutex, &timeoutTime) != 0)
     {
-        wg->status = OPENAI_FAILED;
+        chat->status = OPENAI_END_OF_STREAM;
         // setting this to -1 will cause the curl request to fail and end
         realsize = -1;
         goto cleanup;
     }
 
-    wg->content_index = 0;
-    // wg->status        = OPENAI_WAITING;
+    chat->content_index  = 0;
+    chat->content_length = 0;
+    char *ptr          = (char *)contents;
 
-    char *ptr = (char *)contents;
     while (ptr != NULL)
     {
         ptr = strstr(ptr, "data: ");
@@ -341,18 +342,17 @@ static size_t StreamOpenAICallback(void *contents, size_t size, size_t nmemb, vo
             }
             else
             {
-                strcpy(wg->last_finish_reason, finish_reason);
+                content = NULL;
+                strcpy(chat->last_finish_reason, finish_reason);
             }
 
             if (content != NULL)
             {
                 int content_length = strlen(content);
-                if (content_length > 0 && wg->content_length + content_length < sizeof(wg->content))
+                if (content_length > 0 && chat->content_length + content_length < sizeof(chat->content))
                 {
-                    // printf("%s", content);
-                    memcpy(wg->content + wg->content_length, content, content_length);
-                    wg->content_length += content_length;
-                    // printf("wg->content_length: %d\n", wg->content_length);
+                    memcpy(chat->content + chat->content_length, content, content_length);
+                    chat->content_length += content_length;
                 }
             }
 
@@ -366,7 +366,7 @@ static size_t StreamOpenAICallback(void *contents, size_t size, size_t nmemb, vo
         }
     }
 
-    wg->status = OPENAI_DATA_READY;
+    chat->status = OPENAI_DATA_READY;
 
     return realsize;
 }
@@ -418,8 +418,8 @@ static int stream_openai(struct curl_slist *headers, const char *postData, long 
         // or larger than 400
         curl_easy_setopt(curl_handle, CURLOPT_FAILONERROR, true);
 
-        openai.status        = OPENAI_WAITING;
-        openai.end_of_stream = false;
+        openai.status = OPENAI_WAITING;
+        // openai.end_of_stream = false;
 
         /* write the page body to this file handle */
         curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &openai);
@@ -427,17 +427,10 @@ static int stream_openai(struct curl_slist *headers, const char *postData, long 
         /* get it! */
         CURLcode res = curl_easy_perform(curl_handle);
 
-        if (res != CURLE_OK)
-        {
-            openai.status = OPENAI_FAILED;
-        }
-
-        openai.status        = OPENAI_END_OF_STREAM;
-        openai.end_of_stream = true;
+        openai.status = OPENAI_END_OF_STREAM;
 
         /* cleanup curl stuff */
         curl_easy_cleanup(curl_handle);
-
         curl_global_cleanup();
     }
 
@@ -446,8 +439,13 @@ static int stream_openai(struct curl_slist *headers, const char *postData, long 
 
 static void *openai_thread(void *arg)
 {
-    pthread_mutex_unlock(&openai_mutex);
-    stream_openai(headers, openai_prompt, 5);
-    // printf("openai_thread: stream_openai returned\n");
+    if (!streaming)
+    {
+        streaming = true;
+        pthread_mutex_unlock(&openai_mutex);
+        stream_openai(headers, openai_prompt, 5);
+        printf("openai_thread: stream_openai returned\n");
+        streaming = false;
+    }
     return NULL;
 }
