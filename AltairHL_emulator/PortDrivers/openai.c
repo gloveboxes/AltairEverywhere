@@ -271,7 +271,7 @@ static size_t StreamOpenAICallback(void *contents, size_t size, size_t nmemb, vo
 #ifndef __APPLE__
 
     clock_gettime(CLOCK_REALTIME, &timeoutTime);
-    timeoutTime.tv_sec += 2;
+    timeoutTime.tv_sec += 3;
     timeoutTime.tv_nsec = 0;
 
 #else // __APPLE__
