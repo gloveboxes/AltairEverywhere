@@ -301,7 +301,7 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
     clock_gettime(CLOCK_REALTIME, &timeoutTime);
 #endif // __APPLE__
 
-    timeoutTime.tv_sec += 20;
+    timeoutTime.tv_sec += 2;
 
     if (pthread_mutex_timedlock(&webget_mutex, &timeoutTime) != 0)
     {
