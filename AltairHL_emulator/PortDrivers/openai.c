@@ -210,11 +210,9 @@ static int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec
 
     long nsecs = remaining.tv_sec * 1000 * ONE_MS;
     nsecs += remaining.tv_nsec;
-    printf("\n");
 
     while ((rv = pthread_mutex_trylock(mutex)) == EBUSY)
     {
-        printf(".");
         if (nsecs > 10 * ONE_MS)
         {
             nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
@@ -290,10 +288,9 @@ static size_t StreamOpenAICallback(void *contents, size_t size, size_t nmemb, vo
     if (pthread_mutex_timedlock(&openai_mutex, &timeoutTime) != 0)
     {
         chat->status = OPENAI_END_OF_STREAM;
-        // setting this to -1 will cause the curl request to fail and end
-        realsize = -1;
         strcpy(chat->last_finish_reason, "lock tout");
-        goto cleanup;
+        // returning -1 will cause the curl request to fail and end
+        return -1;
     }
 
     chat->content_index  = 0;
