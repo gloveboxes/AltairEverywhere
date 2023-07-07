@@ -423,7 +423,6 @@ static int stream_openai(struct curl_slist *headers, const char *postData, long 
         curl_easy_setopt(curl_handle, CURLOPT_FAILONERROR, true);
 
         openai.status = OPENAI_WAITING;
-        // openai.end_of_stream = false;
 
         /* write the page body to this file handle */
         curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &openai);
