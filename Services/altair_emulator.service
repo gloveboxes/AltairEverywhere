@@ -1,15 +1,12 @@
 [Unit]
-Description=Altair Emulator daemon
-After=multi-user.target
+Description=Altair 8800 Emulator
+After=network.target
 
 [Service]
-Type=idle
-User=pi
-WorkingDirectory=/home/pi/altair
-ExecStart=/home/pi/altair/Altair_emulator
-Restart=always
+Type=simple
+ExecStart=/path/to/directory/AltairHL_emulator/build/Altair_emulator
+WorkingDirectory=/path/to/directory/AltairHL_emulator
 
 
 [Install]
 WantedBy=multi-user.target
-

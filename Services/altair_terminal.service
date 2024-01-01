@@ -1,15 +1,12 @@
 [Unit]
-Description=Altair Web Terminal daemon
-After=multi-user.target
+Description=HTTP Server
+After=network.target
 
 [Service]
-Type=idle
-User=pi
-WorkingDirectory=/home/pi/Altair8800Linux/Terminal
-ExecStart=/usr/bin/python3 -m http.server 8081
-Restart=always
+Type=simple
+ExecStart=/usr/bin/python3 -m http.server 80
+WorkingDirectory=/path/to/directory/Terminal
 
 
 [Install]
 WantedBy=multi-user.target
-
