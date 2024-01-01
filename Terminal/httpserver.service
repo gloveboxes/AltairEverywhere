@@ -1,0 +1,11 @@
+[Unit]
+Description=HTTP Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -m http.server 80
+WorkingDirectory=/path/to/directory
+
+[Install]
+WantedBy=multi-user.target
