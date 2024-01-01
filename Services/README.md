@@ -3,12 +3,12 @@
 ## Start the Altair Emulator as a service on Linux
 
 1. From the command line, navigate to `Services` folder.
-2. Update the altair_emulator.service file with the correct path to the `Altair Emulator` file.
+2. Update the .service files with the correct paths.
    
    ```shell
    sed -i "s|/path/to/directory|$(dirname $(pwd))|g" *.service 
    ```
-3. Copy the altair_emulator.service file to the systemd folder.
+3. Copy the .service files to the systemd folder.
    
    ```shell
     sudo cp *.service  /etc/systemd/system/
@@ -19,14 +19,14 @@
      sudo systemctl daemon-reload
      ```
 
-5. Enable the altair_emulator and altair_terminal.service services.
+5. Enable the services.
    
     ```shell
     sudo systemctl enable altair_emulator.service &&
     sudo systemctl enable altair_terminal.service
     ```
 
-6. Start the altair_emulator  and altair_terminal.service services.
+6. Start the services.
 
     ```shell
     sudo systemctl start altair_emulator.service &&
