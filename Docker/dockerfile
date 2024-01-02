@@ -1,4 +1,5 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
+
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -19,19 +20,17 @@ RUN apt update && apt-get install -y --no-install-recommends \
                     nano \
                     libgpiod-dev \
                     gpiod \
-                    # python3 \
+                    python3 \
                     htop \
                 && rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/gloveboxes/Altair8800.Emulator.UN-X.git Altair8800 \
-    && cd Altair8800 \
-    && git submodule update --init --recursive
+RUN git clone --depth 1 --recurse-submodules https://github.com/gloveboxes/AltairEverywhere.git
 
-#<REMOVE_THIS_COMMENT_TO_ENABLE_PI_SENSE_HAT>RUN cd /Altair8800/AltairHL_emulator && sed -i 's/# set(ALTAIR_FRONT_PI_SENSE_HAT/set(ALTAIR_FRONT_PI_SENSE_HAT/g' CMakeLists.txt
-#<REMOVE_THIS_COMMENT_TO_ENABLE_FRONT_PANEL_KIT_ON_RASPBERRY_PI>RUN cd /Altair8800/AltairHL_emulator && sed -i 's/# set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/g' CMakeLists.txt
-#<REMOVE_THIS_COMMENT_TO_ENABLE_CLOUD>RUN cd /Altair8800/AltairHL_emulator && sed -i 's/# set(ALTAIR_CLOUD/set(ALTAIR_CLOUD/g' CMakeLists.txt
+#<REMOVE_THIS_COMMENT_TO_ENABLE_PI_SENSE_HAT>RUN cd /AltairEverywhere/AltairHL_emulator && sed -i 's/# set(ALTAIR_FRONT_PI_SENSE_HAT/set(ALTAIR_FRONT_PI_SENSE_HAT/g' CMakeLists.txt
+#<REMOVE_THIS_COMMENT_TO_ENABLE_FRONT_PANEL_KIT_ON_RASPBERRY_PI>RUN cd /AltairEverywhere/AltairHL_emulator && sed -i 's/# set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/g' CMakeLists.txt
+#<REMOVE_THIS_COMMENT_TO_ENABLE_CLOUD>RUN cd /AltairEverywhere/AltairHL_emulator && sed -i 's/# set(ALTAIR_CLOUD/set(ALTAIR_CLOUD/g' CMakeLists.txt
 
-RUN cd /Altair8800/AltairHL_emulator \
+RUN cd /AltairEverywhere/AltairHL_emulator \
     && mkdir -p build \
     && cmake -B build \
     && cmake --build build --config release --target all -j 8
