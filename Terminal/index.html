@@ -45,7 +45,7 @@
       if (host_address) {
         document.getElementById('altairAddress').value = host_address;
       } else {
-        document.getElementById('altairAddress').value = localStorage['altair_address'] || "";
+        document.getElementById('altairAddress').value = localStorage['altair_address'] || window.location.host.split(':')[0];
       }
 
       term = new Terminal({
