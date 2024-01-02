@@ -4,12 +4,12 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 EXPOSE 8082
+EXPOSE 80
 
 RUN apt update && apt-get install -y --no-install-recommends \
                     libuv1.dev  \
                     cmake \
                     build-essential \
-                    gdb \
                     curl \
                     libcurl4-openssl-dev \
                     libssl-dev \
@@ -17,11 +17,9 @@ RUN apt update && apt-get install -y --no-install-recommends \
                     ca-certificates \
                     git \
                     libi2c-dev \
-                    nano \
                     libgpiod-dev \
                     gpiod \
                     python3 \
-                    htop \
                 && rm -rf /var/lib/apt/lists/*
 
 RUN git clone --depth 1 --recurse-submodules https://github.com/gloveboxes/AltairEverywhere.git
