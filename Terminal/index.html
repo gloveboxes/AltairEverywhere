@@ -14,6 +14,7 @@
     /* WebSocket. */
     var ws;
     var connected = false;
+    var online = false;
     var count = 0;
     var character_mode = false;
     var current_line = "";
@@ -33,6 +34,19 @@
     //     document.getElementsByTagName("head")[0].appendChild(fileref)
     // }
 
+
+    window.addEventListener('offline', function () {
+      // Actions to take when the connection is lost
+      console.log('Connection lost');
+      online = false;
+    });
+
+    window.addEventListener('online', function () {
+      // Actions to take when the connection is restored
+      console.log('Connection restored');
+      online = true;
+    });
+
     function initTerminal() {
 
       term = new Terminal({
@@ -48,7 +62,7 @@
       term.write(`WELCOME TO ALTAIR TERMINAL`);
 
       term.prompt = (msg) => {
-        if (connected) {
+        if (connected && online) {
           ws.send(msg);
         }
       };
@@ -161,7 +175,7 @@
     // https://en.wikipedia.org/wiki/Control_character
     function sendControl(msg) {
       var output;
-      if (connected) {
+      if (connected && online) {
         if (msg == 'M') {
           output = String.fromCharCode(28);
         } else {
@@ -189,6 +203,7 @@
       if (connected) {
         ws.close();
         connected = false;
+        online = false;
         return;
       }
 
@@ -202,6 +217,7 @@
       /* Register events. */
       ws.onopen = function () {
         connected = true;
+        online = true;
         document.getElementById("host_name").innerHTML = altair_address;
         term.focus();
       };
@@ -215,11 +231,13 @@
       /* Close events. */
       ws.onclose = function (event) {
         connected = false;
+        online = false;
         document.getElementById("host_name").innerHTML = 'Refresh to reconnect';
       };
 
       ws.error = function (event) {
         connected = false;
+        online = false;
         alert("Error connecting to WebSocket:", error);
         document.getElementById("host_name").innerHTML = 'Refresh to reconnect';
       };
@@ -252,8 +270,8 @@
   </div>
 
   <div id="terminal"></div>
-  
-  <div id="version">3.0.2</div>
+
+  <div id="version">3.0.3</div>
 
 </body>
 
