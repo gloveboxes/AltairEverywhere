@@ -35,10 +35,6 @@
 
     function initTerminal() {
 
-      const queryString = window.location.search;
-      const urlParams = new URLSearchParams(queryString);
-      const host_address = urlParams.get('altair')
-
       term = new Terminal({
         cursorBlink: "block",
         fontFamily: xterm_font,
@@ -59,7 +55,7 @@
 
       term.prompt("");
 
-      doConnect(host_address);
+      doConnect();
 
       // paste value
       term.on("paste", function (data) {
@@ -178,13 +174,13 @@
 
 
     /* Establish web socket connection. */
-    function doConnect(host_address) {
+    function doConnect() {
 
-      if (host_address) {
-        var altair_address = host_address;
-      } else {
-        var altair_address = window.location.host.split(':')[0];
-      }
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const host_address = urlParams.get('altair')
+
+      var altair_address = host_address ? host_address : window.location.host.split(':')[0];
 
       document.getElementById("host_name").innerHTML = 'Connecting to ' + altair_address + '...';
 
@@ -211,19 +207,21 @@
       };
 
       /* Deals with messages. */
-      ws.onmessage = function (evt) {
+      ws.onmessage = function (event) {
         // console.log("onMessageArrived:" + evt.data);
-        term.write(evt.data);
+        term.write(event.data);
       };
 
       /* Close events. */
       ws.onclose = function (event) {
         connected = false;
+        document.getElementById("host_name").innerHTML = 'Refresh to reconnect';
       };
 
       ws.error = function (event) {
         connected = false;
-        console.alert("Error connecting to WebSocket:", error);
+        alert("Error connecting to WebSocket:", error);
+        document.getElementById("host_name").innerHTML = 'Refresh to reconnect';
       };
     }
 
