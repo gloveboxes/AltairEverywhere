@@ -553,6 +553,39 @@ static void azure_connection_state(bool connection_state)
 }
 
 /// <summary>
+/// Create the a thread with a low priority to encourage a thread to run efficiency cores on Apple Silicon
+/// </summary>
+/// <param name="daemon"></param>
+/// <param name="arg"></param>
+/// <param name="daemon_name"></param>
+/// <param name="priority"></param>
+bool start_altair_thread(void *(*daemon)(void *), void *arg, char *daemon_name, int priority)
+{
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    struct sched_param param;
+
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+
+    // Set scheduling policy to FIFO and priority to a desired value
+    // https://stackoverflow.com/questions/9392415/linux-sched-other-sched-fifo-and-sched-rr-differences
+    pthread_attr_setschedpolicy(&attr, SCHED_RR);
+    param.sched_priority = priority; // Set your desired priority (0-99)
+    pthread_attr_setschedparam(&attr, &param);
+
+    pthread_t thread;
+
+    printf("Starting thread %s detached\n", daemon_name);
+
+    if (pthread_create(&thread, &attr, daemon, arg))
+    {
+        printf("ERROR: Failed to start %s daemon.\n", daemon_name);
+        return false;
+    }
+    return true;
+}
+
+/// <summary>
 ///  Initialize PeripheralGpios, device twins, direct methods, timers.
 /// </summary>
 /// <returns>0 on success, or -1 on failure</returns>
@@ -603,7 +636,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 #endif
 
     init_altair();
-    dx_startThreadDetached(altair_thread, NULL, "altair_thread");
+    start_altair_thread(altair_thread, NULL, "altair_thread", 1);
     while (!altair_i8080_running) // spin until i8080 thread starts
     {
         nanosleep(&(struct timespec){0, 1 * ONE_MS}, NULL);
