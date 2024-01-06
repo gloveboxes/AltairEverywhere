@@ -59,6 +59,8 @@
 
       term.open(document.getElementById("terminal"));
 
+      set_theme();
+
       term.write(`WELCOME TO ALTAIR TERMINAL`);
 
       term.prompt = (msg) => {
@@ -243,20 +245,40 @@
       };
     }
 
+    function set_dark_theme() {
+      localStorage['altair_theme'] = "dark";
+      term.setOption('theme', { background: '#000000', foreground: "#ffffff", cursor: "#ffffff" });
+    }
+
+    function set_light_theme() {
+      localStorage['altair_theme'] = "light";
+      term.setOption('theme', { background: '#ffffff', foreground: "#000000", cursor: "#000000" });
+    }
+
     function toggleTheme() {
-      const root = document.documentElement;
-      const currentTheme = root.getAttribute("data-theme");
+      const currentTheme = localStorage['altair_theme']
       var button = document.getElementById('toggleTheme');
 
       if (currentTheme === "light") {
-        root.setAttribute("data-theme", "dark");
-        term.setOption('theme', { background: '#000000', foreground: "#ffffff", cursor: "#ffffff" });
+        set_dark_theme();
         button.value = "Light theme";
-
       } else {
-        root.setAttribute("data-theme", "light");
-        term.setOption('theme', { background: '#ffffff', foreground: "#000000", cursor: "#000000" });
+        set_light_theme();
         button.value = "Dark theme";
+      }
+      term.focus();
+    }
+
+    function set_theme() {
+      const currentTheme = localStorage['altair_theme']
+      var button = document.getElementById('toggleTheme');
+
+      if (currentTheme === "light") {
+        set_light_theme();
+        button.value = "Dark theme";
+      } else {
+        set_dark_theme();
+        button.value = "Light theme";
       }
       term.focus();
     }
