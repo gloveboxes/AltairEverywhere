@@ -243,12 +243,29 @@
       };
     }
 
+    function toggleTheme() {
+      const root = document.documentElement;
+      const currentTheme = root.getAttribute("data-theme");
+      var button = document.getElementById('toggleTheme');
+
+      if (currentTheme === "light") {
+        root.setAttribute("data-theme", "dark");
+        term.setOption('theme', { background: '#000000', foreground: "#ffffff", cursor: "#ffffff" });
+        button.value = "Light theme";
+
+      } else {
+        root.setAttribute("data-theme", "light");
+        term.setOption('theme', { background: '#ffffff', foreground: "#000000", cursor: "#000000" });
+        button.value = "Dark theme";
+      }
+      term.focus();
+    }
+
   </script>
   <title>ALTAIR 8800 Emulator</title>
 </head>
 
 <body onload="initTerminal();">
-
 
   <div style="display: flex;">
     Altair:<div id="host_name" style="display: inline;"></div>
@@ -261,17 +278,16 @@
 
   <div style="display: flex;">
     <div style="flex-grow: 1;">
-
-      <div id="inputmode">Line input mode: Default (Ctrl+L to toggle)</div>
+      <div id="inputmode">Line input mode: Default (Ctrl+L to toggle), Reboot Altair (Ctrl+M, R, Enter)</div>
     </div>
-    <div id="docs">
-      Reboot Altair (Ctrl+M, R, Enter)
+    <div style="display: flex; justify-content: flex-end;">
+      <input id="toggleTheme" type="button" onclick="toggleTheme()" value="Light theme"></input>
     </div>
   </div>
 
   <div id="terminal"></div>
 
-  <div id="version">3.0.3</div>
+  <div id="version">3.0.4</div>
 
 </body>
 

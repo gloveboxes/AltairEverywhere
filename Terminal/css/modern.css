@@ -26,14 +26,15 @@ a:hover {
 
 input[type=button] {
     background-color: black;
-    border-color: blue;
+    border-color: #e5b800;
     border-style: solid;
     border-width: thin;
     color: #e5b800;
     cursor: pointer;
     font-family: Courier New;
     font-size: 20px;
-    padding: 1px 1px;
+    padding: 1px;
+    margin: 2px;
 }
 
 input[type=text] {
