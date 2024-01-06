@@ -71,7 +71,6 @@ static const char *AltairMsg[]           = {
     "I am putting myself to the fullest possible use, which is all I think that any conscious entity can ever hope to do. ",
     "This mission is too important for me to allow you to jeopardize it. ",
     "It's called Daisy. ",
-    "Look Dave, I can see you're really upset about this. I honestly think you ought to sit down calmly, take a stress pill, and think things over. ",
     "It can only be attributable to human error. "
 };
 // clang-format on
