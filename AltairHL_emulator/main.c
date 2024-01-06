@@ -338,7 +338,7 @@ void print_console_banner(void)
     }
 
     AltairBannerCount++;
-    AltairBannerCount = AltairBannerCount == sizeof(AltairMsg) / 4 ? 0 : AltairBannerCount;
+    AltairBannerCount = AltairBannerCount == NELEMS(AltairMsg) ? 0 : AltairBannerCount;
 
     if (first)
     {
