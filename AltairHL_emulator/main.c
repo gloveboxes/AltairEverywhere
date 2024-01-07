@@ -361,7 +361,7 @@ void print_console_banner(void)
 }
 
 /// <summary>
-/// Updates the PI Sense HAT with Altair address bus, databus, and CPU state
+/// Updates the PI Sense HAT with Altair address bus, data bus, and CPU state
 /// </summary>
 static void *panel_refresh_thread(void *arg)
 {
@@ -401,7 +401,7 @@ static void *panel_refresh_thread(void *arg)
 }
 
 /// <summary>
-/// Intialize the Altair disks and i8080 cpu
+/// Initialize the Altair disks and i8080 cpu
 /// </summary>
 static void init_altair(void)
 {
