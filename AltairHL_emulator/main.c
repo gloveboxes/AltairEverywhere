@@ -561,21 +561,19 @@ static void azure_connection_state(bool connection_state)
 /// <param name="priority"></param>
 bool start_altair_thread(void *(*daemon)(void *), void *arg, char *daemon_name, int priority)
 {
+    pthread_t thread;
     pthread_attr_t attr;
-    pthread_attr_init(&attr);
     struct sched_param param;
 
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
-    // Set scheduling policy to FIFO and priority to a desired value
+    pthread_attr_init(&attr);
+    
     // https://stackoverflow.com/questions/9392415/linux-sched-other-sched-fifo-and-sched-rr-differences
     pthread_attr_setschedpolicy(&attr, SCHED_RR);
+
     param.sched_priority = priority; // Set your desired priority (0-99)
     pthread_attr_setschedparam(&attr, &param);
 
-    pthread_t thread;
-
-    printf("Starting thread %s detached\n", daemon_name);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
     if (pthread_create(&thread, &attr, daemon, arg))
     {
