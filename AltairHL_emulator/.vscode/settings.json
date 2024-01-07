@@ -61,5 +61,11 @@
         "titleBar.inactiveForeground": "#15202b99",
         "commandCenter.border": "#15202b99"
     },
-    "liveServer.settings.port": 5502
+    "liveServer.settings.port": 5502,
+    "cSpell.words": [
+        "DEVX",
+        "Gpios",
+        "Heatbeat",
+        "loadx"
+    ]
 }
