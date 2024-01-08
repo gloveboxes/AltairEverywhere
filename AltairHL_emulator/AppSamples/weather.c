@@ -42,13 +42,15 @@ main()
 
     for (c = 0; c < 65535; c++)
     {
-        printf("%c[91;22;24m---------------------------------------------------------------", 27);
-        printf("----------------------------------------------------------------------%c[0m\n", 27);
+        printf("%c[91;22;24m-------------------------------------------", 27);
+        printf("-----------------------------------------%c[0m\n", 27);
         printf("Reading: %u\t%s\n", c, get_port_data(43, 0, buffer, 50));
 
-        print_k_v(l_key, l_value, l_items);
-        print_k_v(w_key, w_value, w_items);
-        print_k_v(p_key, p_value, p_items);
+        print_k_v(l_key, l_value, 0, l_items);
+        print_k_v(w_key, w_value, 0, 3);
+        print_k_v(w_key, w_value, 3, w_items);
+        print_k_v(p_key, p_value, 0, 5);
+        print_k_v(p_key, p_value, 5, p_items);
 
         /* Wait on Port 32 to go false to signify no pending Azure IoT Publish */
         while (inp(32))
@@ -66,8 +68,9 @@ main()
     }
 }
 
-void print_k_v(key, value, items) int key;
+void print_k_v(key, value, start, items) int key;
 int value;
+int start;
 int items;
 {
     int i;
@@ -76,7 +79,7 @@ int items;
 
     printf("%c[94;22;24m\n", 27);
 
-    for (i = 0; i < items; i++)
+    for (i = start; i < items; i++)
     {
         data = get_port_data(key, i, buffer, 50);
         printf("%s", data);
@@ -92,7 +95,7 @@ int items;
 
     printf("%c[0m\n", 27);
 
-    for (i = 0; i < items; i++)
+    for (i = start; i < items; i++)
     {
         data = get_port_data(value, i, buffer, 50);
         printf("%s\t", data);
