@@ -247,12 +247,12 @@
 
     function set_dark_theme() {
       localStorage['altair_theme'] = "dark";
-      term.setOption('theme', { background: '#000000', foreground: "#ffffff", cursor: "#ffffff" });
+      term.setOption('theme', { background: '#000000', foreground: "#ffffff", cursor: "#ffffff", selection: "rgba(188,214,141, 0.4)"  });
     }
 
     function set_light_theme() {
       localStorage['altair_theme'] = "light";
-      term.setOption('theme', { background: '#ffffff', foreground: "#000000", cursor: "#000000" });
+      term.setOption('theme', { background: '#ffffff', foreground: "#000000", cursor: "#000000", selection: "rgba(188,214,141, 0.4)" });
     }
 
     function toggleTheme() {
