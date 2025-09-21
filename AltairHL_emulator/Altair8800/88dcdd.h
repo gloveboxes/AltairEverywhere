@@ -36,6 +36,19 @@
 #define SECTOR_SIZE 137UL
 #define TRACK (32UL*SECTOR_SIZE)
 
+// Disk drive constants
+#define MAX_DRIVES          4
+#define MAX_TRACKS          77
+#define SECTORS_PER_TRACK   32
+#define DRIVE_SELECT_MASK   0x0F
+#define SECTOR_SHIFT_BITS   1
+
+// Drive numbers
+#define DRIVE_A             0
+#define DRIVE_B             1
+#define DRIVE_C             2
+#define DRIVE_D             3
+
 typedef struct
 {
 	int		fp;
