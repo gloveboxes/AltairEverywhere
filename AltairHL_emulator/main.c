@@ -1,7 +1,71 @@
 ﻿/* Copyright (c) Microsoft Corporation. All rights reserved.
    Licensed under the MIT License. */
 
+#define _POSIX_C_SOURCE 200809L
+
 #include "main.h"
+#include "app_exit_codes.h"
+#include <signal.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <string.h>
+#include <stdatomic.h>
+
+// Thread synchronization
+static pthread_mutex_t cpu_state_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t terminal_state_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t terminal_input_cond = PTHREAD_COND_INITIALIZER;
+
+// Atomic CPU state for high-performance read access
+static _Atomic(CPU_OPERATING_MODE) atomic_cpu_operating_mode = CPU_STOPPED;
+
+// Constants to replace magic numbers
+#define TERMINAL_COMMAND_BUFFER_SIZE 30
+#define FILE_PATH_BUFFER_SIZE 64
+#define MAX_FILENAME_LENGTH 40
+#define TERMINAL_WAIT_TIMEOUT_MS 200
+#define MAX_RETRY_COUNT 20
+#define CTRL_M_MAPPED_VALUE 28
+#define ASCII_CTRL_MAX 29
+#define ASCII_MASK_7BIT 0x7F
+#define MEMORY_SIZE_64K (64 * 1024)
+#define ROM_LOADER_ADDRESS 0xFF00
+
+// Forward declarations
+static void wait_for_terminal_completion(bool *flag);
+static void signal_terminal_completion(bool *flag);
+
+/// <summary>
+/// High-performance CPU operating mode getter for emulation loop
+/// Uses atomic load with relaxed ordering for maximum performance
+/// </summary>
+static inline CPU_OPERATING_MODE get_cpu_operating_mode_fast(void)
+{
+    return atomic_load_explicit(&atomic_cpu_operating_mode, memory_order_relaxed);
+}
+
+/// <summary>
+/// Thread-safe CPU operating mode getter for non-critical paths
+/// </summary>
+CPU_OPERATING_MODE get_cpu_operating_mode(void)
+{
+    pthread_mutex_lock(&cpu_state_mutex);
+    CPU_OPERATING_MODE mode = cpu_operating_mode;
+    pthread_mutex_unlock(&cpu_state_mutex);
+    return mode;
+}
+
+/// <summary>
+/// Thread-safe CPU operating mode setter
+/// Updates both the legacy variable and atomic version
+/// </summary>
+void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode)
+{
+    pthread_mutex_lock(&cpu_state_mutex);
+    cpu_operating_mode = new_mode;
+    atomic_store_explicit(&atomic_cpu_operating_mode, new_mode, memory_order_release);
+    pthread_mutex_unlock(&cpu_state_mutex);
+}
 
 /// <summary>
 /// Get geo location and environment for geo location from Open Weather Map
@@ -48,44 +112,44 @@ static DX_TIMER_HANDLER(heart_beat_handler)
 DX_TIMER_HANDLER_END
 
 /// <summary>
-/// Handler called to process inbound message
+/// Handle enter key press in terminal
 /// </summary>
-void terminal_handler(WS_INPUT_BLOCK_T *in_block)
+/// <param name="data">Input data buffer</param>
+/// <returns>true if handled and should cleanup, false to continue processing</returns>
+static bool handle_enter_key(char *data)
 {
-    char command[30];
-    memset(command, 0x00, sizeof(command));
-
-    pthread_mutex_lock(&in_block->block_lock);
-
-    size_t application_message_size = in_block->length;
-    char *data                      = in_block->buffer;
-
-    // Was just enter pressed
-    if (data[0] == '\r')
+    switch (get_cpu_operating_mode())
     {
-        switch (cpu_operating_mode)
-        {
-            case CPU_RUNNING:
-                send_terminal_character(0x0d, false);
-                break;
-            case CPU_STOPPED:
-                data[0] = 0x00;
-                process_virtual_input(data);
-                break;
-            default:
-                break;
-        }
-        goto cleanup;
+        case CPU_RUNNING:
+            send_terminal_character(0x0d, false);
+            break;
+        case CPU_STOPPED:
+            data[0] = 0x00;
+            process_virtual_input(data);
+            break;
+        default:
+            break;
     }
+    return true;
+}
 
-    // Is it a ctrl character
-    if (application_message_size == 1 && data[0] > 0 && data[0] < 29)
+/// <summary>
+/// Handle control character input
+/// </summary>
+/// <param name="data">Input character</param>
+/// <param name="application_message_size">Size of the message</param>
+/// <returns>true if handled and should cleanup, false to continue processing</returns>
+static bool handle_ctrl_character(char *data, size_t application_message_size)
+{
+    if (application_message_size == 1 && data[0] > 0 && data[0] < ASCII_CTRL_MAX)
     {
         // ctrl-m is mapped to ascii 28 to get around ctrl-m being /r
-        if (data[0] == 28)
+        if (data[0] == CTRL_M_MAPPED_VALUE)
         {
-            cpu_operating_mode = cpu_operating_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
-            if (cpu_operating_mode == CPU_STOPPED)
+            CPU_OPERATING_MODE current_mode = get_cpu_operating_mode();
+            CPU_OPERATING_MODE new_mode = current_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
+            set_cpu_operating_mode(new_mode);
+            if (new_mode == CPU_STOPPED)
             {
                 bus_switches = cpu.address_bus;
                 publish_message("\r\nCPU MONITOR> ", 15);
@@ -99,14 +163,22 @@ void terminal_handler(WS_INPUT_BLOCK_T *in_block)
         {
             send_terminal_character(data[0], false);
         }
-        goto cleanup;
+        return true;
     }
+    return false;
+}
 
-    // The web terminal must be in single char mode as char is not a ctrl or enter char
-    // so feed to Altair terminal read
+/// <summary>
+/// Handle single character input
+/// </summary>
+/// <param name="data">Input character</param>
+/// <param name="application_message_size">Size of the message</param>
+/// <returns>true if handled and should cleanup, false to continue processing</returns>
+static bool handle_single_character(char *data, size_t application_message_size)
+{
     if (application_message_size == 1)
     {
-        if (cpu_operating_mode == CPU_RUNNING)
+        if (get_cpu_operating_mode() == CPU_RUNNING)
         {
             altairOutputBufReadIndex  = 0;
             terminalOutputMessageLen  = 0;
@@ -120,25 +192,78 @@ void terminal_handler(WS_INPUT_BLOCK_T *in_block)
             data[1] = 0x00;
             process_virtual_input(data);
         }
+        return true;
+    }
+    return false;
+}
+
+/// <summary>
+/// Handle LOADX command processing
+/// </summary>
+/// <param name="command">Command buffer</param>
+/// <param name="application_message_size">Size of the message</param>
+/// <returns>true if handled and should cleanup, false to continue processing</returns>
+static bool handle_loadx_command(char *command, size_t application_message_size)
+{
+    if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 8 && 
+        application_message_size < TERMINAL_COMMAND_BUFFER_SIZE && (command[application_message_size - 2] == '"'))
+    {
+        command[application_message_size - 2] = '\0'; // replace the '"' with \0
+        load_application(&command[7]);
+        return true;
+    }
+    return false;
+}
+
+/// <summary>
+/// Handler called to process inbound message
+/// </summary>
+void terminal_handler(WS_INPUT_BLOCK_T *in_block)
+{
+    char command[TERMINAL_COMMAND_BUFFER_SIZE];
+    memset(command, 0x00, sizeof(command));
+
+    pthread_mutex_lock(&in_block->block_lock);
+
+    size_t application_message_size = in_block->length;
+    char *data                      = in_block->buffer;
+
+    // Was just enter pressed
+    if (data[0] == '\r')
+    {
+        if (handle_enter_key(data)) {
+            goto cleanup;
+        }
+    }
+
+    // Handle control characters
+    if (handle_ctrl_character(data, application_message_size))
+    {
+        goto cleanup;
+    }
+
+    // Handle single character input
+    if (handle_single_character(data, application_message_size))
+    {
         goto cleanup;
     }
 
     // Check for loadx command
-    // upper case the first 30 chars for command processing
-    for (int i = 0; i < sizeof(command) - 1 && i < application_message_size - 1; i++)
-    { // -1 to allow for trailing null
+    // upper case the first 30 chars for command processing with bounds checking
+    size_t copy_len = (sizeof(command) - 1 < application_message_size) ? sizeof(command) - 1 : application_message_size;
+    for (size_t i = 0; i < copy_len; i++)
+    {
         command[i] = (char)toupper(data[i]);
     }
+    command[copy_len] = '\0'; // Ensure null termination
 
-    // if command is loadx then try looking for in baked in samples
-    if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 6 && (command[application_message_size - 2] == '"'))
+    // Handle LOADX command
+    if (handle_loadx_command(command, application_message_size))
     {
-        command[application_message_size - 2] = 0x00; // replace the '"' with \0
-        load_application(&command[7]);
         goto cleanup;
     }
 
-    switch (cpu_operating_mode)
+    switch (get_cpu_operating_mode())
     {
         case CPU_RUNNING:
 
@@ -153,7 +278,7 @@ void terminal_handler(WS_INPUT_BLOCK_T *in_block)
 
                 haveTerminalInputMessage = haveTerminalOutputMessage = true;
 
-                spin_wait(&haveTerminalInputMessage);
+                wait_for_terminal_completion(&haveTerminalInputMessage);
             }
             break;
         case CPU_STOPPED:
@@ -185,20 +310,45 @@ static void send_terminal_character(char character, bool wait)
 }
 
 /// <summary>
-/// Sets wait for terminal io cmd to be processed and flag reset
+/// Wait for terminal input message with proper synchronization
 /// </summary>
-static void spin_wait(bool *flag)
+/// <param name="flag">Pointer to flag to wait for</param>
+static void wait_for_terminal_completion(bool *flag)
 {
-    struct timespec delay = {0, 10 * ONE_MS};
-    int retry             = 0;
-    *flag                 = true;
-
-    // wait max 200ms = 10 x 20ms
-    while (*flag && retry++ < 10)
-    {
-        while (nanosleep(&delay, &delay))
-            ;
+    pthread_mutex_lock(&terminal_state_mutex);
+    
+    struct timespec timeout;
+    clock_gettime(CLOCK_REALTIME, &timeout);
+    timeout.tv_nsec += TERMINAL_WAIT_TIMEOUT_MS * ONE_MS; // timeout
+    if (timeout.tv_nsec >= 1000000000) {
+        timeout.tv_sec++;
+        timeout.tv_nsec -= 1000000000;
     }
+    
+    *flag = true;
+    
+    // Wait for flag to be reset or timeout
+    while (*flag) {
+        int result = pthread_cond_timedwait(&terminal_input_cond, &terminal_state_mutex, &timeout);
+        if (result == ETIMEDOUT) {
+            dx_Log_Debug("Terminal input wait timeout\n");
+            break;
+        }
+    }
+    
+    pthread_mutex_unlock(&terminal_state_mutex);
+}
+
+/// <summary>
+/// Signal terminal completion
+/// </summary>
+/// <param name="flag">Pointer to flag to reset</param>
+static void signal_terminal_completion(bool *flag)
+{
+    pthread_mutex_lock(&terminal_state_mutex);
+    *flag = false;
+    pthread_cond_signal(&terminal_input_cond);
+    pthread_mutex_unlock(&terminal_state_mutex);
 }
 
 /// <summary>
@@ -207,7 +357,34 @@ static void spin_wait(bool *flag)
 static void client_connected_cb(void)
 {
     print_console_banner();
-    cpu_operating_mode = CPU_RUNNING;
+    set_cpu_operating_mode(CPU_RUNNING);
+}
+
+/// <summary>
+/// Validate filename for security and length constraints
+/// </summary>
+/// <param name="filename">Filename to validate</param>
+/// <returns>true if valid, false otherwise</returns>
+static bool validate_filename(const char *filename)
+{
+    if (!filename || strlen(filename) == 0) {
+        dx_Log_Debug("Invalid filename: null or empty\n");
+        return false;
+    }
+    
+    size_t len = strlen(filename);
+    if (len >= MAX_FILENAME_LENGTH) { // Leave room for directory and null terminator
+        dx_Log_Debug("Filename too long: %zu characters\n", len);
+        return false;
+    }
+    
+    // Check for directory traversal attempts
+    if (strstr(filename, "..") || strstr(filename, "/") || strstr(filename, "\\")) {
+        dx_Log_Debug("Invalid filename: contains path separators or traversal\n");
+        return false;
+    }
+    
+    return true;
 }
 
 /// <summary>
@@ -217,9 +394,20 @@ static void client_connected_cb(void)
 /// <returns></returns>
 static bool load_application(const char *fileName)
 {
+    if (!validate_filename(fileName)) {
+        publish_message("\n\rInvalid filename\n\r", 19);
+        return false;
+    }
+
     int retry = 0;
-    char filePathAndName[50];
-    snprintf(filePathAndName, sizeof(filePathAndName), "%s/%s", APP_SAMPLES_DIRECTORY, fileName);
+    char filePathAndName[FILE_PATH_BUFFER_SIZE]; // Increased buffer size for safety
+    int result = snprintf(filePathAndName, sizeof(filePathAndName), "%s/%s", APP_SAMPLES_DIRECTORY, fileName);
+    
+    if (result >= sizeof(filePathAndName)) {
+        dx_Log_Debug("File path too long: %d characters\n", result);
+        publish_message("\n\rFile path too long\n\r", 22);
+        return false;
+    }
 
     // precaution
     if (app_stream != NULL)
@@ -233,7 +421,7 @@ static bool load_application(const char *fileName)
         haveAppLoad              = true;
 
         retry = 0;
-        while (haveAppLoad && retry++ < 20)
+        while (haveAppLoad && retry++ < MAX_RETRY_COUNT)
         {
             nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
         }
@@ -254,7 +442,7 @@ static char terminal_read(void)
     {
         retVal                 = terminalInputCharacter;
         terminalInputCharacter = 0x00;
-        retVal &= 0x7F; // take first 7 bits (127 ascii chars)
+        retVal &= ASCII_MASK_7BIT; // take first 7 bits (127 ascii chars)
         return retVal;
     }
 
@@ -264,9 +452,9 @@ static char terminal_read(void)
 
         if (altairInputBufReadIndex >= terminalInputMessageLen)
         {
-            haveTerminalInputMessage = false;
+            signal_terminal_completion(&haveTerminalInputMessage);
         }
-        retVal &= 0x7F; // take first 7 bits (127 ascii chars)
+        retVal &= ASCII_MASK_7BIT; // take first 7 bits (127 ascii chars)
         return retVal;
     }
 
@@ -287,7 +475,7 @@ static char terminal_read(void)
                 retVal = 0x0D;
             }
         }
-        retVal &= 0x7F; // take first 7 bits (127 ascii chars)
+        retVal &= ASCII_MASK_7BIT; // take first 7 bits (127 ascii chars)
         return retVal;
     }
     return 0;
@@ -295,7 +483,7 @@ static char terminal_read(void)
 
 static void terminal_write(uint8_t c)
 {
-    c &= 0x7F; // take first 7 bits (127 ascii chars) only and discard 8th bit.
+    c &= ASCII_MASK_7BIT; // take first 7 bits (127 ascii chars) only and discard 8th bit.
 
     if (haveTerminalOutputMessage)
     {
@@ -401,6 +589,30 @@ static void *panel_refresh_thread(void *arg)
 }
 
 /// <summary>
+/// Initialize a single disk drive
+/// </summary>
+/// <param name="disk_path">Path to the disk image file</param>
+/// <param name="fp">Pointer to file descriptor to set</param>
+/// <param name="disk_name">Name of the disk for logging</param>
+/// <param name="exit_code">Exit code to use if initialization fails</param>
+/// <returns>true on success, false on failure</returns>
+static bool init_altair_disk(const char* disk_path, int* fp, const char* disk_name, APP_EXIT_CODE exit_code)
+{
+#ifdef ALTAIR_CLOUD
+    if ((*fp = open(disk_path, O_RDONLY)) == -1)
+    {
+#else
+    if ((*fp = open(disk_path, O_RDWR)) == -1)
+    {
+#endif
+        Log_Debug("Failed to open %s disk image: %s\n", disk_name, strerror(errno));
+        dx_terminate(exit_code);
+        return false;
+    }
+    return true;
+}
+
+/// <summary>
 /// Initialize the Altair disks and i8080 cpu
 /// </summary>
 static void init_altair(void)
@@ -408,7 +620,7 @@ static void init_altair(void)
     Log_Debug("Altair Thread starting...\n");
     // print_console_banner();
 
-    memset(memory, 0x00, 64 * 1024); // clear Altair memory.
+    memset(memory, 0x00, MEMORY_SIZE_64K); // clear Altair memory.
 
     disk_controller_t disk_controller;
     disk_controller.disk_function = disk_function;
@@ -418,71 +630,27 @@ static void init_altair(void)
     disk_controller.write         = disk_write;
     disk_controller.sector        = sector;
 
-#ifdef ALTAIR_CLOUD
-    if ((disk_drive.disk1.fp = open(DISK_A, O_RDONLY)) == -1)
-    {
-        Log_Debug("Failed to open %s disk image\n", DISK_A);
-        exit(-1);
-    }
-#else
-    if ((disk_drive.disk1.fp = open(DISK_A, O_RDWR)) == -1)
-    {
-        Log_Debug("Failed to open %s disk image\n", DISK_A);
-        exit(-1);
-    }
-#endif // ALTAIR_CLOUD
-
+    // Initialize all disk drives
+    if (!init_altair_disk(DISK_A, &disk_drive.disk1.fp, "DISK_A", APP_EXIT_DISK_A_INIT_FAILED))
+        return;
     disk_drive.disk1.diskPointer = 0;
     disk_drive.disk1.sector      = 0;
     disk_drive.disk1.track       = 0;
 
-#ifdef ALTAIR_CLOUD
-    if ((disk_drive.disk2.fp = open(DISK_B, O_RDONLY)) == -1)
-    {
-        Log_Debug("Failed to open %s disk image\n", DISK_B);
-        exit(-1);
-    }
-#else
-    if ((disk_drive.disk2.fp = open(DISK_B, O_RDWR)) == -1)
-    {
-        Log_Debug("Failed to open %s disk image\n", DISK_B);
-        exit(-1);
-    }
-#endif // ALTAIR_CLOUD
+    if (!init_altair_disk(DISK_B, &disk_drive.disk2.fp, "DISK_B", APP_EXIT_DISK_B_INIT_FAILED))
+        return;
     disk_drive.disk2.diskPointer = 0;
     disk_drive.disk2.sector      = 0;
     disk_drive.disk2.track       = 0;
 
-#ifdef ALTAIR_CLOUD
-    if ((disk_drive.disk3.fp = open(DISK_C, O_RDONLY)) == -1)
-    {
-        Log_Debug("Failed to open %s disk image\n", DISK_C);
-        exit(-1);
-    }
-#else
-    if ((disk_drive.disk3.fp = open(DISK_C, O_RDWR)) == -1)
-    {
-        Log_Debug("Failed to open %s disk image\n", DISK_C);
-        exit(-1);
-    }
-#endif // ALTAIR_CLOUD
+    if (!init_altair_disk(DISK_C, &disk_drive.disk3.fp, "DISK_C", APP_EXIT_DISK_C_INIT_FAILED))
+        return;
     disk_drive.disk3.diskPointer = 0;
     disk_drive.disk3.sector      = 0;
     disk_drive.disk3.track       = 0;
 
-#ifdef ALTAIR_CLOUD
-    if ((disk_drive.disk4.fp = open(DISK_D, O_RDONLY)) == -1)
-    {
-        Log_Debug("Failed to open %s disk image\n", DISK_D);
-        exit(-1);
-    }
-#else
-    if ((disk_drive.disk4.fp = open(DISK_D, O_RDWR)) == -1)
-    {
-        Log_Debug("Failed to open %s disk image\n", DISK_D);
-        exit(-1);
-    }
-#endif // ALTAIR_CLOUD
+    if (!init_altair_disk(DISK_D, &disk_drive.disk4.fp, "DISK_D", APP_EXIT_DISK_D_INIT_FAILED))
+        return;
     disk_drive.disk4.diskPointer = 0;
     disk_drive.disk4.sector      = 0;
     disk_drive.disk4.track       = 0;
@@ -490,13 +658,38 @@ static void init_altair(void)
     i8080_reset(&cpu, (port_in)terminal_read, (port_out)terminal_write, sense, &disk_controller, (azure_sphere_port_in)io_port_in,
         (azure_sphere_port_out)io_port_out);
 
-    // load Disk Loader at 0xff00
-    if (!loadRomImage(DISK_LOADER, 0xff00))
+    // load Disk Loader at ROM_LOADER_ADDRESS
+    if (!loadRomImage(DISK_LOADER, ROM_LOADER_ADDRESS))
     {
         Log_Debug("Failed to open %s disk load ROM image\n", DISK_LOADER);
+        dx_terminate(APP_EXIT_ROM_LOAD_FAILED);
+        return;
     }
 
-    i8080_examine(&cpu, 0xff00); // 0xff00 loads from disk, 0x0000 loads basic
+    i8080_examine(&cpu, ROM_LOADER_ADDRESS); // ROM_LOADER_ADDRESS loads from disk, 0x0000 loads basic
+}
+
+/// <summary>
+/// Cleanup Altair disk file handles to prevent resource leaks
+/// </summary>
+static void cleanup_altair_disks(void)
+{
+    if (disk_drive.disk1.fp != -1) {
+        close(disk_drive.disk1.fp);
+        disk_drive.disk1.fp = -1;
+    }
+    if (disk_drive.disk2.fp != -1) {
+        close(disk_drive.disk2.fp);
+        disk_drive.disk2.fp = -1;
+    }
+    if (disk_drive.disk3.fp != -1) {
+        close(disk_drive.disk3.fp);
+        disk_drive.disk3.fp = -1;
+    }
+    if (disk_drive.disk4.fp != -1) {
+        close(disk_drive.disk4.fp);
+        disk_drive.disk4.fp = -1;
+    }
 }
 
 /// <summary>
@@ -514,7 +707,7 @@ static void *altair_thread(void *arg)
 
     while (!stop_cpu)
     {
-        if (cpu_operating_mode == CPU_RUNNING)
+        if (get_cpu_operating_mode_fast() == CPU_RUNNING)
         {
             i8080_cycle(&cpu);
         }
@@ -590,7 +783,11 @@ bool start_altair_thread(void *(*daemon)(void *), void *arg, char *daemon_name, 
 static void InitPeripheralAndHandlers(int argc, char *argv[])
 {
     // https://stackoverflow.com/questions/18935446/program-received-signal-sigpipe-broken-pipe
-    sigaction(SIGPIPE, &(struct sigaction){SIG_IGN}, NULL);
+    struct sigaction sa;
+    sa.sa_handler = SIG_IGN;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGPIPE, &sa, NULL);
 
     curl_global_init(CURL_GLOBAL_ALL);
 
@@ -649,6 +846,8 @@ static void ClosePeripheralAndHandlers(void)
     dx_azureToDeviceStop();
     dx_deviceTwinUnsubscribe();
     dx_timerEventLoopStop();
+
+    cleanup_altair_disks();
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
     pi_sense_hat_sensors_close();

@@ -25,8 +25,11 @@ extern DX_TIMER_BINDING tmr_deferred_command;
 extern intel8080_t cpu;
 extern uint8_t memory[64 * 1024];
 extern ALTAIR_COMMAND cmd_switches;
-extern CPU_OPERATING_MODE cpu_operating_mode;
 extern uint16_t bus_switches;
+
+// Thread-safe CPU operating mode accessors (defined in main.c)
+CPU_OPERATING_MODE get_cpu_operating_mode(void);
+void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode);
 
 bool loadRomImage(char *romImageName, uint16_t loadAddress);
 void disassemble(intel8080_t *cpu);

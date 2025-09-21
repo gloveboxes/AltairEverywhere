@@ -50,7 +50,7 @@ DX_ASYNC_HANDLER_END
 static void cleanup_session(void)
 {
 #ifdef ALTAIR_CLOUD
-    cpu_operating_mode = CPU_STOPPED;
+    set_cpu_operating_mode(CPU_STOPPED);
 
     // Sleep this thread so the Altair CPU thread can complete current instruction
     nanosleep(&(struct timespec){0, 250 * ONE_MS}, NULL);

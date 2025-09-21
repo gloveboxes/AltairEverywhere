@@ -29,7 +29,6 @@ void print_console_banner(void);
 void terminal_handler(WS_INPUT_BLOCK_T *in_block);
 
 extern DX_DEVICE_TWIN_BINDING dt_new_sessions;
-extern CPU_OPERATING_MODE cpu_operating_mode;
 extern DX_TIMER_BINDING tmr_partial_message;
 
 DX_DECLARE_ASYNC_HANDLER(async_expire_session_handler);
@@ -40,3 +39,4 @@ void init_web_socket_server(void (*client_connected_cb)(void));
 void publish_character(char character);
 void publish_message(const void *application_message, size_t application_message_length);
 void send_partial_message(void);
+void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode);

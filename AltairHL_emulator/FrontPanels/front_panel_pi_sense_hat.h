@@ -9,7 +9,6 @@
 #define NUM_OF_LEDS 64
 
 extern ALTAIR_COMMAND cmd_switches;
-extern CPU_OPERATING_MODE cpu_operating_mode;
 extern uint16_t bus_switches;
 
 void init_altair_hardware(void);

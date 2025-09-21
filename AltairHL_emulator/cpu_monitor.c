@@ -72,6 +72,12 @@ static void process_virtual_switches(const char *command)
 
 void process_virtual_input(const char *command)
 {
+    // Remove trailing \r if present
+    size_t len = strlen(command);
+    if (len > 0 && command[len - 1] == '\r') {
+        ((char*)command)[len - 1] = '\0';  // Cast away const to modify in place
+    }
+    
     if (strlen(command) == 0)
     {
         publish_message("\r\nCPU MONITOR> ", 15);
@@ -327,7 +333,7 @@ void altair_panel_command_handler(void)
             break;
         case RESET:
             load_boot_disk();
-            cpu_operating_mode = CPU_RUNNING;
+            set_cpu_operating_mode(CPU_RUNNING);
             break;
         case LOAD_ALTAIR_BASIC:
             memset(memory, 0x00, 64 * 1024); // clear altair memory.
@@ -339,7 +345,7 @@ void altair_panel_command_handler(void)
             print_console_banner();
 
             i8080_examine(&cpu, 0x0000); // 0x0000 loads Altair BASIC
-            cpu_operating_mode = CPU_RUNNING;
+            set_cpu_operating_mode(CPU_RUNNING);
             break;
         default:
             break;
@@ -348,15 +354,15 @@ void altair_panel_command_handler(void)
 
 void process_control_panel_commands(void)
 {
-    if (cpu_operating_mode == CPU_STOPPED || cmd_switches == STOP_CMD)
+    if (get_cpu_operating_mode() == CPU_STOPPED || cmd_switches == STOP_CMD)
     {
         switch (cmd_switches)
         {
             case RUN_CMD:
-                cpu_operating_mode = CPU_RUNNING;
+                set_cpu_operating_mode(CPU_RUNNING);
                 break;
             case STOP_CMD:
-                cpu_operating_mode = CPU_STOPPED;
+                set_cpu_operating_mode(CPU_STOPPED);
                 i8080_examine(&cpu, cpu.registers.pc);
                 bus_switches = cpu.address_bus;
                 break;
@@ -367,9 +373,5 @@ void process_control_panel_commands(void)
         }
     }
 
-    // if (cmd_switches & STOP_CMD)
-    // {
-    // 	cpu_operating_mode = CPU_STOPPED;
-    // }
     cmd_switches = 0x00;
 }
