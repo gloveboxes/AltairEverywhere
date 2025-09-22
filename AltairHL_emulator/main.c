@@ -8,31 +8,41 @@
 
 #include "main.h"
 #include "app_exit_codes.h"
-#include <signal.h>
-#include <sys/types.h>
+#include "dx_mqtt.h"
 #include <errno.h>
-#include <string.h>
+#include <signal.h>
 #include <stdatomic.h>
+#include <string.h>
+#include <sys/types.h>
 
 // Thread synchronization
-static pthread_mutex_t cpu_state_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t cpu_state_mutex      = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t terminal_state_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t terminal_input_cond = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t terminal_input_cond   = PTHREAD_COND_INITIALIZER;
 
 // Atomic CPU state for high-performance read access
 static _Atomic(CPU_OPERATING_MODE) atomic_cpu_operating_mode = CPU_STOPPED;
 
 // Constants to replace magic numbers
 #define TERMINAL_COMMAND_BUFFER_SIZE 30
-#define FILE_PATH_BUFFER_SIZE 64
-#define MAX_FILENAME_LENGTH 40
-#define TERMINAL_WAIT_TIMEOUT_MS 200
-#define MAX_RETRY_COUNT 20
-#define CTRL_M_MAPPED_VALUE 28
-#define ASCII_CTRL_MAX 29
-#define ASCII_MASK_7BIT 0x7F
-#define MEMORY_SIZE_64K (64 * 1024)
-#define ROM_LOADER_ADDRESS 0xFF00
+#define FILE_PATH_BUFFER_SIZE        64
+#define MAX_FILENAME_LENGTH          40
+#define TERMINAL_WAIT_TIMEOUT_MS     200
+#define MAX_RETRY_COUNT              20
+#define CTRL_M_MAPPED_VALUE          28
+#define ASCII_CTRL_MAX               29
+#define ASCII_MASK_7BIT              0x7F
+#define MEMORY_SIZE_64K              (64 * 1024)
+#define ROM_LOADER_ADDRESS           0xFF00
+
+// MQTT Configuration
+static DX_MQTT_CONFIG mqtt_config = {
+#ifdef MQTT_BROKER_HOSTNAME
+    .hostname = MQTT_BROKER_HOSTNAME,
+#else
+    .hostname = "localhost",
+#endif
+    .port = "1883", .client_id = "altair_emulator", .username = NULL, .password = NULL, .keep_alive_seconds = 60, .clean_session = true};
 
 // Forward declarations
 static void wait_for_terminal_completion(bool *flag);
@@ -76,6 +86,8 @@ void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode)
 /// </summary>
 static DX_TIMER_HANDLER(update_environment_handler)
 {
+
+    update_geo_location(&environment); // Hitch a ride on the report_memory_usage event. Only publishes once.
     if (dx_isNetworkConnected(network_interface))
     {
         update_weather();
@@ -86,7 +98,7 @@ static DX_TIMER_HANDLER(update_environment_handler)
 DX_TIMER_HANDLER_END
 
 /// <summary>
-/// Reports memory usage to IoT Central
+/// Reports memory usage to IoT Central and MQTT
 /// </summary>
 static DX_TIMER_HANDLER(report_memory_usage)
 {
@@ -100,25 +112,30 @@ static DX_TIMER_HANDLER(report_memory_usage)
     long memory_usage_kb = r_usage.ru_maxrss; // Already in KB on Linux
 #endif
 
-    if (azure_connected && dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1, DX_JSON_INT, "memoryUsage", memory_usage_kb))
+    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 3, DX_JSON_STRING, "device", "altair_emulator", DX_JSON_INT, "timestamp", time(NULL), DX_JSON_INT,
+            "memory_usage_kb", memory_usage_kb))
     {
-        dx_azurePublish(msgBuffer, strlen(msgBuffer), diag_msg_properties, NELEMS(diag_msg_properties), &diag_content_properties);
-        update_geo_location(&environment); // Hitch a ride on the report_memory_usage event. Only publishes once.
+        DX_MQTT_MESSAGE mqtt_msg = {.topic = "altair/memory/usage", .payload = msgBuffer, .payload_length = strlen(msgBuffer), .qos = 0, .retain = false};
+        dx_mqttPublish(&mqtt_msg);
     }
 }
 DX_TIMER_HANDLER_END
 
 /// <summary>
-/// Reports IoT Central Heatbeat UTC Date and Time
+/// Reports IoT Central Heartbeat UTC Date and Time to MQTT
 /// </summary>
 static DX_TIMER_HANDLER(heart_beat_handler)
 {
-    if (azure_connected)
+    char current_utc[64];
+    dx_getCurrentUtc(current_utc, sizeof(current_utc));
+
+    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2, DX_JSON_STRING, "device", "altair_emulator", DX_JSON_STRING, "heartbeat_utc", current_utc))
     {
-        dx_deviceTwinReportValue(&dt_heartbeatUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
-        dx_deviceTwinReportValue(&dt_new_sessions, dt_new_sessions.propertyValue);
+        DX_MQTT_MESSAGE mqtt_msg = {.topic = "altair/heartbeat", .payload = msgBuffer, .payload_length = strlen(msgBuffer), .qos = 0, .retain = false};
+        dx_mqttPublish(&mqtt_msg);
     }
 }
+
 DX_TIMER_HANDLER_END
 
 /// <summary>
@@ -157,7 +174,7 @@ static bool handle_ctrl_character(char *data, size_t application_message_size)
         if (data[0] == CTRL_M_MAPPED_VALUE)
         {
             CPU_OPERATING_MODE current_mode = get_cpu_operating_mode();
-            CPU_OPERATING_MODE new_mode = current_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
+            CPU_OPERATING_MODE new_mode     = current_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
             set_cpu_operating_mode(new_mode);
             if (new_mode == CPU_STOPPED)
             {
@@ -215,8 +232,8 @@ static bool handle_single_character(char *data, size_t application_message_size)
 /// <returns>true if handled and should cleanup, false to continue processing</returns>
 static bool handle_loadx_command(char *command, size_t application_message_size)
 {
-    if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 8 && 
-        application_message_size < TERMINAL_COMMAND_BUFFER_SIZE && (command[application_message_size - 2] == '"'))
+    if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 8 && application_message_size < TERMINAL_COMMAND_BUFFER_SIZE &&
+        (command[application_message_size - 2] == '"'))
     {
         command[application_message_size - 2] = '\0'; // replace the '"' with \0
         load_application(&command[7]);
@@ -241,7 +258,8 @@ void terminal_handler(WS_INPUT_BLOCK_T *in_block)
     // Was just enter pressed
     if (data[0] == '\r')
     {
-        if (handle_enter_key(data)) {
+        if (handle_enter_key(data))
+        {
             goto cleanup;
         }
     }
@@ -326,26 +344,29 @@ static void send_terminal_character(char character, bool wait)
 static void wait_for_terminal_completion(bool *flag)
 {
     pthread_mutex_lock(&terminal_state_mutex);
-    
+
     struct timespec timeout;
     clock_gettime(CLOCK_REALTIME, &timeout);
     timeout.tv_nsec += TERMINAL_WAIT_TIMEOUT_MS * ONE_MS; // timeout
-    if (timeout.tv_nsec >= 1000000000) {
+    if (timeout.tv_nsec >= 1000000000)
+    {
         timeout.tv_sec++;
         timeout.tv_nsec -= 1000000000;
     }
-    
+
     *flag = true;
-    
+
     // Wait for flag to be reset or timeout
-    while (*flag) {
+    while (*flag)
+    {
         int result = pthread_cond_timedwait(&terminal_input_cond, &terminal_state_mutex, &timeout);
-        if (result == ETIMEDOUT) {
+        if (result == ETIMEDOUT)
+        {
             dx_Log_Debug("Terminal input wait timeout\n");
             break;
         }
     }
-    
+
     pthread_mutex_unlock(&terminal_state_mutex);
 }
 
@@ -377,23 +398,26 @@ static void client_connected_cb(void)
 /// <returns>true if valid, false otherwise</returns>
 static bool validate_filename(const char *filename)
 {
-    if (!filename || strlen(filename) == 0) {
+    if (!filename || strlen(filename) == 0)
+    {
         dx_Log_Debug("Invalid filename: null or empty\n");
         return false;
     }
-    
+
     size_t len = strlen(filename);
-    if (len >= MAX_FILENAME_LENGTH) { // Leave room for directory and null terminator
+    if (len >= MAX_FILENAME_LENGTH)
+    { // Leave room for directory and null terminator
         dx_Log_Debug("Filename too long: %zu characters\n", len);
         return false;
     }
-    
+
     // Check for directory traversal attempts
-    if (strstr(filename, "..") || strstr(filename, "/") || strstr(filename, "\\")) {
+    if (strstr(filename, "..") || strstr(filename, "/") || strstr(filename, "\\"))
+    {
         dx_Log_Debug("Invalid filename: contains path separators or traversal\n");
         return false;
     }
-    
+
     return true;
 }
 
@@ -404,7 +428,8 @@ static bool validate_filename(const char *filename)
 /// <returns></returns>
 static bool load_application(const char *fileName)
 {
-    if (!validate_filename(fileName)) {
+    if (!validate_filename(fileName))
+    {
         publish_message("\n\rInvalid filename\n\r", 19);
         return false;
     }
@@ -412,8 +437,9 @@ static bool load_application(const char *fileName)
     int retry = 0;
     char filePathAndName[FILE_PATH_BUFFER_SIZE]; // Increased buffer size for safety
     int result = snprintf(filePathAndName, sizeof(filePathAndName), "%s/%s", APP_SAMPLES_DIRECTORY, fileName);
-    
-    if (result >= sizeof(filePathAndName)) {
+
+    if (result >= sizeof(filePathAndName))
+    {
         dx_Log_Debug("File path too long: %d characters\n", result);
         publish_message("\n\rFile path too long\n\r", 22);
         return false;
@@ -577,16 +603,16 @@ static void *panel_refresh_thread(void *arg)
 
             // if (status != last_status || data != last_data || bus != last_bus)
             // {
-                last_status = status;
-                last_data   = data;
-                last_bus    = bus;
+            last_status = status;
+            last_data   = data;
+            last_bus    = bus;
 
-                status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
-                data   = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
-                bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 |
-                                 reverse_lut[(bus & 0xf0) >> 4] | reverse_lut[bus & 0xf] << 4);
+            status = (uint8_t)(reverse_lut[(status & 0xf0) >> 4] | reverse_lut[status & 0xf] << 4);
+            data   = (uint8_t)(reverse_lut[(data & 0xf0) >> 4] | reverse_lut[data & 0xf] << 4);
+            bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] |
+                             reverse_lut[bus & 0xf] << 4);
 
-                front_panel_io(status, data, bus, process_control_panel_commands);
+            front_panel_io(status, data, bus, process_control_panel_commands);
             // }
             nanosleep(&(struct timespec){0, 5 * ONE_MS}, NULL);
         }
@@ -606,7 +632,7 @@ static void *panel_refresh_thread(void *arg)
 /// <param name="disk_name">Name of the disk for logging</param>
 /// <param name="exit_code">Exit code to use if initialization fails</param>
 /// <returns>true on success, false on failure</returns>
-static bool init_altair_disk(const char* disk_path, int* fp, const char* disk_name, APP_EXIT_CODE exit_code)
+static bool init_altair_disk(const char *disk_path, int *fp, const char *disk_name, APP_EXIT_CODE exit_code)
 {
 #ifdef ALTAIR_CLOUD
     if ((*fp = open(disk_path, O_RDONLY)) == -1)
@@ -665,8 +691,8 @@ static void init_altair(void)
     disk_drive.disk4.sector      = 0;
     disk_drive.disk4.track       = 0;
 
-    i8080_reset(&cpu, (port_in)terminal_read, (port_out)terminal_write, sense, &disk_controller, (azure_sphere_port_in)io_port_in,
-        (azure_sphere_port_out)io_port_out);
+    i8080_reset(
+        &cpu, (port_in)terminal_read, (port_out)terminal_write, sense, &disk_controller, (azure_sphere_port_in)io_port_in, (azure_sphere_port_out)io_port_out);
 
     // load Disk Loader at ROM_LOADER_ADDRESS
     if (!loadRomImage(DISK_LOADER, ROM_LOADER_ADDRESS))
@@ -684,19 +710,23 @@ static void init_altair(void)
 /// </summary>
 static void cleanup_altair_disks(void)
 {
-    if (disk_drive.disk1.fp != -1) {
+    if (disk_drive.disk1.fp != -1)
+    {
         close(disk_drive.disk1.fp);
         disk_drive.disk1.fp = -1;
     }
-    if (disk_drive.disk2.fp != -1) {
+    if (disk_drive.disk2.fp != -1)
+    {
         close(disk_drive.disk2.fp);
         disk_drive.disk2.fp = -1;
     }
-    if (disk_drive.disk3.fp != -1) {
+    if (disk_drive.disk3.fp != -1)
+    {
         close(disk_drive.disk3.fp);
         disk_drive.disk3.fp = -1;
     }
-    if (disk_drive.disk4.fp != -1) {
+    if (disk_drive.disk4.fp != -1)
+    {
         close(disk_drive.disk4.fp);
         disk_drive.disk4.fp = -1;
     }
@@ -769,7 +799,7 @@ bool start_altair_thread(void *(*daemon)(void *), void *arg, char *daemon_name, 
     struct sched_param param;
 
     pthread_attr_init(&attr);
-    
+
     // https://stackoverflow.com/questions/9392415/linux-sched-other-sched-fifo-and-sched-rr-differences
     pthread_attr_setschedpolicy(&attr, SCHED_RR);
 
@@ -812,7 +842,8 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     init_environment(&altair_config);
 
-    if (!dx_isStringNullOrEmpty(altair_config.openai_api_key)){
+    if (!dx_isStringNullOrEmpty(altair_config.openai_api_key))
+    {
         init_openai(altair_config.openai_api_key);
     }
 
@@ -836,6 +867,22 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
     init_web_socket_server(client_connected_cb);
     dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 
+#ifdef MQTT_BROKER_HOSTNAME
+    // Initialize MQTT connection to rpi58
+    if (dx_isNetworkConnected(network_interface))
+    {
+        dx_Log_Debug("Initializing MQTT connection to %s:%s\n", mqtt_config.hostname, mqtt_config.port);
+        if (dx_mqttConnect(&mqtt_config, NULL, NULL))
+        {
+            dx_Log_Debug("Successfully connected to MQTT broker at %s\n", mqtt_config.hostname);
+        }
+        else
+        {
+            dx_Log_Debug("Failed to connect to MQTT broker: %s\n", dx_mqttGetLastError());
+        }
+    }
+#endif
+
 #if defined(ALTAIR_FRONT_PANEL_PI_SENSE) || defined(ALTAIR_FRONT_PANEL_KIT)
     dx_startThreadDetached(panel_refresh_thread, NULL, "panel_refresh_thread");
 #endif
@@ -853,6 +900,15 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 /// </summary>
 static void ClosePeripheralAndHandlers(void)
 {
+#ifdef MQTT_BROKER_HOSTNAME
+    // Disconnect from MQTT broker
+    if (dx_isMqttConnected())
+    {
+        dx_mqttDisconnect();
+        dx_Log_Debug("Disconnected from MQTT broker\n");
+    }
+#endif
+
     dx_azureToDeviceStop();
     dx_deviceTwinUnsubscribe();
     dx_timerEventLoopStop();

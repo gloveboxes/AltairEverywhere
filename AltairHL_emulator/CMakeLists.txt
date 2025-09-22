@@ -13,12 +13,22 @@ project (Altair_emulator C)
 
 ###################################################################################################################
 #
+# set(ALTAIR_MQTT_BROKER_HOSTNAME localhost)
+#
+###################################################################################################################
+
+###################################################################################################################
+#
 # set(ALTAIR_CLOUD TRUE "Enable Altair as a service real-time in-memory differencing disk")
 ###################################################################################################################
 
 if (ALTAIR_CLOUD)
     add_compile_definitions(ALTAIR_CLOUD)
 endif(ALTAIR_CLOUD)
+
+if (ALTAIR_MQTT_BROKER_HOSTNAME)
+    add_compile_definitions(ALTAIR_MQTT_BROKER_HOSTNAME)
+endif(ALTAIR_MQTT_BROKER_HOSTNAME)
 
 # overide wsServer MAX_CLIENTS
 add_compile_definitions(MAX_CLIENTS=1)
@@ -116,6 +126,11 @@ set(ALL_FILES
 
 # Create executable
 add_executable(${PROJECT_NAME} ${ALL_FILES})
+
+# Configure MQTT if hostname is specified
+if (ALTAIR_MQTT_BROKER_HOSTNAME)
+    target_compile_options(${PROJECT_NAME} PRIVATE "-DMQTT_BROKER_HOSTNAME=\"${ALTAIR_MQTT_BROKER_HOSTNAME}\"")
+endif(ALTAIR_MQTT_BROKER_HOSTNAME)
 
 ################################################################################
 # Following lines required for EdgeDevX
