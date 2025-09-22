@@ -11,10 +11,6 @@
 #include "environment.h"
 #include "web_socket_server.h"
 
-extern DX_DEVICE_TWIN_BINDING dt_city;
-extern DX_DEVICE_TWIN_BINDING dt_country;
-extern DX_DEVICE_TWIN_BINDING dt_location;
-
 extern bool azure_connected;
 extern char msgBuffer[MSG_BUFFER_BYTES];
 

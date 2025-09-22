@@ -132,11 +132,8 @@ void onopen(ws_cli_conn_t client)
     dx_asyncSend(&async_expire_session, NULL);
 #endif
 
-    // Safely increment session counter if pointer is valid
-    if (dt_new_sessions.propertyValue != NULL)
-    {
-        (*(int *)dt_new_sessions.propertyValue)++;
-    }
+    // Log new session instead of device twin reporting
+    dx_Log_Debug("New WebSocket session established\n");
 
     // Call client connected callback if it's valid
     if (_client_connected_cb != NULL)

@@ -2,7 +2,6 @@
 
 // DevX Libraries
 #include "dx_async.h"
-#include "dx_device_twins.h"
 #include "dx_exit_codes.h"
 #include "dx_terminate.h"
 #include "dx_timer.h"
@@ -147,16 +146,6 @@ DX_ASYNC_BINDING async_publish_weather = {.name = "async_publish_weather", .hand
 DX_ASYNC_BINDING async_set_millisecond_timer = {.name = "async_set_millisecond_timer", .handler = async_set_timer_millisecond_handler};
 DX_ASYNC_BINDING async_set_seconds_timer = {.name = "async_set_seconds_timer", .handler = async_set_timer_seconds_handler};
 
-// Azure IoT Central Properties (Device Twins)
-
-DX_DEVICE_TWIN_BINDING dt_city = {.propertyName = "City", .twinType = DX_DEVICE_TWIN_STRING};
-DX_DEVICE_TWIN_BINDING dt_country = {.propertyName = "Country", .twinType = DX_DEVICE_TWIN_STRING};
-DX_DEVICE_TWIN_BINDING dt_location = {.propertyName = "Location", .twinType = DX_DEVICE_TWIN_JSON_OBJECT};
-DX_DEVICE_TWIN_BINDING dt_new_sessions = {.propertyName = "NewSessions", .twinType = DX_DEVICE_TWIN_INT};
-
-static DX_DEVICE_TWIN_BINDING dt_deviceStartTimeUtc = {.propertyName = "StartTimeUTC", .twinType = DX_DEVICE_TWIN_STRING};
-static DX_DEVICE_TWIN_BINDING dt_heartbeatUtc = {.propertyName = "HeartbeatUTC", .twinType = DX_DEVICE_TWIN_STRING};
-static DX_DEVICE_TWIN_BINDING dt_softwareVersion = {.propertyName = "SoftwareVersion", .twinType = DX_DEVICE_TWIN_STRING};
 // clang-format on
 
 static DX_ASYNC_BINDING *async_bindings[] = {
@@ -178,16 +167,4 @@ static DX_TIMER_BINDING *timer_bindings[] = {
     &tmr_timer_seconds_expired,
     &tmr_update_environment,
     &tmr_ws_ping_pong,
-};
-
-static DX_DEVICE_TWIN_BINDING *device_twin_bindings[] = {
-    &dt_deviceStartTimeUtc,
-    &dt_heartbeatUtc,
-    &dt_softwareVersion,
-
-    &dt_location,
-    &dt_country,
-    &dt_city,
-
-    &dt_new_sessions,
 };

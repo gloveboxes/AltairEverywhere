@@ -28,7 +28,6 @@ typedef struct
 void print_console_banner(void);
 void terminal_handler(WS_INPUT_BLOCK_T *in_block);
 
-extern DX_DEVICE_TWIN_BINDING dt_new_sessions;
 extern DX_TIMER_BINDING tmr_partial_message;
 
 DX_DECLARE_ASYNC_HANDLER(async_expire_session_handler);

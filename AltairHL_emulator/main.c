@@ -770,27 +770,6 @@ static void *altair_thread(void *arg)
 }
 
 /// <summary>
-/// Report on first connect the software version and device startup UTC time
-/// </summary>
-/// <param name="connected"></param>
-static void report_software_version(bool connected)
-{
-    if (connected)
-    {
-        snprintf(msgBuffer, sizeof(msgBuffer), "Altair emulator: %s, DevX: %s", ALTAIR_EMULATOR_VERSION, AZURE_SPHERE_DEVX_VERSION);
-        dx_deviceTwinReportValue(&dt_softwareVersion, msgBuffer);
-        dx_deviceTwinReportValue(&dt_deviceStartTimeUtc, dx_getCurrentUtc(msgBuffer, sizeof(msgBuffer))); // DX_TYPE_STRING
-
-        dx_azureUnregisterConnectionChangedNotification(report_software_version);
-    }
-}
-
-static void azure_connection_state(bool connection_state)
-{
-    azure_connected = connection_state;
-}
-
-/// <summary>
 /// Create the a thread with a low priority to encourage a thread to run efficiency cores on Apple Silicon
 /// </summary>
 /// <param name="daemon"></param>
@@ -858,17 +837,6 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     dx_asyncSetInit(async_bindings, NELEMS(async_bindings));
 
-    // if there is no ID Scope or connection string then don't attempt to start connection to Azure IoT
-    // Central
-    if (!dx_isStringNullOrEmpty(altair_config.user_config.idScope) || !dx_isStringNullOrEmpty(altair_config.user_config.connection_string))
-    {
-        dx_azureConnect(&altair_config.user_config, network_interface, IOT_PLUG_AND_PLAY_MODEL_ID);
-
-        dx_azureRegisterConnectionChangedNotification(azure_connection_state);
-        dx_azureRegisterConnectionChangedNotification(report_software_version);
-    }
-
-    dx_deviceTwinSubscribe(device_twin_bindings, NELEMS(device_twin_bindings));
     init_web_socket_server(client_connected_cb);
     dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 
@@ -915,7 +883,6 @@ static void ClosePeripheralAndHandlers(void)
 #endif
 
     dx_azureToDeviceStop();
-    dx_deviceTwinUnsubscribe();
     dx_timerEventLoopStop();
 
     cleanup_altair_disks();

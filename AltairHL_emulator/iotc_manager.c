@@ -12,7 +12,8 @@ static void device_twin_update_location(double latitude, double longitude, DX_DE
 {
     char location_buffer[128];
     snprintf(location_buffer, sizeof(location_buffer), "{\"lat\":%f,\"lon\":%f,\"alt\":0}", latitude, longitude);
-    dx_deviceTwinReportValue(device_twin, location_buffer);
+    // Device twin reporting removed - using MQTT only
+    dx_Log_Debug("Location: %s\n", location_buffer);
 }
 
 void update_geo_location(ENVIRONMENT_TELEMETRY *environment)
@@ -22,9 +23,9 @@ void update_geo_location(ENVIRONMENT_TELEMETRY *environment)
     if (!updated && environment->locationInfo.updated)
     {
         updated = true;
-        device_twin_update_location(environment->locationInfo.lat, environment->locationInfo.lng, &dt_location);
-        dx_deviceTwinReportValue(&dt_country, environment->locationInfo.country);
-        dx_deviceTwinReportValue(&dt_city, environment->locationInfo.city);
+        device_twin_update_location(environment->locationInfo.lat, environment->locationInfo.lng, NULL);
+        // Device twin reporting removed - using MQTT only
+        dx_Log_Debug("Country: %s, City: %s\n", environment->locationInfo.country, environment->locationInfo.city);
     }
 }
 
