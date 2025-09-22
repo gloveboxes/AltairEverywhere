@@ -47,7 +47,7 @@ static DX_MQTT_CONFIG mqtt_config = {
 #else
     .client_id = "AltairEmulator",
 #endif
-    .port = "1883", .client_id = "altair_emulator", .username = NULL, .password = NULL, .keep_alive_seconds = 60, .clean_session = true};
+    .port = "1883", .username = NULL, .password = NULL, .keep_alive_seconds = 60, .clean_session = true};
 
 // Forward declarations
 static void wait_for_terminal_completion(bool *flag);
