@@ -2,6 +2,9 @@
    Licensed under the MIT License. */
 
 #define _POSIX_C_SOURCE 200809L
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE
+#endif
 
 #include "main.h"
 #include "app_exit_codes.h"
@@ -90,7 +93,14 @@ static DX_TIMER_HANDLER(report_memory_usage)
     struct rusage r_usage;
     getrusage(RUSAGE_SELF, &r_usage);
 
-    if (azure_connected && dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1, DX_JSON_INT, "memoryUsage", r_usage.ru_maxrss))
+    // macOS has ru_maxrss in bytes, Linux has it in kilobytes
+#ifdef __APPLE__
+    long memory_usage_kb = r_usage.ru_maxrss / 1024; // Convert bytes to KB
+#else
+    long memory_usage_kb = r_usage.ru_maxrss; // Already in KB on Linux
+#endif
+
+    if (azure_connected && dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 1, DX_JSON_INT, "memoryUsage", memory_usage_kb))
     {
         dx_azurePublish(msgBuffer, strlen(msgBuffer), diag_msg_properties, NELEMS(diag_msg_properties), &diag_content_properties);
         update_geo_location(&environment); // Hitch a ride on the report_memory_usage event. Only publishes once.
