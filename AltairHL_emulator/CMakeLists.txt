@@ -117,7 +117,7 @@ source_group("Source" FILES ${Source})
 set(wsServer
     wsServer/src/ws.c
     wsServer/src/base64.c
-    # wsServer/src/sha1/sha1.c # sha1.c is pulled in from the Azure IoT SDK C
+    wsServer/src/sha1.c
     wsServer/src/handshake.c
     wsServer/src/utf8.c
 )
@@ -138,9 +138,9 @@ if (ALTAIR_MQTT_BROKER_HOSTNAME)
 endif(ALTAIR_MQTT_BROKER_HOSTNAME)
 
 ################################################################################
-# Following lines required for EdgeDevX
-add_subdirectory("EdgeDevX" edge_devx)
-target_link_libraries(${PROJECT_NAME} "edge_devx")
+# Following lines required for EdgeMqttDevX
+add_subdirectory("EdgeMqttDevX" edge_mqtt_devx)
+target_link_libraries(${PROJECT_NAME} "edge_mqtt_devx")
 ################################################################################
 
 # target_compile_definitions(${PROJECT_NAME} PUBLIC AZURE_IOT_HUB_CONFIGURED)
