@@ -15,6 +15,8 @@ static const char *cmdLineArgsUsageText =
 	"  -m, --MqttHost <host>          MQTT broker hostname (required for MQTT)\n"
 	"  -p, --MqttPort <port>          MQTT broker port (default: 1883)\n"
 	"  -c, --MqttClientId <client_id> MQTT client ID (default: AltairEmulator_<timestamp>)\n"
+	"  -U, --MqttUsername <username>  MQTT username (default: none)\n"
+	"  -P, --MqttPassword <password>  MQTT password (default: none)\n"
 	"\n"
 	"Network Configuration:\n"
 	"  -n, --NetworkInterface <iface> Network interface to use\n"
@@ -28,7 +30,7 @@ static const char *cmdLineArgsUsageText =
 	"  -h, --help                     Show this help message\n"
 	"\n"
 	"Example:\n"
-	"  ./Altair_emulator -m mqtt.example.com -p 1883 -c MyAltair\n";
+	"  ./Altair_emulator -m mqtt.example.com -p 1883 -c MyAltair -U myuser -P mypass\n";
 
 bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *altair_config)
 {
@@ -38,6 +40,8 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 		{.name = "MqttHost", .has_arg = required_argument, .flag = NULL, .val = 'm'},
 		{.name = "MqttPort", .has_arg = required_argument, .flag = NULL, .val = 'p'},
 		{.name = "MqttClientId", .has_arg = required_argument, .flag = NULL, .val = 'c'},
+		{.name = "MqttUsername", .has_arg = required_argument, .flag = NULL, .val = 'U'},
+		{.name = "MqttPassword", .has_arg = required_argument, .flag = NULL, .val = 'P'},
 		{.name = "NetworkInterface", .has_arg = required_argument, .flag = NULL, .val = 'n'},
 		{.name = "OpenWeatherMapKey", .has_arg = required_argument, .flag = NULL, .val = 'o'},
 		{.name = "CopyXUrl", .has_arg = required_argument, .flag = NULL, .val = 'u'},
@@ -49,6 +53,8 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 	// Set default values - no default MQTT host, only connect when explicitly specified
 	altair_config->user_config.mqtt_host = NULL;
 	altair_config->user_config.mqtt_port = "1883";
+	altair_config->user_config.mqtt_username = NULL;
+	altair_config->user_config.mqtt_password = NULL;
 	
 	// Generate a unique client ID with timestamp to avoid conflicts
 	static char unique_client_id[64];
@@ -57,7 +63,7 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 	altair_config->user_config.mqtt_client_id = unique_client_id;
 
 	// Loop over all of the options.
-	while ((option = getopt_long(argc, argv, "m:p:c:n:o:u:a:h", cmdLineOptions, NULL)) != -1)
+	while ((option = getopt_long(argc, argv, "m:p:c:U:P:n:o:u:a:h", cmdLineOptions, NULL)) != -1)
 	{
 		// Check if arguments are missing. Every option requires an argument.
 		if (optarg != NULL && optarg[0] == '-')
@@ -75,6 +81,12 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 				break;
 			case 'c':
 				altair_config->user_config.mqtt_client_id = optarg;
+				break;
+			case 'U':
+				altair_config->user_config.mqtt_username = optarg;
+				break;
+			case 'P':
+				altair_config->user_config.mqtt_password = optarg;
 				break;
 			case 'n':
 				altair_config->user_config.network_interface = optarg;

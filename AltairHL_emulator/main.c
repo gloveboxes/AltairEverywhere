@@ -821,8 +821,8 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
     mqtt_config.hostname           = altair_config.user_config.mqtt_host;
     mqtt_config.port               = altair_config.user_config.mqtt_port;
     mqtt_config.client_id          = altair_config.user_config.mqtt_client_id;
-    mqtt_config.username           = NULL;
-    mqtt_config.password           = NULL;
+    mqtt_config.username           = altair_config.user_config.mqtt_username;
+    mqtt_config.password           = altair_config.user_config.mqtt_password;
     mqtt_config.keep_alive_seconds = 60;
     mqtt_config.clean_session      = true;
 
