@@ -877,14 +877,12 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 /// </summary>
 static void ClosePeripheralAndHandlers(void)
 {
-#ifdef ALTAIR_MQTT_BROKER_HOSTNAME
-    // Disconnect from MQTT broker
+    // Disconnect from MQTT broker if connected
     if (dx_isMqttConnected())
     {
         dx_mqttDisconnect();
         dx_Log_Debug("Disconnected from MQTT broker\n");
     }
-#endif
 
     dx_timerEventLoopStop();
 
