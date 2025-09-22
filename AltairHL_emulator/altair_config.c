@@ -2,7 +2,10 @@
    Licensed under the MIT License. */
 
 #include "altair_config.h"
+#include "EdgeMqttDevX/include/dx_utilities.h"
 #include <stdio.h>
+#include <time.h>
+#include <string.h>
 
 // Usage text for command line arguments in application manifest.
 static const char *cmdLineArgsUsageText =
@@ -11,7 +14,7 @@ static const char *cmdLineArgsUsageText =
 	"MQTT Configuration (optional):\n"
 	"  -m, --MqttHost <host>          MQTT broker hostname (required for MQTT)\n"
 	"  -p, --MqttPort <port>          MQTT broker port (default: 1883)\n"
-	"  -c, --MqttClientId <client_id> MQTT client ID (default: AltairEmulator)\n"
+	"  -c, --MqttClientId <client_id> MQTT client ID (default: AltairEmulator_<timestamp>)\n"
 	"\n"
 	"Network Configuration:\n"
 	"  -n, --NetworkInterface <iface> Network interface to use\n"
@@ -46,7 +49,12 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 	// Set default values - no default MQTT host, only connect when explicitly specified
 	altair_config->user_config.mqtt_host = NULL;
 	altair_config->user_config.mqtt_port = "1883";
-	altair_config->user_config.mqtt_client_id = "AltairEmulator";
+	
+	// Generate a unique client ID with timestamp to avoid conflicts
+	static char unique_client_id[64];
+	time_t current_time = time(NULL);
+	snprintf(unique_client_id, sizeof(unique_client_id), "AltairEmulator_%ld", current_time);
+	altair_config->user_config.mqtt_client_id = unique_client_id;
 
 	// Loop over all of the options.
 	while ((option = getopt_long(argc, argv, "m:p:c:n:o:u:a:h", cmdLineOptions, NULL)) != -1)
@@ -54,7 +62,7 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 		// Check if arguments are missing. Every option requires an argument.
 		if (optarg != NULL && optarg[0] == '-')
 		{
-			printf("WARNING: Option %c requires an argument\n", option);
+			dx_Log_Debug("WARNING: Option %c requires an argument\n", option);
 			continue;
 		}
 		switch (option)
@@ -103,6 +111,14 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 	if (!result)
 	{
 		printf("%s\n", cmdLineArgsUsageText);
+	}
+	else
+	{
+		// Log the final MQTT client ID that will be used
+		if (altair_config->user_config.mqtt_host != NULL)
+		{
+			dx_Log_Debug("Using MQTT client ID: %s\n", altair_config->user_config.mqtt_client_id);
+		}
 	}
 
 	return result;
