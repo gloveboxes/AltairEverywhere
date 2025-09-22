@@ -37,10 +37,15 @@ static _Atomic(CPU_OPERATING_MODE) atomic_cpu_operating_mode = CPU_STOPPED;
 
 // MQTT Configuration
 static DX_MQTT_CONFIG mqtt_config = {
-#ifdef MQTT_BROKER_HOSTNAME
-    .hostname = MQTT_BROKER_HOSTNAME,
+#ifdef ALTAIR_MQTT_BROKER_HOSTNAME
+    .hostname = ALTAIR_MQTT_BROKER_HOSTNAME,
 #else
     .hostname = "localhost",
+#endif
+#ifdef ALTAIR_MQTT_CLIENT_ID
+    .client_id = ALTAIR_MQTT_CLIENT_ID,
+#else
+    .client_id = "AltairEmulator",
 #endif
     .port = "1883", .client_id = "altair_emulator", .username = NULL, .password = NULL, .keep_alive_seconds = 60, .clean_session = true};
 
@@ -112,7 +117,7 @@ static DX_TIMER_HANDLER(report_memory_usage)
     long memory_usage_kb = r_usage.ru_maxrss; // Already in KB on Linux
 #endif
 
-    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 3, DX_JSON_STRING, "device", "altair_emulator", DX_JSON_INT, "timestamp", time(NULL), DX_JSON_INT,
+    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 3, DX_JSON_STRING, "device", mqtt_config.client_id, DX_JSON_INT, "timestamp", time(NULL), DX_JSON_INT,
             "memory_usage_kb", memory_usage_kb))
     {
         DX_MQTT_MESSAGE mqtt_msg = {.topic = "altair/memory/usage", .payload = msgBuffer, .payload_length = strlen(msgBuffer), .qos = 0, .retain = false};
@@ -129,7 +134,7 @@ static DX_TIMER_HANDLER(heart_beat_handler)
     char current_utc[64];
     dx_getCurrentUtc(current_utc, sizeof(current_utc));
 
-    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2, DX_JSON_STRING, "device", "altair_emulator", DX_JSON_STRING, "heartbeat_utc", current_utc))
+    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2, DX_JSON_STRING, "device", mqtt_config.client_id, DX_JSON_STRING, "heartbeat_utc", current_utc))
     {
         DX_MQTT_MESSAGE mqtt_msg = {.topic = "altair/heartbeat", .payload = msgBuffer, .payload_length = strlen(msgBuffer), .qos = 0, .retain = false};
         dx_mqttPublish(&mqtt_msg);
@@ -867,7 +872,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
     init_web_socket_server(client_connected_cb);
     dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 
-#ifdef MQTT_BROKER_HOSTNAME
+#ifdef ALTAIR_MQTT_BROKER_HOSTNAME
     // Initialize MQTT connection to rpi58
     if (dx_isNetworkConnected(network_interface))
     {
@@ -900,7 +905,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 /// </summary>
 static void ClosePeripheralAndHandlers(void)
 {
-#ifdef MQTT_BROKER_HOSTNAME
+#ifdef ALTAIR_MQTT_BROKER_HOSTNAME
     // Disconnect from MQTT broker
     if (dx_isMqttConnected())
     {

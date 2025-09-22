@@ -14,6 +14,7 @@ project (Altair_emulator C)
 ###################################################################################################################
 #
 # set(ALTAIR_MQTT_BROKER_HOSTNAME localhost)
+# set(ALTAIR_MQTT_CLIENT_ID altair_emulator)
 #
 ###################################################################################################################
 
@@ -27,8 +28,12 @@ if (ALTAIR_CLOUD)
 endif(ALTAIR_CLOUD)
 
 if (ALTAIR_MQTT_BROKER_HOSTNAME)
-    add_compile_definitions(ALTAIR_MQTT_BROKER_HOSTNAME)
+    add_compile_definitions(ALTAIR_MQTT_BROKER_HOSTNAME="${ALTAIR_MQTT_BROKER_HOSTNAME}")
 endif(ALTAIR_MQTT_BROKER_HOSTNAME)
+
+if (ALTAIR_MQTT_CLIENT_ID)
+    add_compile_definitions(ALTAIR_MQTT_CLIENT_ID="${ALTAIR_MQTT_CLIENT_ID}")
+endif(ALTAIR_MQTT_CLIENT_ID)
 
 # overide wsServer MAX_CLIENTS
 add_compile_definitions(MAX_CLIENTS=1)
