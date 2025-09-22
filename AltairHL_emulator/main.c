@@ -35,19 +35,8 @@ static _Atomic(CPU_OPERATING_MODE) atomic_cpu_operating_mode = CPU_STOPPED;
 #define MEMORY_SIZE_64K              (64 * 1024)
 #define ROM_LOADER_ADDRESS           0xFF00
 
-// MQTT Configuration
-static DX_MQTT_CONFIG mqtt_config = {
-#ifdef ALTAIR_MQTT_BROKER_HOSTNAME
-    .hostname = ALTAIR_MQTT_BROKER_HOSTNAME,
-#else
-    .hostname = "localhost",
-#endif
-#ifdef ALTAIR_MQTT_CLIENT_ID
-    .client_id = ALTAIR_MQTT_CLIENT_ID,
-#else
-    .client_id = "AltairEmulator",
-#endif
-    .port = "1883", .username = NULL, .password = NULL, .keep_alive_seconds = 60, .clean_session = true};
+// MQTT Configuration - will be initialized after command line parsing
+static DX_MQTT_CONFIG mqtt_config;
 
 // Forward declarations
 static void wait_for_terminal_completion(bool *flag);
@@ -820,9 +809,22 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
     dx_Log_Debug_Init(Log_Debug_Time_buffer, sizeof(Log_Debug_Time_buffer));
     srand((unsigned int)time(NULL)); // seed the random number generator
 
-    parse_altair_cmd_line_arguments(argc, argv, &altair_config);
+    if (!parse_altair_cmd_line_arguments(argc, argv, &altair_config))
+    {
+        dx_terminate(0); // Exit cleanly if help was displayed or invalid arguments
+        return;
+    }
 
     network_interface = altair_config.user_config.network_interface;
+
+    // Initialize MQTT configuration from command line arguments
+    mqtt_config.hostname           = altair_config.user_config.mqtt_host;
+    mqtt_config.port               = altair_config.user_config.mqtt_port;
+    mqtt_config.client_id          = altair_config.user_config.mqtt_client_id;
+    mqtt_config.username           = NULL;
+    mqtt_config.password           = NULL;
+    mqtt_config.keep_alive_seconds = 60;
+    mqtt_config.clean_session      = true;
 
     init_environment(&altair_config);
 
@@ -840,9 +842,8 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
     init_web_socket_server(client_connected_cb);
     dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 
-#ifdef ALTAIR_MQTT_BROKER_HOSTNAME
-    // Initialize MQTT connection to rpi58
-    if (dx_isNetworkConnected(network_interface))
+    // Initialize MQTT connection only if hostname is specified
+    if (!dx_isStringNullOrEmpty(mqtt_config.hostname) && dx_isNetworkConnected(network_interface))
     {
         dx_Log_Debug("Initializing MQTT connection to %s:%s\n", mqtt_config.hostname, mqtt_config.port);
         if (dx_mqttConnect(&mqtt_config, NULL, NULL))
@@ -854,7 +855,10 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
             dx_Log_Debug("Failed to connect to MQTT broker: %s\n", dx_mqttGetLastError());
         }
     }
-#endif
+    else if (mqtt_config.hostname == NULL)
+    {
+        dx_Log_Debug("No MQTT broker specified - running without MQTT connectivity\n");
+    }
 
 #if defined(ALTAIR_FRONT_PANEL_PI_SENSE) || defined(ALTAIR_FRONT_PANEL_KIT)
     dx_startThreadDetached(panel_refresh_thread, NULL, "panel_refresh_thread");
