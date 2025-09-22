@@ -11,278 +11,592 @@
   <script>
     "use strict";
 
-    /* WebSocket. */
-    var ws;
-    var connected = false;
-    var online = false;
-    var count = 0;
-    var character_mode = false;
-    var current_line = "";
-    var term = null;
-    var xterm_font = 'Courier'
-    var xterm_font_size = 18;
-
-
-    // function load_css(mode) {
-    //   if (mode == "retro") {
-    //     var fileref = document.createElement("link")
-    //     fileref.setAttribute("rel", "stylesheet")
-    //     fileref.setAttribute("type", "text/css")
-    //     fileref.setAttribute("href", "css/retro.css")
-    //   }
-    //   if (typeof fileref != "undefined")
-    //     document.getElementsByTagName("head")[0].appendChild(fileref)
-    // }
-
-
-    window.addEventListener('offline', function () {
-      // Actions to take when the connection is lost
-      console.log('Connection lost');
-      online = false;
-    });
-
-    window.addEventListener('online', function () {
-      // Actions to take when the connection is restored
-      console.log('Connection restored');
-      online = true;
-    });
-
-    function initTerminal() {
-
-      term = new Terminal({
-        cursorBlink: "block",
-        fontFamily: xterm_font,
-        fontSize: xterm_font_size,
-        rows: 28,
-        cols: 104
-      });
-
-      term.open(document.getElementById("terminal"));
-
-      set_theme();
-
-      term.write(`WELCOME TO ALTAIR TERMINAL`);
-
-      term.prompt = (msg) => {
-        if (connected && online) {
-          ws.send(msg);
-        }
+    /**
+     * Altair Terminal Web Client
+     * Improved version with better error handling, code organization, and robustness
+     */
+    const AltairTerminal = (function() {
+      // Private state - encapsulated to avoid global pollution
+      const state = {
+        ws: null,
+        connected: false,
+        online: navigator.onLine,
+        characterMode: false,
+        currentLine: "",
+        term: null,
+        reconnectAttempts: 0,
+        maxReconnectAttempts: 5,
+        reconnectDelay: 2000
       };
 
-      term.prompt("");
+      // Configuration constants
+      const CONFIG = {
+        XTERM_FONT: 'Courier',
+        XTERM_FONT_SIZE: 18,
+        XTERM_ROWS: 28,
+        XTERM_COLS: 104,
+        WEBSOCKET_PORT: 8082,
+        MAX_PASTE_LENGTH: 256,
+        STORAGE_THEME_KEY: 'altair_theme',
+        DEFAULT_THEME: 'dark'
+      };
 
-      doConnect();
+      // DOM element cache
+      const elements = {
+        terminal: null,
+        hostName: null,
+        inputMode: null,
+        toggleTheme: null
+      };
 
-      // paste value
-      term.on("paste", function (data) {
-        if (character_mode) { return; }
+      /**
+       * Initialize DOM element references with error checking
+       */
+      function initializeElements() {
+        try {
+          elements.terminal = document.getElementById("terminal");
+          elements.hostName = document.getElementById("host_name");
+          elements.inputMode = document.getElementById("inputmode");
+          elements.toggleTheme = document.getElementById("toggleTheme");
 
-        if (data.length < 256) {
-          current_line += data;
-          term.write(data);
-          return;
+          // Validate critical elements exist
+          if (!elements.terminal) {
+            throw new Error("Terminal container element not found");
+          }
+        } catch (error) {
+          console.error("Failed to initialize DOM elements:", error);
+          showError("Failed to initialize terminal interface");
+          return false;
         }
-      });
+        return true;
+      }
 
-      term.on("key", function (key, ev) {
+      /**
+       * Safe error display without using alert()
+       */
+      function showError(message) {
+        console.error("Altair Terminal Error:", message);
+        if (elements.hostName) {
+          elements.hostName.textContent = `Error: ${message}`;
+          elements.hostName.style.color = 'red';
+        }
+      }
 
-        if (ev.ctrlKey) {    // ctrl keys
-          if (ev.keyCode === 76) {   // hook ctrl L as toggle between line and Word Master mode
-            character_mode = !character_mode;
-            if (character_mode) {
-              document.getElementById("inputmode").innerHTML = "Character input mode : Wordmaster (Ctrl+L to toggle)";
-            } else {
-              document.getElementById("inputmode").innerHTML = "Line input mode: Default (Ctrl+L to toggle)";
+      /**
+       * Safe message display
+       */
+      function showMessage(message, isError = false) {
+        console.log("Altair Terminal:", message);
+        if (elements.hostName) {
+          elements.hostName.textContent = message;
+          elements.hostName.style.color = isError ? 'red' : '';
+        }
+      }
+
+      /**
+       * Network status management
+       */
+      function initializeNetworkHandlers() {
+        window.addEventListener('offline', () => {
+          console.log('Connection lost');
+          state.online = false;
+          showMessage('Connection lost', true);
+        });
+
+        window.addEventListener('online', () => {
+          console.log('Connection restored');
+          state.online = true;
+          showMessage('Connection restored');
+          // Attempt to reconnect if we were previously connected
+          if (state.connected && (!state.ws || state.ws.readyState !== WebSocket.OPEN)) {
+            setTimeout(() => attemptConnection(), 1000);
+          }
+        });
+      }
+
+      /**
+       * Initialize xterm.js terminal with error handling
+       */
+      function initializeTerminal() {
+        try {
+          // Check if Terminal is available
+          if (typeof Terminal === 'undefined') {
+            throw new Error("xterm.js library not loaded");
+          }
+
+          state.term = new Terminal({
+            cursorBlink: "block",
+            fontFamily: CONFIG.XTERM_FONT,
+            fontSize: CONFIG.XTERM_FONT_SIZE,
+            rows: CONFIG.XTERM_ROWS,
+            cols: CONFIG.XTERM_COLS
+          });
+
+          if (!elements.terminal) {
+            throw new Error("Terminal container not found");
+          }
+
+          state.term.open(elements.terminal);
+          setTheme();
+          state.term.write('WELCOME TO ALTAIR TERMINAL');
+
+          // Set up terminal prompt function
+          state.term.prompt = (msg) => {
+            if (state.connected && state.online && state.ws) {
+              try {
+                state.ws.send(msg);
+              } catch (error) {
+                console.error("Failed to send message:", error);
+                showError("Failed to send data to server");
+              }
             }
+          };
+
+          state.term.prompt("");
+          setupTerminalEventHandlers();
+          
+          return true;
+        } catch (error) {
+          console.error("Failed to initialize terminal:", error);
+          showError("Failed to initialize terminal: " + error.message);
+          return false;
+        }
+      }
+
+      /**
+       * Set up terminal event handlers with better error handling
+       */
+      function setupTerminalEventHandlers() {
+        if (!state.term) return;
+
+        // Paste handler with length validation
+        state.term.on("paste", (data) => {
+          if (state.characterMode) return;
+
+          if (typeof data === 'string' && data.length < CONFIG.MAX_PASTE_LENGTH) {
+            state.currentLine += data;
+            state.term.write(data);
+          } else {
+            console.warn("Paste data too long or invalid, ignoring");
+          }
+        });
+
+        // Key handler with improved logic
+        state.term.on("key", (key, ev) => {
+          try {
+            handleKeyPress(key, ev);
+          } catch (error) {
+            console.error("Error handling key press:", error);
+          }
+        });
+      }
+
+      /**
+       * Handle key press events with better organization
+       */
+      function handleKeyPress(key, ev) {
+        // Handle Ctrl key combinations
+        if (ev.ctrlKey) {
+          if (ev.keyCode === 76) { // Ctrl+L toggle
+            toggleInputMode();
             return;
           }
-          sendControl(String.fromCharCode(ev.keyCode));
+          sendControlCharacter(String.fromCharCode(ev.keyCode));
           return;
         }
 
-        if (ev.keyCode === 27) { // escape
-          term.prompt(key);
-          term.write(key);
+        // Handle Escape key
+        if (ev.keyCode === 27) {
+          state.term.prompt(key);
+          state.term.write(key);
           return;
         }
 
-        if (character_mode) {
-          switch (ev.keyCode) {
-            case 39:  // cursor right
-              sendControl(String.fromCharCode(68)); // ctrl d
-              return;
-            case 37:  // cursor left
-              sendControl(String.fromCharCode(83)); // ctrl s
-              return;
-            case 38:  // cursor up
-              sendControl(String.fromCharCode(69)); // ctrl e
-              return;
-            case 40:  // cursor down
-              sendControl(String.fromCharCode(88)); // ctrl x
-              return;
-            case 45:  // insert toggle
-              sendControl(String.fromCharCode(79)); // ctrl o
-              return;
-            case 46:  // delete
-              sendControl(String.fromCharCode(71)); // ctrl g
-              return;
-            case 13:  // Enter
-              term.prompt("\r");
-              current_line = "";
-              return;
-            case 8:  // Backspace
-              sendControl(String.fromCharCode(72));
-              return;
-            default:
-              current_line += key;
-              term.prompt(key);
-              term.write(key);
-              return;
-          }
-        }
-
-        if (!character_mode) {
-
-          switch (ev.keyCode) {
-            case 39:  // cursor right
-              break;
-            case 37:  // cursor left
-              break;
-            case 38:  // cursor up
-              break;
-            case 40:  // cursor down
-              break;
-            case 13:  // Enter
-              current_line += "\r";
-              term.prompt(current_line);
-              term.write("\r");
-              current_line = "";
-              return;
-            case 8:   // Backspace
-              if (current_line) {
-                current_line = current_line.slice(0, current_line.length - 1);
-                term.write("\b \b");
-              }
-              return;
-            default:
-              current_line += key;
-              term.write(key);
-          }
-        }
-      });
-
-      // doConnect();
-    }
-
-    // https://en.wikipedia.org/wiki/Control_character
-    function sendControl(msg) {
-      var output;
-      if (connected && online) {
-        if (msg == 'M') {
-          output = String.fromCharCode(28);
+        if (state.characterMode) {
+          handleCharacterMode(key, ev);
         } else {
-          var ascii = msg.charCodeAt(0);
-          output = String.fromCharCode(ascii & 31);
+          handleLineMode(key, ev);
         }
-        ws.send(output);
-      }
-    }
-
-
-    /* Establish web socket connection. */
-    function doConnect() {
-
-      const queryString = window.location.search;
-      const urlParams = new URLSearchParams(queryString);
-      const host_address = urlParams.get('altair')
-
-      var altair_address = host_address ? host_address : window.location.host.split(':')[0];
-
-      document.getElementById("host_name").innerHTML = 'Connecting to ' + altair_address + '...';
-
-      var addr = "ws://" + altair_address + ":8082";
-
-      if (connected) {
-        ws.close();
-        connected = false;
-        online = false;
-        return;
       }
 
-      /* Do connection. */
-      try {
-        ws = new WebSocket(addr);
-      } catch (error) {
-        alert("Error connecting to WebSocket: " + error);
+      /**
+       * Handle character input mode
+       */
+      function handleCharacterMode(key, ev) {
+        const keyMappings = {
+          39: String.fromCharCode(68), // cursor right -> ctrl d
+          37: String.fromCharCode(83), // cursor left -> ctrl s
+          38: String.fromCharCode(69), // cursor up -> ctrl e
+          40: String.fromCharCode(88), // cursor down -> ctrl x
+          45: String.fromCharCode(79), // insert -> ctrl o
+          46: String.fromCharCode(71), // delete -> ctrl g
+          8: String.fromCharCode(72)   // backspace -> ctrl h
+        };
+
+        if (keyMappings[ev.keyCode]) {
+          sendControlCharacter(keyMappings[ev.keyCode]);
+          return;
+        }
+
+        if (ev.keyCode === 13) { // Enter
+          state.term.prompt("\r");
+          state.currentLine = "";
+          return;
+        }
+
+        // Default character input
+        state.currentLine += key;
+        state.term.prompt(key);
+        state.term.write(key);
       }
 
-      /* Register events. */
-      ws.onopen = function () {
-        connected = true;
-        online = true;
-        document.getElementById("host_name").innerHTML = altair_address;
-        term.focus();
+      /**
+       * Handle line input mode
+       */
+      function handleLineMode(key, ev) {
+        switch (ev.keyCode) {
+          case 39: // cursor right
+          case 37: // cursor left  
+          case 38: // cursor up
+          case 40: // cursor down
+            break; // Ignore cursor keys in line mode
+          case 13: // Enter
+            state.currentLine += "\r";
+            state.term.prompt(state.currentLine);
+            state.term.write("\r");
+            state.currentLine = "";
+            break;
+          case 8: // Backspace
+            if (state.currentLine) {
+              state.currentLine = state.currentLine.slice(0, -1);
+              state.term.write("\b \b");
+            }
+            break;
+          default:
+            state.currentLine += key;
+            state.term.write(key);
+        }
+      }
+
+      /**
+       * Toggle between line and character input modes
+       */
+      function toggleInputMode() {
+        state.characterMode = !state.characterMode;
+        const message = state.characterMode 
+          ? "Character input mode : Wordmaster (Ctrl+L to toggle)"
+          : "Line input mode: Default (Ctrl+L to toggle)";
+        
+        if (elements.inputMode) {
+          elements.inputMode.textContent = message;
+        }
+      }
+
+      /**
+       * Send control character with error handling
+       */
+      function sendControlCharacter(msg) {
+        if (!state.connected || !state.online || !state.ws) return;
+
+        try {
+          let output;
+          if (msg === 'M') {
+            output = String.fromCharCode(28);
+          } else {
+            const ascii = msg.charCodeAt(0);
+            output = String.fromCharCode(ascii & 31);
+          }
+          state.ws.send(output);
+        } catch (error) {
+          console.error("Failed to send control character:", error);
+          showError("Communication error with server");
+        }
+      }
+
+      /**
+       * Get WebSocket URL with validation
+       */
+      function getWebSocketUrl() {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const hostAddress = urlParams.get('altair');
+          
+          // Validate and sanitize host address
+          const altairAddress = hostAddress 
+            ? sanitizeHostAddress(hostAddress)
+            : window.location.hostname || 'localhost';
+
+          return `ws://${altairAddress}:${CONFIG.WEBSOCKET_PORT}`;
+        } catch (error) {
+          console.error("Failed to construct WebSocket URL:", error);
+          return `ws://localhost:${CONFIG.WEBSOCKET_PORT}`;
+        }
+      }
+
+      /**
+       * Basic host address sanitization
+       */
+      function sanitizeHostAddress(address) {
+        // Remove any protocol prefixes and validate basic format
+        const cleaned = address.replace(/^https?:\/\//, '').split('/')[0];
+        // Basic validation - allow alphanumeric, dots, hyphens
+        if (!/^[a-zA-Z0-9.-]+$/.test(cleaned)) {
+          console.warn("Invalid host address, using default");
+          return 'localhost';
+        }
+        return cleaned;
+      }
+
+      /**
+       * Attempt WebSocket connection with retry logic
+       */
+      function attemptConnection() {
+        if (state.connected) {
+          closeConnection();
+        }
+
+        const wsUrl = getWebSocketUrl();
+        const altairAddress = wsUrl.split('://')[1].split(':')[0];
+        
+        showMessage(`Connecting to ${altairAddress}...`);
+
+        try {
+          state.ws = new WebSocket(wsUrl);
+          setupWebSocketEventHandlers(altairAddress);
+        } catch (error) {
+          console.error("Failed to create WebSocket:", error);
+          showError("Failed to create connection");
+          scheduleReconnect();
+        }
+      }
+
+      /**
+       * Set up WebSocket event handlers
+       */
+      function setupWebSocketEventHandlers(altairAddress) {
+        if (!state.ws) return;
+
+        state.ws.onopen = () => {
+          console.log("WebSocket connected");
+          state.connected = true;
+          state.reconnectAttempts = 0;
+          showMessage(altairAddress);
+          if (state.term) {
+            state.term.focus();
+          }
+        };
+
+        state.ws.onmessage = (event) => {
+          if (state.term && event.data) {
+            try {
+              state.term.write(event.data);
+            } catch (error) {
+              console.error("Error writing to terminal:", error);
+            }
+          }
+        };
+
+        state.ws.onclose = (event) => {
+          console.log("WebSocket closed:", event.code, event.reason);
+          state.connected = false;
+          state.ws = null;
+          showMessage('Connection closed. Refresh to reconnect', true);
+        };
+
+        state.ws.onerror = (error) => {
+          console.error("WebSocket error:", error);
+          state.connected = false;
+          showError("Connection error occurred");
+        };
+      }
+
+      /**
+       * Close WebSocket connection cleanly
+       */
+      function closeConnection() {
+        if (state.ws) {
+          try {
+            state.ws.close(1000, "Client disconnect");
+          } catch (error) {
+            console.error("Error closing WebSocket:", error);
+          }
+          state.ws = null;
+        }
+        state.connected = false;
+      }
+
+      /**
+       * Schedule reconnection attempt
+       */
+      function scheduleReconnect() {
+        if (state.reconnectAttempts < CONFIG.MAX_RECONNECT_ATTEMPTS && state.online) {
+          state.reconnectAttempts++;
+          const delay = CONFIG.RECONNECT_DELAY * Math.pow(2, state.reconnectAttempts - 1);
+          
+          showMessage(`Reconnecting in ${delay/1000}s... (${state.reconnectAttempts}/${CONFIG.MAX_RECONNECT_ATTEMPTS})`);
+          
+          setTimeout(() => {
+            if (!state.connected && state.online) {
+              attemptConnection();
+            }
+          }, delay);
+        } else {
+          showMessage('Max reconnection attempts reached. Refresh to try again.', true);
+        }
+      }
+
+      /**
+       * Theme management with error handling
+       */
+      function setTheme(themeName = null) {
+        if (!state.term) return;
+
+        try {
+          const currentTheme = themeName || localStorage.getItem(CONFIG.STORAGE_THEME_KEY) || CONFIG.DEFAULT_THEME;
+          
+          if (currentTheme === "light") {
+            setLightTheme();
+          } else {
+            setDarkTheme();
+          }
+        } catch (error) {
+          console.error("Error setting theme:", error);
+          setDarkTheme(); // Fallback to dark theme
+        }
+      }
+
+      /**
+       * Apply dark theme
+       */
+      function setDarkTheme() {
+        try {
+          localStorage.setItem(CONFIG.STORAGE_THEME_KEY, "dark");
+          if (state.term) {
+            state.term.setOption('theme', { 
+              background: '#000000', 
+              foreground: "#ffffff", 
+              cursor: "#ffffff", 
+              selection: "rgba(188,214,141, 0.4)" 
+            });
+          }
+          updateThemeButton("Light theme");
+        } catch (error) {
+          console.error("Error applying dark theme:", error);
+        }
+      }
+
+      /**
+       * Apply light theme
+       */
+      function setLightTheme() {
+        try {
+          localStorage.setItem(CONFIG.STORAGE_THEME_KEY, "light");
+          if (state.term) {
+            state.term.setOption('theme', { 
+              background: '#ffffff', 
+              foreground: "#000000", 
+              cursor: "#000000", 
+              selection: "rgba(188,214,141, 0.4)" 
+            });
+          }
+          updateThemeButton("Dark theme");
+        } catch (error) {
+          console.error("Error applying light theme:", error);
+        }
+      }
+
+      /**
+       * Update theme button text
+       */
+      function updateThemeButton(text) {
+        if (elements.toggleTheme) {
+          elements.toggleTheme.value = text;
+        }
+      }
+
+      /**
+       * Toggle between themes
+       */
+      function toggleTheme() {
+        try {
+          const currentTheme = localStorage.getItem(CONFIG.STORAGE_THEME_KEY) || CONFIG.DEFAULT_THEME;
+          
+          if (currentTheme === "light") {
+            setDarkTheme();
+          } else {
+            setLightTheme();
+          }
+          
+          if (state.term) {
+            state.term.focus();
+          }
+        } catch (error) {
+          console.error("Error toggling theme:", error);
+        }
+      }
+
+      /**
+       * Cleanup function for page unload
+       */
+      function cleanup() {
+        closeConnection();
+        if (state.term) {
+          try {
+            state.term.dispose();
+          } catch (error) {
+            console.error("Error disposing terminal:", error);
+          }
+        }
+      }
+
+      /**
+       * Initialize the application
+       */
+      function initialize() {
+        try {
+          console.log("Initializing Altair Terminal...");
+          
+          if (!initializeElements()) {
+            return false;
+          }
+
+          initializeNetworkHandlers();
+          
+          if (!initializeTerminal()) {
+            return false;
+          }
+
+          attemptConnection();
+
+          // Set up cleanup on page unload
+          window.addEventListener('beforeunload', cleanup);
+          
+          console.log("Altair Terminal initialized successfully");
+          return true;
+        } catch (error) {
+          console.error("Failed to initialize Altair Terminal:", error);
+          showError("Initialization failed: " + error.message);
+          return false;
+        }
+      }
+
+      // Public API
+      return {
+        initialize,
+        toggleTheme,
+        cleanup
       };
+    })();
 
-      /* Deals with messages. */
-      ws.onmessage = function (event) {
-        // console.log("onMessageArrived:" + evt.data);
-        term.write(event.data);
-      };
-
-      /* Close events. */
-      ws.onclose = function (event) {
-        connected = false;
-        online = false;
-        document.getElementById("host_name").innerHTML = 'Refresh to reconnect';
-      };
-
-      ws.error = function (event) {
-        connected = false;
-        online = false;
-        alert("Error connecting to WebSocket:", error);
-        document.getElementById("host_name").innerHTML = 'Refresh to reconnect';
-      };
-    }
-
-    function set_dark_theme() {
-      localStorage['altair_theme'] = "dark";
-      term.setOption('theme', { background: '#000000', foreground: "#ffffff", cursor: "#ffffff", selection: "rgba(188,214,141, 0.4)"  });
-    }
-
-    function set_light_theme() {
-      localStorage['altair_theme'] = "light";
-      term.setOption('theme', { background: '#ffffff', foreground: "#000000", cursor: "#000000", selection: "rgba(188,214,141, 0.4)" });
-    }
-
+    // Global functions for HTML onclick handlers (maintained for compatibility)
     function toggleTheme() {
-      const currentTheme = localStorage['altair_theme']
-      var button = document.getElementById('toggleTheme');
-
-      if (currentTheme === "light") {
-        set_dark_theme();
-        button.value = "Light theme";
-      } else {
-        set_light_theme();
-        button.value = "Dark theme";
-      }
-      term.focus();
+      AltairTerminal.toggleTheme();
     }
 
-    function set_theme() {
-      const currentTheme = localStorage['altair_theme']
-      var button = document.getElementById('toggleTheme');
-
-      if (currentTheme === "light") {
-        set_light_theme();
-        button.value = "Dark theme";
-      } else {
-        set_dark_theme();
-        button.value = "Light theme";
-      }
-      term.focus();
+    // Initialize when DOM is loaded
+    function initTerminal() {
+      AltairTerminal.initialize();
     }
-
   </script>
   <title>ALTAIR 8800 Emulator</title>
 </head>
