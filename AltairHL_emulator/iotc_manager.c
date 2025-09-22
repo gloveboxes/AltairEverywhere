@@ -3,19 +3,6 @@
 
 #include "iotc_manager.h"
 
-static DX_MESSAGE_PROPERTY *weather_msg_properties[] = {&(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"},
-    &(DX_MESSAGE_PROPERTY){.key = "type", .value = "weather"}, &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
-
-static DX_MESSAGE_CONTENT_PROPERTIES weather_content_properties = {.contentEncoding = "utf-8", .contentType = "application/json"};
-
-static void device_twin_update_location(double latitude, double longitude, DX_DEVICE_TWIN_BINDING *device_twin)
-{
-    char location_buffer[128];
-    snprintf(location_buffer, sizeof(location_buffer), "{\"lat\":%f,\"lon\":%f,\"alt\":0}", latitude, longitude);
-    // Device twin reporting removed - using MQTT only
-    dx_Log_Debug("Location: %s\n", location_buffer);
-}
-
 void update_geo_location(ENVIRONMENT_TELEMETRY *environment)
 {
     static bool updated = false;
@@ -23,7 +10,6 @@ void update_geo_location(ENVIRONMENT_TELEMETRY *environment)
     if (!updated && environment->locationInfo.updated)
     {
         updated = true;
-        device_twin_update_location(environment->locationInfo.lat, environment->locationInfo.lng, NULL);
         // Device twin reporting removed - using MQTT only
         dx_Log_Debug("Country: %s, City: %s\n", environment->locationInfo.country, environment->locationInfo.city);
     }
@@ -65,7 +51,16 @@ void publish_telemetry(ENVIRONMENT_TELEMETRY *environment)
 
     if (msg_len < sizeof(msgBuffer))
     {
-        dx_azurePublish(msgBuffer, msg_len, weather_msg_properties, NELEMS(weather_msg_properties), &weather_content_properties);
+        // Publish telemetry via MQTT instead of Azure IoT Hub
+        DX_MQTT_MESSAGE mqtt_msg = {
+            .topic = "altair/telemetry/weather", 
+            .payload = msgBuffer, 
+            .payload_length = msg_len, 
+            .qos = 0, 
+            .retain = false
+        };
+        dx_mqttPublish(&mqtt_msg);
+        dx_Log_Debug("Published weather telemetry via MQTT\n");
     }
     else
     {

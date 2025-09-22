@@ -2,7 +2,6 @@
 #define _88DCDD_H_
 
 #include "difference_disk.h"
-#include "dx_device_twins.h"
 #include "types.h"
 #include "utils.h"
 #include <applibs/log.h>
@@ -75,9 +74,6 @@ typedef struct
 } disks;
 
 extern disks disk_drive;
-extern DX_DEVICE_TWIN_BINDING dt_difference_disk_reads;
-extern DX_DEVICE_TWIN_BINDING dt_difference_disk_writes;
-extern DX_DEVICE_TWIN_BINDING dt_filesystem_reads;
 
 void disk_select(uint8_t b);
 uint8_t disk_status(void);

@@ -8,16 +8,6 @@ typedef struct
     int index;
 } JSON_UNIT_T;
 
-// clang-format off
-DX_MESSAGE_PROPERTY *json_msg_properties[] = {
-    &(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"},
-    &(DX_MESSAGE_PROPERTY){.key = "type", .value = "custom"},
-    &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
-
-DX_MESSAGE_CONTENT_PROPERTIES json_content_properties = {
-    .contentEncoding = "utf-8", .contentType = "application/json"};
-// clang-format on
-
 extern bool azure_connected;
 extern ENVIRONMENT_TELEMETRY environment;
 
@@ -42,7 +32,16 @@ DX_ASYNC_HANDLER(async_publish_json_handler, handle)
     if (azure_connected)
     {
 #ifndef ALTAIR_CLOUD
-        dx_azurePublish(ju.buffer, strlen(ju.buffer), json_msg_properties, NELEMS(json_msg_properties), &json_content_properties);
+        // Publish JSON data via MQTT instead of Azure IoT Hub
+        DX_MQTT_MESSAGE mqtt_msg = {
+            .topic = "altair/json", 
+            .payload = ju.buffer, 
+            .payload_length = strlen(ju.buffer), 
+            .qos = 0, 
+            .retain = false
+        };
+        dx_mqttPublish(&mqtt_msg);
+        dx_Log_Debug("Published JSON data via MQTT\n");
 #endif
     }
     publish_json_pending = false;

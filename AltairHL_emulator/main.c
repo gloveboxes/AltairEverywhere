@@ -882,7 +882,6 @@ static void ClosePeripheralAndHandlers(void)
     }
 #endif
 
-    dx_azureToDeviceStop();
     dx_timerEventLoopStop();
 
     cleanup_altair_disks();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dx_async.h"
+#include "dx_mqtt.h"
 #include <stddef.h>
 #include <stdint.h>
 

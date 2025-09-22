@@ -6,7 +6,6 @@
 #include "88dcdd.h"
 #include "cpu_monitor.h"
 #include "dx_async.h"
-#include "dx_device_twins.h"
 #include "dx_timer.h"
 #include "dx_utilities.h"
 #include <pthread.h>

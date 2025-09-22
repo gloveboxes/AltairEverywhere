@@ -77,11 +77,6 @@ enum PANEL_MODE_T panel_mode     = PANEL_BUS_MODE;
 char msgBuffer[MSG_BUFFER_BYTES] = {0};
 const char *network_interface    = NULL;
 
-static DX_MESSAGE_PROPERTY *diag_msg_properties[] = {&(DX_MESSAGE_PROPERTY){.key = "appid", .value = "altair"},
-    &(DX_MESSAGE_PROPERTY){.key = "type", .value = "diagnostics"}, &(DX_MESSAGE_PROPERTY){.key = "schema", .value = "1"}};
-
-static DX_MESSAGE_CONTENT_PROPERTIES diag_content_properties = {.contentEncoding = "utf-8", .contentType = "application/json"};
-
 // CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
 CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
 
