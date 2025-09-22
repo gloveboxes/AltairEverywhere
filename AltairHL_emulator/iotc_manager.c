@@ -2,6 +2,7 @@
    Licensed under the MIT License. */
 
 #include "iotc_manager.h"
+#include "dx_mqtt.h"
 
 void update_geo_location(ENVIRONMENT_TELEMETRY *environment)
 {
@@ -17,7 +18,7 @@ void update_geo_location(ENVIRONMENT_TELEMETRY *environment)
 
 void publish_telemetry(ENVIRONMENT_TELEMETRY *environment)
 {
-    if (!azure_connected || !environment->valid)
+    if (!dx_isMqttConnected() || !environment->valid)
     {
         return;
     }

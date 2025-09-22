@@ -8,7 +8,6 @@ typedef struct
     int index;
 } JSON_UNIT_T;
 
-extern bool azure_connected;
 extern ENVIRONMENT_TELEMETRY environment;
 
 static JSON_UNIT_T ju;
@@ -17,7 +16,7 @@ static volatile bool publish_weather_pending = false;
 
 DX_ASYNC_HANDLER(async_publish_weather_handler, handle)
 {
-    if (environment.valid && azure_connected)
+    if (environment.valid && dx_isMqttConnected())
     {
 #ifndef ALTAIR_CLOUD
         publish_telemetry(&environment);
@@ -29,7 +28,7 @@ DX_ASYNC_HANDLER_END
 
 DX_ASYNC_HANDLER(async_publish_json_handler, handle)
 {
-    if (azure_connected)
+    if (dx_isMqttConnected())
     {
 #ifndef ALTAIR_CLOUD
         // Publish JSON data via MQTT instead of Azure IoT Hub

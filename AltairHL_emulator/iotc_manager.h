@@ -10,7 +10,6 @@
 #include "environment.h"
 #include "web_socket_server.h"
 
-extern bool azure_connected;
 extern char msgBuffer[MSG_BUFFER_BYTES];
 
 void publish_telemetry(ENVIRONMENT_TELEMETRY *environment);

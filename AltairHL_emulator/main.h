@@ -102,7 +102,6 @@ static int terminalOutputMessageLen   = 0;
 
 static char *input_data = NULL;
 
-bool azure_connected             = false;
 bool send_partial_msg            = false;
 static FILE *app_stream          = NULL;
 static bool altair_i8080_running = false;
