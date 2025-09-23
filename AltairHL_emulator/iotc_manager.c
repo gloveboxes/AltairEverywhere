@@ -4,6 +4,9 @@
 #include "iotc_manager.h"
 #include "dx_mqtt.h"
 
+// External reference to global MQTT configuration
+extern DX_MQTT_CONFIG mqtt_config;
+
 void update_geo_location(ENVIRONMENT_TELEMETRY *environment)
 {
     static bool updated = false;
@@ -24,6 +27,8 @@ void publish_telemetry(ENVIRONMENT_TELEMETRY *environment)
     }
 
     const char *publish_template = "{"
+                                   "\"device\":\"%s\","
+                                   "\"timestamp\":%ld,"
                                    "\"temperature\":%d,"
                                    "\"pressure\":%d,"
                                    "\"humidity\":%d,"
@@ -42,7 +47,7 @@ void publish_telemetry(ENVIRONMENT_TELEMETRY *environment)
                                    "\"longitude\":%.6f"
                                    "}";
 
-    size_t msg_len = (size_t)snprintf(msgBuffer, sizeof(msgBuffer), publish_template, environment->latest.weather.temperature,
+    size_t msg_len = (size_t)snprintf(msgBuffer, sizeof(msgBuffer), publish_template, mqtt_config.client_id, time(NULL), environment->latest.weather.temperature,
         environment->latest.weather.pressure, environment->latest.weather.humidity, environment->latest.weather.wind_speed,
         environment->latest.weather.wind_direction, environment->latest.pollution.air_quality_index,
         environment->latest.pollution.carbon_monoxide, environment->latest.pollution.nitrogen_monoxide,
@@ -61,7 +66,6 @@ void publish_telemetry(ENVIRONMENT_TELEMETRY *environment)
             .retain = false
         };
         dx_mqttPublish(&mqtt_msg);
-        dx_Log_Debug("Published weather telemetry via MQTT\n");
     }
     else
     {

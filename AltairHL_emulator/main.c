@@ -36,7 +36,7 @@ static _Atomic(CPU_OPERATING_MODE) atomic_cpu_operating_mode = CPU_STOPPED;
 #define ROM_LOADER_ADDRESS           0xFF00
 
 // MQTT Configuration - will be initialized after command line parsing
-static DX_MQTT_CONFIG mqtt_config;
+DX_MQTT_CONFIG mqtt_config;
 
 // Forward declarations
 static void wait_for_terminal_completion(bool *flag);
@@ -80,14 +80,13 @@ void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode)
 /// </summary>
 static DX_TIMER_HANDLER(update_environment_handler)
 {
-
-    update_geo_location(&environment); // Hitch a ride on the report_memory_usage event. Only publishes once.
+     // Hitch a ride on the report_memory_usage event. Only publishes once.
     if (dx_isNetworkConnected(network_interface))
     {
+        update_geo_location(&environment);
         update_weather();
+        publish_telemetry(&environment);
     }
-
-    dx_timerOneShotSet(&tmr_update_environment, &(struct timespec){30 * 60, 0});
 }
 DX_TIMER_HANDLER_END
 
