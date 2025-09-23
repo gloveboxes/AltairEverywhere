@@ -59,7 +59,7 @@ void publish_telemetry(ENVIRONMENT_TELEMETRY *environment)
     {
         // Publish telemetry via MQTT instead of Azure IoT Hub
         DX_MQTT_MESSAGE mqtt_msg = {
-            .topic = "altair/telemetry/weather", 
+            .topic = "v1/devices/me/telemetry", 
             .payload = msgBuffer, 
             .payload_length = msg_len, 
             .qos = 0, 
