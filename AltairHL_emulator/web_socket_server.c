@@ -87,8 +87,11 @@ void publish_message(const void *message, size_t message_length)
 
 void send_partial_message(void)
 {
-    publish_message(output_buffer, output_buffer_length);
-    output_buffer_length = 0;
+    if (output_buffer_length > 0)
+    {
+        publish_message(output_buffer, output_buffer_length);
+        output_buffer_length = 0;
+    }
 }
 
 inline void publish_character(char character)
