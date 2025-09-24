@@ -110,13 +110,10 @@ char **argv;
             return 0;
         }
 
-        while (get_endpoint() == -1)
-        {
-        }
-
-        set_ep_url(endpoint);
-        printf("\nEndpoint URL set to: %s\n", endpoint);
-        return 0;
+        /* Invalid option */
+        printf("Invalid option: %s\n", argv[1]);
+        printf("Use 'gf --help' for usage information.\n");
+        return -1;
     }
 
     if (argc == 1)

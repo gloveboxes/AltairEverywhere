@@ -401,6 +401,7 @@ int update_ball_position()
         ball_dx = (last_random & 1) ? -1 : 1;  /* Random horizontal direction */
         ball_dy = 1;  /* Always start going down */
         bounce_count = 0;  /* Reset speed to default for new ball */
+        ball_counter = 0;  /* Reset ball timing counter for fresh start */
         if (score > 0) score--;  /* Lose a point */
     }
     return 0;
