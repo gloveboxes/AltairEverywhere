@@ -7,7 +7,9 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #ifdef AZURE_SPHERE
 #include <applibs/storage.h>
@@ -33,15 +35,15 @@ enum WEBGET_STATUS
 typedef struct
 {
     bool end_of_file;
-    char *byte_stream;
-    char bytes[1024];
+    char *full_file_buffer;      // Buffer to hold entire file
+    size_t full_file_size;       // Total size of the complete file
+    size_t current_position;     // Current read position in the buffer
     char personal_endpoint[ENDPOINT_LEN];
     uint8_t selected_endpoint;
     char filename[15];
     char url[150];
     enum WEBGET_STATUS status;
     int index;
-    size_t byte_stream_length;
 } WEBGET_T;
 
 typedef struct
@@ -62,6 +64,7 @@ pthread_mutex_t webget_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 DX_ASYNC_HANDLER(async_copyx_request_handler, handle)
 {
+    printf("DEBUG: Starting copy_web with URL: %s\n", webget.url);
     copy_web(webget.url);
 }
 DX_ASYNC_HANDLER_END
@@ -103,15 +106,18 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
                 memset(webget.personal_endpoint, 0x00, ENDPOINT_LEN);
             }
 
-            if (data != 0 && webget.index < ENDPOINT_LEN)
+            if (data != 0 && webget.index < ENDPOINT_LEN - 1)
             {
                 webget.personal_endpoint[webget.index++] = data;
             }
 
             if (data == 0) // NULL TERMINATION
             {
-                webget.personal_endpoint[webget.index] = 0x00;
-                webget.index                           = 0;
+                if (webget.index < ENDPOINT_LEN)
+                {
+                    webget.personal_endpoint[webget.index] = 0x00;
+                }
+                webget.index = 0;
             }
             break;
         case 111: // Load getfile (gf) custom endpoint url
@@ -142,8 +148,16 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
             {
                 webget.index              = 0;
                 webget.status             = WEBGET_WAITING;
-                webget.byte_stream_length = 0;
                 webget.end_of_file        = false;
+                
+                // Initialize full file buffer fields
+                if (webget.full_file_buffer != NULL) {
+                    free(webget.full_file_buffer);
+                }
+                webget.full_file_buffer = NULL;
+                webget.full_file_size = 0;
+                webget.current_position = 0;
+                
                 pthread_mutex_unlock(&webget_mutex);
 
                 memset(webget.url, 0x00, sizeof(webget.url));
@@ -181,20 +195,31 @@ uint8_t file_input(uint8_t port)
             retVal = devget.end_of_file;
             break;
         case 201: // Read file from http(s) web server
-            if (webget.byte_stream_length > 0)
+            if (webget.full_file_buffer != NULL && webget.current_position < webget.full_file_size)
             {
-                retVal = webget.byte_stream[0];
-                webget.byte_stream++;
-                webget.byte_stream_length--;
-
-                if (webget.byte_stream_length == 0)
+                retVal = webget.full_file_buffer[webget.current_position];
+                webget.current_position++;
+                
+                // Update status based on whether we're at the end of the file
+                if (webget.current_position >= webget.full_file_size)
                 {
-                    webget.status = webget.end_of_file ? WEBGET_EOF : WEBGET_WAITING;
-                    pthread_mutex_unlock(&webget_mutex);
+                    webget.status = WEBGET_EOF;
                 }
+                else
+                {
+                    webget.status = WEBGET_DATA_READY;
+                }
+            }
+            else if (webget.end_of_file && webget.full_file_buffer == NULL)
+            {
+                // Transfer complete but no data (empty file)
+                webget.status = WEBGET_EOF;
+                retVal = 0x00;
             }
             else
             {
+                // Still downloading or no data ready
+                webget.status = WEBGET_WAITING;
                 retVal = 0x00;
             }
             break;
@@ -261,7 +286,6 @@ static int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec
 
     long nsecs = remaining.tv_sec * 1000 * ONE_MS;
     nsecs += remaining.tv_nsec;
-    printf("\n");
 
     while ((rv = pthread_mutex_trylock(mutex)) == EBUSY)
     {
@@ -300,22 +324,47 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
     clock_gettime(CLOCK_REALTIME, &timeoutTime);
 #endif // __APPLE__
 
-    timeoutTime.tv_sec += 2;
+    timeoutTime.tv_sec += 10;  // Increased timeout for larger files and embedded devices
 
     if (pthread_mutex_timedlock(&webget_mutex, &timeoutTime) != 0)
     {
         wg->status = WEBGET_FAILED;
-        realsize = -1;
+        return 0; // Return 0 to indicate error to curl
+    }
+
+    // Full file buffering approach - accumulate entire file
+    if (wg->full_file_buffer == NULL)
+    {
+        // First chunk - allocate initial buffer
+        wg->full_file_buffer = malloc(realsize);
+        if (wg->full_file_buffer == NULL)
+        {
+            pthread_mutex_unlock(&webget_mutex);
+            wg->status = WEBGET_FAILED;
+            return 0;
+        }
+        memcpy(wg->full_file_buffer, ptr, realsize);
+        wg->full_file_size = realsize;
+        wg->current_position = 0;
+        wg->status = WEBGET_WAITING; // Keep waiting until transfer completes
     }
     else
     {
-        memcpy(wg->bytes, ptr, realsize);
-
-        wg->byte_stream        = wg->bytes;
-        wg->byte_stream_length = realsize;
-        wg->status             = WEBGET_DATA_READY;
+        // Subsequent chunks - expand buffer
+        char *new_buffer = realloc(wg->full_file_buffer, wg->full_file_size + realsize);
+        if (new_buffer == NULL)
+        {
+            pthread_mutex_unlock(&webget_mutex);
+            wg->status = WEBGET_FAILED;
+            return 0;
+        }
+        wg->full_file_buffer = new_buffer;
+        memcpy(wg->full_file_buffer + wg->full_file_size, ptr, realsize);
+        wg->full_file_size += realsize;
+        wg->status = WEBGET_WAITING; // Keep waiting until transfer completes
     }
 
+    pthread_mutex_unlock(&webget_mutex);
     return realsize;
 }
 
@@ -334,17 +383,22 @@ static int copy_web(char *url)
     // https://curl.se/libcurl/c/CURLOPT_NOSIGNAL.html
     curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L);
 
-    // https://curl.se/libcurl/c/CURLOPT_TIMEOUT.html
-    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 12L);
+    // https://curl.se/libcurl/c/CURLOPT_TIMEOUT.html - increased for larger files
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 60L);
 
-    /* Switch on full protocol/debug output while testing */
-    // curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
+    /* Disable debug output for production */
+    curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0L);
 
     /* disable progress meter, set to 0L to enable it */
     curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
 
-    // set returned data chuck to max 128 bytes
-    curl_easy_setopt(curl_handle, CURLOPT_BUFFERSIZE, 1024L);
+    // Remove artificial buffer size limit to let curl use natural chunk sizes
+    // curl_easy_setopt(curl_handle, CURLOPT_BUFFERSIZE, 256L);
+    
+    // Limit transfer speed to prevent buffer overruns
+    // Set low speed limit to 100 bytes/sec for 30 seconds before timeout
+    curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_LIMIT, 100L);
+    curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_TIME, 30L);
 
     /* send all data to this function  */
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
@@ -364,7 +418,21 @@ static int copy_web(char *url)
 
     if (res != CURLE_OK)
     {
+        printf("CURL ERROR: %s\n", curl_easy_strerror(res));
         webget.status = WEBGET_FAILED;
+    }
+    else
+    {
+        // Transfer completed successfully - check if we have data ready
+        if (webget.full_file_buffer != NULL && webget.full_file_size > 0)
+        {
+            webget.status = WEBGET_DATA_READY;
+        }
+        else
+        {
+            // Empty file or no data
+            webget.status = WEBGET_EOF;
+        }
     }
 
     webget.end_of_file = true;
