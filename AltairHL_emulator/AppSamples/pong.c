@@ -55,7 +55,8 @@ int base_speed;       /* Base speed cycles (4 = 100ms) */
 
 /* Timing counters for cooperative multitasking */
 int ball_counter;   /* Counter for ball movement timing */
-int game_cycles;
+int paddle_counter; /* Counter for paddle input timing */
+int status_counter; /* Counter for status display timing */
 
 /* --- Console I/O --- */
 
@@ -266,6 +267,18 @@ int check_paddle_hit()
     return 0;
 }
 
+int check_future_paddle_hit()
+{
+    int future_x_col;
+    
+    /* Check if ball would hit paddle at next position */
+    future_x_col = x_col + ball_dx;  /* Future horizontal position */
+    if (future_x_col >= y_col && future_x_col <= y_col + 5) {
+        return 1;
+    }
+    return 0;
+}
+
 int start_game_loop_timer()
 {
     /* Start a 25ms game loop timer */
@@ -288,11 +301,11 @@ int should_move_ball()
     effective_bounces = bounce_count;
     if (effective_bounces > 10) effective_bounces = 10;
     
-    /* Calculate current speed: base speed reduced by 2% per bounce */
-    /* Speed increases as cycles decrease - minimum 2 cycles (50ms) at 10 bounces */
-    speed_cycles = base_speed - (effective_bounces / 5);  /* Roughly 2% per bounce */
-    if (speed_cycles < 2) speed_cycles = 2;  /* Minimum speed limit at 10 bounces */
+    /* Calculate current speed: base speed reduced by bounce count */
+    speed_cycles = base_speed - (effective_bounces / 5);
+    if (speed_cycles < 2) speed_cycles = 2;  /* Minimum speed: 2 cycles (50ms) */
     
+    /* Ensure we're using the correct speed calculation */
     return (ball_counter >= speed_cycles);
 }
 
@@ -358,9 +371,18 @@ int get_random()
 
 int update_ball_position()
 {
-    /* Update ball position */
-    x_row += ball_dy;
-    x_col += ball_dx;
+    /* Check for paddle hit BEFORE moving (when ball is approaching paddle) */
+    if (ball_dy > 0 && x_row + 1 == y_row && check_future_paddle_hit()) {
+        ball_dy = -1;  /* Reverse direction */
+        score++;
+        bounce_count++;  /* Only count paddle hits for speed increase */
+        /* Don't move the ball this cycle - it will move up next cycle */
+        return 0;
+    }
+    
+    /* Update ball position - move exactly 1 step in each direction */
+    x_row += ball_dy;  /* ball_dy is -1, 0, or 1 */
+    x_col += ball_dx;  /* ball_dx is -1, 0, or 1 */
     
     /* Ball bounces off top */
     if (x_row <= MIN_ROW) {
@@ -379,14 +401,6 @@ int update_ball_position()
         x_col = MAX_COL;
         ball_dx = -1;
         /* No bounce count increase for wall bounces */
-    }
-
-    /* Check paddle hit */
-    if (x_row >= y_row && check_paddle_hit()) {
-        ball_dy = -1;
-        x_row = y_row - 1;  /* Position ball just above paddle */
-        score++;
-        bounce_count++;  /* Only count paddle hits for speed increase */
     }
 
     /* Ball goes out at bottom */
@@ -536,7 +550,8 @@ int main()
     
     /* Initialize game loop timer and counters */
     ball_counter = 0;
-    game_cycles = 0;
+    paddle_counter = 0;
+    status_counter = 0;
     start_game_loop_timer();
 
     hide_cursor();
@@ -556,25 +571,30 @@ int main()
         old_y_row = y_row;
         old_y_col = y_col;
 
-        /* Handle paddle input and check for quit */
-        ch = handle_paddle_input();
-        if (ch == -1) {
-            running = 0;  /* Quit game */
-        }
-
         /* Check if game loop timer has expired - cooperative multitasking */
         if (is_game_loop_timer_expired()) {
-            game_cycles++;
             ball_counter++;
+            paddle_counter++;
+            status_counter++;
+
+            /* Handle paddle input every 2 cycles (2 * 25ms = 50ms) */
+            if (paddle_counter >= 2) {
+                ch = handle_paddle_input();
+                if (ch == -1) {
+                    running = 0;  /* Quit game */
+                }
+                paddle_counter = 0;  /* Reset paddle counter */
+            }
+            
             /* Hardware RNG used - no seed updates needed */
             
-            /* Move ball every 4 cycles (4 * 25ms = 100ms) */
+            /* Move ball when counter reaches the required cycles */
             if (should_move_ball()) {
                 update_ball_position();
                 ball_counter = 0;  /* Reset ball counter */
             }
             
-            start_game_loop_timer();  /* Restart 50ms timer */
+            start_game_loop_timer();  /* Restart 25ms timer */
         }
 
         /* Only redraw objects that moved */
@@ -587,7 +607,11 @@ int main()
             draw_y_marker(y_row, y_col);
         }
 
-        update_status();
+        /* Update status every 40 cycles (40 * 25ms = 1000ms) */
+        if (status_counter >= 40) {
+            update_status();
+            status_counter = 0;  /* Reset status counter */
+        }
         /* No delay loop needed - timing controlled by cooperative multitasking */
     }
 
