@@ -366,19 +366,19 @@ int update_ball_position()
     if (x_row <= MIN_ROW) {
         x_row = MIN_ROW;
         ball_dy = 1;
-        bounce_count++;  /* Increase speed for next movement */
+        /* No bounce count increase for wall bounces */
     }
 
     /* Ball bounces off sides */
     if (x_col <= MIN_COL) {
         x_col = MIN_COL;
         ball_dx = 1;
-        bounce_count++;  /* Increase speed for next movement */
+        /* No bounce count increase for wall bounces */
     }
     if (x_col >= MAX_COL) {
         x_col = MAX_COL;
         ball_dx = -1;
-        bounce_count++;  /* Increase speed for next movement */
+        /* No bounce count increase for wall bounces */
     }
 
     /* Check paddle hit */
@@ -386,7 +386,7 @@ int update_ball_position()
         ball_dy = -1;
         x_row = y_row - 1;  /* Position ball just above paddle */
         score++;
-        bounce_count++;  /* Increase speed for next movement */
+        bounce_count++;  /* Only count paddle hits for speed increase */
     }
 
     /* Ball goes out at bottom */
