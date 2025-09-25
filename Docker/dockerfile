@@ -24,11 +24,11 @@ RUN apt update && apt-get install -y --no-install-recommends \
 
 RUN git clone --depth 1 --recurse-submodules https://github.com/gloveboxes/AltairEverywhere.git
 
-#<REMOVE_THIS_COMMENT_TO_ENABLE_PI_SENSE_HAT>RUN cd /AltairEverywhere/AltairHL_emulator && sed -i 's/# set(ALTAIR_FRONT_PI_SENSE_HAT/set(ALTAIR_FRONT_PI_SENSE_HAT/g' CMakeLists.txt
-#<REMOVE_THIS_COMMENT_TO_ENABLE_FRONT_PANEL_KIT_ON_RASPBERRY_PI>RUN cd /AltairEverywhere/AltairHL_emulator && sed -i 's/# set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/g' CMakeLists.txt
-#<REMOVE_THIS_COMMENT_TO_ENABLE_CLOUD>RUN cd /AltairEverywhere/AltairHL_emulator && sed -i 's/# set(ALTAIR_CLOUD/set(ALTAIR_CLOUD/g' CMakeLists.txt
+#<REMOVE_THIS_COMMENT_TO_ENABLE_PI_SENSE_HAT>RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_FRONT_PI_SENSE_HAT/set(ALTAIR_FRONT_PI_SENSE_HAT/g' CMakeLists.txt
+#<REMOVE_THIS_COMMENT_TO_ENABLE_FRONT_PANEL_KIT_ON_RASPBERRY_PI>RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/g' CMakeLists.txt
+#<REMOVE_THIS_COMMENT_TO_ENABLE_CLOUD>RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_CLOUD/set(ALTAIR_CLOUD/g' CMakeLists.txt
 
-RUN cd /AltairEverywhere/AltairHL_emulator \
+RUN cd /AltairEverywhere/src \
     && mkdir -p build \
     && cmake -B build \
     && cmake --build build --config release --target all -j 8

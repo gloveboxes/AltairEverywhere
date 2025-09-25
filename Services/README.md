@@ -50,7 +50,7 @@
             Tasks: 5 (limit: 191)
                 CPU: 10min 51.649s
             CGroup: /system.slice/altair_emulator.service
-                    └─992844 /home/pi/github/AltairEverywhere/AltairHL_emulator/build/Altair_emulator
+                    └─992844 /home/pi/github/AltairEverywhere/src/build/Altair_emulator
 
     ```
 

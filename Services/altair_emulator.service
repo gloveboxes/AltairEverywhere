@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/path/to/directory/AltairHL_emulator/build/Altair_emulator
-WorkingDirectory=/path/to/directory/AltairHL_emulator
+ExecStart=/path/to/directory/src/build/Altair_emulator
+WorkingDirectory=/path/to/directory/src
 
 
 [Install]

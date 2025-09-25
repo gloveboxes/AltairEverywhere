@@ -1,19 +1,19 @@
-[submodule "AltairHL_emulator/HardwareDefinitions"]
-	path = AltairHL_emulator/HardwareDefinitions
+[submodule "src/HardwareDefinitions"]
+	path = src/HardwareDefinitions
 	url = https://github.com/Azure-Sphere-DevX/AzureSphereDevX.HardwareDefinitions
-[submodule "AltairHL_emulator/Disks"]
-	path = AltairHL_emulator/Disks
+[submodule "src/Disks"]
+	path = src/Disks
 	url = https://github.com/AzureSphereCloudEnabledAltair8800/AzureSphereAltair8800.disks.git
-[submodule "AltairHL_emulator/uthash"]
-	path = AltairHL_emulator/uthash
+[submodule "src/uthash"]
+	path = src/uthash
 	url = https://github.com/troydhanson/uthash.git
 
-[submodule "AltairHL_emulator/wsServer"]
-	path = AltairHL_emulator/wsServer
+[submodule "src/wsServer"]
+	path = src/wsServer
 	url = https://github.com/Theldus/wsServer.git
-[submodule "AltairHL_emulator/Drivers/spidev-lib"]
-	path = AltairHL_emulator/Drivers/spidev-lib
+[submodule "src/Drivers/spidev-lib"]
+	path = src/Drivers/spidev-lib
 	url = https://github.com/milekium/spidev-lib.git
-[submodule "AltairHL_emulator/EdgeMqttDevX"]
-	path = AltairHL_emulator/EdgeMqttDevX
+[submodule "src/EdgeMqttDevX"]
+	path = src/EdgeMqttDevX
 	url = https://github.com/Azure-Sphere-DevX/EdgeMqttDevX.git

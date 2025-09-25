@@ -4,7 +4,7 @@ cd /AltairEverywhere/Terminal
 
 python3 -m http.server 80 &
 
-cd /AltairEverywhere/AltairHL_emulator
+cd /AltairEverywhere/src
 
 # Build the command line arguments
 ARGS=""
