@@ -55,7 +55,9 @@
         toggleTheme: null,
         reconnectBtn: null,
         sendEscBtn: null,
-        sendCtrlCBtn: null
+        sendCtrlCBtn: null,
+        toggleInputModeBtn: null,
+        monitorBtn: null
       };
 
       /**
@@ -70,6 +72,8 @@
           elements.reconnectBtn = document.getElementById("reconnectBtn");
           elements.sendEscBtn = document.getElementById("sendEscBtn");
           elements.sendCtrlCBtn = document.getElementById("sendCtrlCBtn");
+          elements.toggleInputModeBtn = document.getElementById("toggleInputModeBtn");
+          elements.monitorBtn = document.getElementById("monitorBtn");
 
           // Validate critical elements exist
           if (!elements.terminal) {
@@ -82,6 +86,29 @@
         }
         return true;
       }
+      // Add toggleInputMode button click handler
+      function setupToggleInputModeButton() {
+        if (!elements.toggleInputModeBtn) return;
+        elements.toggleInputModeBtn.onclick = function() {
+          // Toggle local state (simulate mode switch)
+          state.characterMode = !state.characterMode;
+          // Toggle button text: show the mode you will switch to
+          if (state.characterMode) {
+            elements.toggleInputModeBtn.textContent = 'Line mode';
+          } else {
+            elements.toggleInputModeBtn.textContent = 'Character mode';
+          }
+          // Optionally update the input mode label on the page
+          if (elements.inputMode) {
+            elements.inputMode.textContent = state.characterMode
+              ? 'Character input mode : Wordmaster (Ctrl+L to toggle)'
+              : 'Line input mode: Default (Ctrl+L to toggle), Reboot Altair (Ctrl+M, R, Enter)';
+          }
+          if (state.term) {
+            state.term.focus();
+          }
+        };
+      }
       // Add sendCtrlC button click handler
       function setupSendCtrlCButton() {
         if (!elements.sendCtrlCBtn) return;
@@ -92,6 +119,9 @@
             } catch (error) {
               showError("Failed to send Ctrl+C to server");
             }
+          }
+          if (state.term) {
+            state.term.focus();
           }
         };
       }
@@ -105,6 +135,9 @@
             } catch (error) {
               showError("Failed to send ESC to server");
             }
+          }
+          if (state.term) {
+            state.term.focus();
           }
         };
       }
@@ -134,19 +167,27 @@
 
       function updateReconnectButton() {
         if (!elements.reconnectBtn) return;
-        if (state.connected && state.ws && state.ws.readyState === WebSocket.OPEN) {
-          elements.reconnectBtn.disabled = true;
-          elements.reconnectBtn.textContent = "Connected";
-        } else {
-          elements.reconnectBtn.disabled = false;
-          elements.reconnectBtn.textContent = "Reconnect";
-        }
+        const connected = state.connected && state.ws && state.ws.readyState === WebSocket.OPEN;
+        elements.reconnectBtn.disabled = false;
+        elements.reconnectBtn.textContent = connected ? "Disconnect" : "Connect";
+
+        // Disable/enable control buttons based on connection state
+        if (elements.sendEscBtn) elements.sendEscBtn.disabled = !connected;
+        if (elements.sendCtrlCBtn) elements.sendCtrlCBtn.disabled = !connected;
+        if (elements.toggleInputModeBtn) elements.toggleInputModeBtn.disabled = !connected;
+        if (elements.monitorBtn) elements.monitorBtn.disabled = !connected;
       }
       // Add reconnect button click handler
       function setupReconnectButton() {
         if (!elements.reconnectBtn) return;
         elements.reconnectBtn.onclick = function() {
-          if (!state.connected || !state.ws || state.ws.readyState !== WebSocket.OPEN) {
+          if (state.connected && state.ws && state.ws.readyState === WebSocket.OPEN) {
+            // Disconnect
+            closeConnection();
+            showMessage('Disconnected', true);
+            updateReconnectButton();
+          } else {
+            // Connect
             attemptConnection();
           }
         };
@@ -409,6 +450,7 @@
         try {
           let output;
           if (msg === 'M') {
+            // Original behavior: Ctrl+M sends ASCII 28 (File Separator)
             output = String.fromCharCode(28);
           } else {
             const ascii = msg.charCodeAt(0);
@@ -624,7 +666,7 @@
        */
       function updateThemeButton(text) {
         if (elements.toggleTheme) {
-          elements.toggleTheme.value = text;
+          elements.toggleTheme.textContent = text;
         }
       }
 
@@ -733,10 +775,31 @@
             return false;
           }
 
+
           setupReconnectButton();
           setupSendEscButton();
           setupSendCtrlCButton();
+          setupToggleInputModeButton();
+          // Add Monitor button setup
+          setupMonitorButton();
           initializeNetworkHandlers();
+      // Add monitor button click handler
+      function setupMonitorButton() {
+        if (!elements.monitorBtn) return;
+        elements.monitorBtn.onclick = function() {
+          if (state.connected && state.ws && state.ws.readyState === WebSocket.OPEN) {
+            try {
+              // Send the same character as Ctrl+M (ASCII 28)
+              sendControlCharacter('M');
+            } catch (error) {
+              showError("Failed to send Monitor (Ctrl+M) to server");
+            }
+          }
+          if (state.term) {
+            state.term.focus();
+          }
+        };
+      }
 
           if (!initializeTerminal()) {
             return false;
@@ -784,7 +847,8 @@
 
 <body onload="initTerminal();">
 
-  <div style="display: flex; align-items: center;">
+
+  <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 8px; padding-bottom: 8px;">
     Altair:<div id="host_name" style="display: inline;"></div>
     <style>
       .altair-btn {
@@ -800,6 +864,8 @@
         cursor: pointer;
         transition: background 0.2s, color 0.2s, box-shadow 0.2s;
         box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        font-family: inherit;
+        font-weight: 500;
       }
       .altair-btn:disabled {
         opacity: 0.6;
@@ -814,6 +880,9 @@
     <button id="reconnectBtn" class="altair-btn" disabled>Connected</button>
     <button id="sendEscBtn" class="altair-btn">Send Esc</button>
     <button id="sendCtrlCBtn" class="altair-btn">Send Ctrl+C</button>
+    <button id="toggleInputModeBtn" class="altair-btn">Character mode</button>
+    <button id="monitorBtn" class="altair-btn">Monitor</button>
+    <button id="toggleTheme" class="altair-btn" onclick="toggleTheme()">Light theme</button>
     <div id="docs" style="margin-left: auto;">
       <a href="https://github.com/AzureSphereCloudEnabledAltair8800/RetroGames" target="_blank">Games</a>
       <a href="https://gloveboxes.github.io/altair_8800_docs/" target="_blank">Documentation</a>
@@ -821,14 +890,8 @@
     </div>
   </div>
 
-  <div style="display: flex;">
-    <div style="flex-grow: 1;">
-      <div id="inputmode">Line input mode: Default (Ctrl+L to toggle), Reboot Altair (Ctrl+M, R, Enter)</div>
-    </div>
-    <div style="display: flex; justify-content: flex-end;">
-      <input id="toggleTheme" type="button" onclick="toggleTheme()" value="Light theme"></input>
-    </div>
-  </div>
+
+
 
   <div id="terminal"></div>
 
