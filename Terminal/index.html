@@ -26,7 +26,10 @@
         term: null,
         reconnectAttempts: 0,
         maxReconnectAttempts: 5,
-        reconnectDelay: 2000
+        reconnectDelay: 2000,
+        pasteHandler: null,
+        keyHandler: null,
+        cleanupInterval: null
       };
 
       // Configuration constants
@@ -38,7 +41,10 @@
         WEBSOCKET_PORT: 8082,
         MAX_PASTE_LENGTH: 256,
         STORAGE_THEME_KEY: 'altair_theme',
-        DEFAULT_THEME: 'dark'
+        DEFAULT_THEME: 'dark',
+        MAX_SCROLLBACK_LINES: 1000,
+        BUFFER_CLEANUP_INTERVAL: 300000, // 5 minutes
+        MAX_CURRENT_LINE_LENGTH: 10000
       };
 
       // DOM element cache
@@ -169,26 +175,61 @@
       function setupTerminalEventHandlers() {
         if (!state.term) return;
 
-        // Paste handler with length validation
-        state.term.on("paste", (data) => {
+        // Remove existing handlers first to prevent accumulation
+        cleanupTerminalEventHandlers();
+
+        // Store handler references for cleanup
+        state.pasteHandler = (data) => {
           if (state.characterMode) return;
 
           if (typeof data === 'string' && data.length < CONFIG.MAX_PASTE_LENGTH) {
             state.currentLine += data;
+            
+            // Prevent memory leaks from accumulated paste data
+            if (state.currentLine.length > CONFIG.MAX_CURRENT_LINE_LENGTH) {
+              console.warn("Current line too long after paste, truncating");
+              state.currentLine = state.currentLine.slice(-CONFIG.MAX_CURRENT_LINE_LENGTH / 2);
+            }
+            
             state.term.write(data);
           } else {
             console.warn("Paste data too long or invalid, ignoring");
           }
-        });
+        };
 
-        // Key handler with improved logic
-        state.term.on("key", (key, ev) => {
+        state.keyHandler = (key, ev) => {
           try {
             handleKeyPress(key, ev);
           } catch (error) {
             console.error("Error handling key press:", error);
           }
-        });
+        };
+
+        // Attach handlers
+        state.term.on("paste", state.pasteHandler);
+        state.term.on("key", state.keyHandler);
+      }
+
+      /**
+       * Clean up terminal event handlers
+       */
+      function cleanupTerminalEventHandlers() {
+        if (state.term && state.pasteHandler) {
+          try {
+            state.term.off("paste", state.pasteHandler);
+          } catch (error) {
+            console.error("Error removing paste handler:", error);
+          }
+        }
+        if (state.term && state.keyHandler) {
+          try {
+            state.term.off("key", state.keyHandler);
+          } catch (error) {
+            console.error("Error removing key handler:", error);
+          }
+        }
+        state.pasteHandler = null;
+        state.keyHandler = null;
       }
 
       /**
@@ -246,6 +287,13 @@
 
         // Default character input
         state.currentLine += key;
+        
+        // Prevent memory leaks from very long lines
+        if (state.currentLine.length > CONFIG.MAX_CURRENT_LINE_LENGTH) {
+          console.warn("Current line too long, truncating");
+          state.currentLine = state.currentLine.slice(-CONFIG.MAX_CURRENT_LINE_LENGTH / 2);
+        }
+        
         state.term.prompt(key);
         state.term.write(key);
       }
@@ -274,6 +322,13 @@
             break;
           default:
             state.currentLine += key;
+            
+            // Prevent memory leaks from very long lines
+            if (state.currentLine.length > CONFIG.MAX_CURRENT_LINE_LENGTH) {
+              console.warn("Current line too long, truncating");
+              state.currentLine = state.currentLine.slice(-CONFIG.MAX_CURRENT_LINE_LENGTH / 2);
+            }
+            
             state.term.write(key);
         }
       }
@@ -416,6 +471,12 @@
       function closeConnection() {
         if (state.ws) {
           try {
+            // Clear event handlers explicitly to prevent memory leaks
+            state.ws.onopen = null;
+            state.ws.onmessage = null;
+            state.ws.onclose = null;
+            state.ws.onerror = null;
+            
             state.ws.close(1000, "Client disconnect");
           } catch (error) {
             console.error("Error closing WebSocket:", error);
@@ -536,16 +597,75 @@
       }
 
       /**
+       * Start periodic memory cleanup
+       */
+      function startPeriodicCleanup() {
+        // Clear existing interval first
+        if (state.cleanupInterval) {
+          clearInterval(state.cleanupInterval);
+        }
+        
+        state.cleanupInterval = setInterval(() => {
+          if (state.term && state.connected) {
+            try {
+              // Log memory usage for monitoring
+              logMemoryUsage();
+              
+              // Clear excess scrollback buffer
+              const buffer = state.term.buffer;
+              if (buffer && buffer.lines && buffer.lines.length > CONFIG.MAX_SCROLLBACK_LINES) {
+                console.log("Cleaning up terminal buffer - lines:", buffer.lines.length);
+                // Clear the terminal display but keep connection
+                state.term.clear();
+              }
+              
+              // Reset current line if it's getting too long
+              if (state.currentLine.length > CONFIG.MAX_CURRENT_LINE_LENGTH) {
+                console.log("Resetting long current line - length:", state.currentLine.length);
+                state.currentLine = "";
+              }
+            } catch (error) {
+              console.error("Error during periodic cleanup:", error);
+            }
+          }
+        }, CONFIG.BUFFER_CLEANUP_INTERVAL);
+      }
+
+      /**
+       * Log memory usage for monitoring
+       */
+      function logMemoryUsage() {
+        if (performance.memory) {
+          const used = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2);
+          const total = (performance.memory.totalJSHeapSize / 1024 / 1024).toFixed(2);
+          console.log(`Memory - Used: ${used}MB, Total: ${total}MB`);
+        }
+      }
+
+      /**
        * Cleanup function for page unload
        */
       function cleanup() {
+        // Stop periodic cleanup
+        if (state.cleanupInterval) {
+          clearInterval(state.cleanupInterval);
+          state.cleanupInterval = null;
+        }
+        
+        // Clean up terminal event handlers
+        cleanupTerminalEventHandlers();
+        
+        // Close WebSocket connection
         closeConnection();
+        
+        // Dispose terminal
         if (state.term) {
           try {
             state.term.dispose();
           } catch (error) {
             console.error("Error disposing terminal:", error);
           }
+          state.term = null;
         }
       }
 
@@ -567,6 +687,9 @@
           }
 
           attemptConnection();
+
+          // Start periodic memory cleanup
+          startPeriodicCleanup();
 
           // Set up cleanup on page unload
           window.addEventListener('beforeunload', cleanup);
@@ -623,7 +746,7 @@
 
   <div id="terminal"></div>
 
-  <div id="version">3.1.0</div>
+  <div id="version">3.2.0</div>
 
 </body>
 
