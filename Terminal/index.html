@@ -52,7 +52,10 @@
         terminal: null,
         hostName: null,
         inputMode: null,
-        toggleTheme: null
+        toggleTheme: null,
+        reconnectBtn: null,
+        sendEscBtn: null,
+        sendCtrlCBtn: null
       };
 
       /**
@@ -64,6 +67,9 @@
           elements.hostName = document.getElementById("host_name");
           elements.inputMode = document.getElementById("inputmode");
           elements.toggleTheme = document.getElementById("toggleTheme");
+          elements.reconnectBtn = document.getElementById("reconnectBtn");
+          elements.sendEscBtn = document.getElementById("sendEscBtn");
+          elements.sendCtrlCBtn = document.getElementById("sendCtrlCBtn");
 
           // Validate critical elements exist
           if (!elements.terminal) {
@@ -75,6 +81,32 @@
           return false;
         }
         return true;
+      }
+      // Add sendCtrlC button click handler
+      function setupSendCtrlCButton() {
+        if (!elements.sendCtrlCBtn) return;
+        elements.sendCtrlCBtn.onclick = function() {
+          if (state.connected && state.ws && state.ws.readyState === WebSocket.OPEN) {
+            try {
+              state.ws.send(String.fromCharCode(3)); // Ctrl+C
+            } catch (error) {
+              showError("Failed to send Ctrl+C to server");
+            }
+          }
+        };
+      }
+      // Add sendEsc button click handler
+      function setupSendEscButton() {
+        if (!elements.sendEscBtn) return;
+        elements.sendEscBtn.onclick = function() {
+          if (state.connected && state.ws && state.ws.readyState === WebSocket.OPEN) {
+            try {
+              state.ws.send(String.fromCharCode(27)); // ESC key
+            } catch (error) {
+              showError("Failed to send ESC to server");
+            }
+          }
+        };
       }
 
       /**
@@ -97,6 +129,27 @@
           elements.hostName.textContent = message;
           elements.hostName.style.color = isError ? 'red' : '';
         }
+        updateReconnectButton();
+      }
+
+      function updateReconnectButton() {
+        if (!elements.reconnectBtn) return;
+        if (state.connected && state.ws && state.ws.readyState === WebSocket.OPEN) {
+          elements.reconnectBtn.disabled = true;
+          elements.reconnectBtn.textContent = "Connected";
+        } else {
+          elements.reconnectBtn.disabled = false;
+          elements.reconnectBtn.textContent = "Reconnect";
+        }
+      }
+      // Add reconnect button click handler
+      function setupReconnectButton() {
+        if (!elements.reconnectBtn) return;
+        elements.reconnectBtn.onclick = function() {
+          if (!state.connected || !state.ws || state.ws.readyState !== WebSocket.OPEN) {
+            attemptConnection();
+          }
+        };
       }
 
       /**
@@ -455,7 +508,7 @@
           console.log("WebSocket closed:", event.code, event.reason);
           state.connected = false;
           state.ws = null;
-          showMessage('Connection closed. Refresh to reconnect', true);
+          showMessage('Connection closed.', true);
         };
 
         state.ws.onerror = (error) => {
@@ -675,13 +728,16 @@
       function initialize() {
         try {
           console.log("Initializing Altair Terminal...");
-          
+
           if (!initializeElements()) {
             return false;
           }
 
+          setupReconnectButton();
+          setupSendEscButton();
+          setupSendCtrlCButton();
           initializeNetworkHandlers();
-          
+
           if (!initializeTerminal()) {
             return false;
           }
@@ -693,7 +749,9 @@
 
           // Set up cleanup on page unload
           window.addEventListener('beforeunload', cleanup);
-          
+
+          updateReconnectButton();
+
           console.log("Altair Terminal initialized successfully");
           return true;
         } catch (error) {
@@ -726,8 +784,36 @@
 
 <body onload="initTerminal();">
 
-  <div style="display: flex;">
+  <div style="display: flex; align-items: center;">
     Altair:<div id="host_name" style="display: inline;"></div>
+    <style>
+      .altair-btn {
+        margin-left: 8px;
+        padding: 1px 10px;
+        border-radius: 10px;
+        border: 1px solid #ffe066;
+        background: #093b09;
+        color: #ffe066;
+        font-size: 0.95rem;
+        line-height: 1.1;
+        vertical-align: middle;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      }
+      .altair-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .altair-btn:hover:not(:disabled) {
+        background: #145214;
+        color: #fffbe6;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      }
+    </style>
+    <button id="reconnectBtn" class="altair-btn" disabled>Connected</button>
+    <button id="sendEscBtn" class="altair-btn">Send Esc</button>
+    <button id="sendCtrlCBtn" class="altair-btn">Send Ctrl+C</button>
     <div id="docs" style="margin-left: auto;">
       <a href="https://github.com/AzureSphereCloudEnabledAltair8800/RetroGames" target="_blank">Games</a>
       <a href="https://gloveboxes.github.io/altair_8800_docs/" target="_blank">Documentation</a>
