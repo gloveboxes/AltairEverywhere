@@ -30,7 +30,7 @@ int outp();
 #define MIN_ROW 6
 #define MAX_ROW 30
 #define MIN_COL 5
-#define MAX_COL 45
+#define MAX_COL 50
 
 /* Globals for key sequence debugging */
 int g_last_seq[4];
@@ -165,7 +165,7 @@ int draw_walls()
 int draw_instructions()
 {
     cursor_move(1, 1);
-    cputs("VT100/xterm.js Ball and Paddle Game\r\n");
+    cputs("VT100/xterm.js Ball and Paddle Game (Enable Character Mode (Ctrl+L))\r\n");
     cputs("LEFT/RIGHT keys move ---- (paddle). Keep the ball from going out!\r\n");
     cputs("Press Q to quit.\r\n");
     cputs("----------------------------------------------------------------\r\n");
