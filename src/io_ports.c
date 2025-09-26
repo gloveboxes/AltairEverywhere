@@ -98,6 +98,7 @@ void io_port_out(uint8_t port, uint8_t data)
 
         // File transfer IO Ports
         case 68:  // Set devget filename
+        case 109: // Set webget.index = 0
         case 110: // Set getfile custom endpoint url
         case 111: // Load getfile (gf) custom endpoint url
         case 112: // Select getfile (gf) endpoint to use

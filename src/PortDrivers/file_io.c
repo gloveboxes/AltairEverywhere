@@ -100,6 +100,9 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
             break;
 
 #endif            // AZURE SPHERE
+        case 109:
+            webget.index = 0;
+            break;
         case 110: // Set getfile custom endpoint url
             if (webget.index == 0)
             {

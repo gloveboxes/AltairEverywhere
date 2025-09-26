@@ -39,6 +39,43 @@ char *endpoint;
 char *filename;
 char buf[128];
 int selected_ep;
+char file_content[128];
+
+int defaults()
+{
+    FILE *fp;
+    int len, c;
+
+    /* Load endpoint from gf.txt */
+    fp = fopen("gf.txt", "r");
+    if (fp != NULL)
+    {
+        outp(109, 0);
+        if (fgets(file_content, 128, fp) != NULL)
+        {
+            len = strlen(file_content);
+            if (len > 1 && len < 128)
+            {
+                /* Remove newline */
+                if (file_content[len - 1] == '\n')
+                {
+                    file_content[len - 1] = 0x00;
+                    len--;
+                }
+
+                endpoint = file_content;
+                for (c = 0; c < len; c++)
+                {
+                    outp(WG_EPNAME, endpoint[c]);
+                }
+                outp(WG_EPNAME, 0);
+            }
+        }
+        fclose(fp);
+        printf("Default endpoint loaded from gf.txt: %s\n", file_content);
+    }
+    return 0;
+}
 
 int main(argc, argv)
 int argc;
@@ -48,6 +85,8 @@ char **argv;
 
     wg_result = 0;
     fp_input = fopen("stdin", "r");
+
+    defaults();
 
     printf("\nGF (Get File) - File Transfer Utility v%s\n", GF_VERSION);
     printf("Transfer files from Azure Sphere storage or web over HTTP(s)\n");
@@ -167,6 +206,8 @@ int set_ep_url(endpoint)
 char *endpoint;
 {
     int len, c;
+    FILE *fp;
+
     len = strlen(endpoint);
     for (c = 0; c < len; c++)
     {
@@ -174,6 +215,15 @@ char *endpoint;
     }
 
     outp(WG_EPNAME, 0);
+
+    /* write endpoint to gf.txt */
+    fp = fopen("gf.txt", "w");
+    if (fp != NULL)
+    {
+        fprintf(fp, "%s\n", endpoint);
+        fclose(fp);
+    }
+
     return 0;
 }
 
