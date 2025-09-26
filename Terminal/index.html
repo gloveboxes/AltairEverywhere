@@ -167,9 +167,23 @@
 
       function updateReconnectButton() {
         if (!elements.reconnectBtn) return;
+
         const connected = state.connected && state.ws && state.ws.readyState === WebSocket.OPEN;
         elements.reconnectBtn.disabled = false;
-        elements.reconnectBtn.textContent = connected ? "Disconnect" : "Connect";
+        let hostText = "localhost";
+        if (connected && state.ws && state.ws.url) {
+          try {
+            const url = new URL(state.ws.url);
+            hostText = url.hostname;
+          } catch (e) {}
+        } else {
+          // Use the host from getWebSocketUrl()
+          try {
+            const wsUrl = getWebSocketUrl();
+            hostText = wsUrl.split('://')[1].split(':')[0];
+          } catch (e) {}
+        }
+        elements.reconnectBtn.textContent = connected ? `Disconnect from ${hostText}` : `Connect to ${hostText}`;
 
         // Disable/enable control buttons based on connection state
         if (elements.sendEscBtn) elements.sendEscBtn.disabled = !connected;
@@ -635,7 +649,7 @@
               selection: "rgba(188,214,141, 0.4)" 
             });
           }
-          updateThemeButton("Light theme");
+          updateThemeButton("Light");
         } catch (error) {
           console.error("Error applying dark theme:", error);
         }
@@ -655,7 +669,7 @@
               selection: "rgba(188,214,141, 0.4)" 
             });
           }
-          updateThemeButton("Dark theme");
+          updateThemeButton("Dark");
         } catch (error) {
           console.error("Error applying light theme:", error);
         }
@@ -849,51 +863,63 @@
 
 
   <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 8px; padding-bottom: 8px;">
-    Altair:<div id="host_name" style="display: inline;"></div>
+  <!-- Status text removed as host is now shown in the button -->
     <style>
       .altair-btn {
         margin-left: 8px;
-        padding: 1px 10px;
-        border-radius: 10px;
-        border: 1px solid #ffe066;
-        background: #093b09;
-        color: #ffe066;
-        font-size: 0.95rem;
-        line-height: 1.1;
+        padding: 2px 14px;
+        border-radius: 2px;
+        border: 2px solid #e5b800;
+        background: #002f00;
+        color: #e5b800;
+        font-size: 1.1rem;
+        line-height: 1.2;
         vertical-align: middle;
         cursor: pointer;
-        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-        font-family: inherit;
+        font-family: GlassTTYVT220, Courier New, Courier, monospace;
         font-weight: 500;
+        box-shadow: 0 0 8px #093b09, 0 0 2px #e5b800 inset;
+        letter-spacing: 1px;
+        text-shadow: none;
       }
       .altair-btn:disabled {
-        opacity: 0.6;
+        opacity: 0.5;
         cursor: not-allowed;
       }
       .altair-btn:hover:not(:disabled) {
-        background: #145214;
+        background: #093b09;
         color: #fffbe6;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        box-shadow: 0 0 12px #e5b800, 0 0 2px #e5b800 inset;
+      }
+      #version {
+        font-family: Courier New, Courier, monospace;
+        color: #e5b800;
+        font-size: 1rem;
+        opacity: 0.7;
+        margin-top: 8px;
+        text-shadow: none;
       }
     </style>
-    <button id="reconnectBtn" class="altair-btn" disabled>Connected</button>
-    <button id="sendEscBtn" class="altair-btn">Send Esc</button>
-    <button id="sendCtrlCBtn" class="altair-btn">Send Ctrl+C</button>
-    <button id="toggleInputModeBtn" class="altair-btn">Character mode</button>
-    <button id="monitorBtn" class="altair-btn">Monitor</button>
-    <button id="toggleTheme" class="altair-btn" onclick="toggleTheme()">Light theme</button>
-    <div id="docs" style="margin-left: auto;">
-      <a href="https://github.com/AzureSphereCloudEnabledAltair8800/RetroGames" target="_blank">Games</a>
-      <a href="https://gloveboxes.github.io/altair_8800_docs/" target="_blank">Documentation</a>
-      <a href="https://gloveboxes.github.io/altair_8800_docs/start/programming/Manuals" target="_blank">Manuals</a>
-    </div>
+  <button id="reconnectBtn" class="altair-btn" disabled>Connected</button>
+  <button id="sendEscBtn" class="altair-btn">Esc</button>
+  <button id="sendCtrlCBtn" class="altair-btn">Ctrl+C</button>
+  <button id="toggleInputModeBtn" class="altair-btn">Character mode</button>
+  <button id="monitorBtn" class="altair-btn">CPU Monitor</button>
+  <button id="toggleTheme" class="altair-btn" onclick="toggleTheme()">Dark</button>
   </div>
 
 
 
 
   <div id="terminal"></div>
+
+  <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+    <div id="docs" style="display: flex; gap: 8px; align-items: center;">
+      <a href="https://github.com/AzureSphereCloudEnabledAltair8800/RetroGames" target="_blank">Games</a>
+      <a href="https://gloveboxes.github.io/altair_8800_docs/" target="_blank">Documentation</a>
+      <a href="https://gloveboxes.github.io/altair_8800_docs/programming/Manuals" target="_blank">Manuals</a>
+    </div>
+  </div>
 
   <div id="version">3.2.0</div>
 
