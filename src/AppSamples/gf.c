@@ -6,7 +6,7 @@
 int get_endpoint();
 int get_filename();
 int set_selected();
-int set_ep_url();
+int save_ep_url();
 int set_stg_fname();
 int immutable_copy();
 int web_copy();
@@ -18,7 +18,8 @@ int str_tolower();
 #define STG_EOF      68
 #define STG_GET_BYTE 202
 
-#define WG_EPNAME   110
+#define WG_IDX_RESET 109
+#define WG_EP_NAME   110
 #define WG_GET_URL  111
 #define WWG_SET_URL 112
 #define WG_SELECTED 113
@@ -50,7 +51,6 @@ int defaults()
     fp = fopen("gf.txt", "r");
     if (fp != NULL)
     {
-        outp(109, 0);
         if (fgets(file_content, 128, fp) != NULL)
         {
             len = strlen(file_content);
@@ -63,12 +63,13 @@ int defaults()
                     len--;
                 }
 
+                outp(WG_IDX_RESET, 0);
                 endpoint = file_content;
                 for (c = 0; c < len; c++)
                 {
-                    outp(WG_EPNAME, endpoint[c]);
+                    outp(WG_EP_NAME, endpoint[c]);
                 }
-                outp(WG_EPNAME, 0);
+                outp(WG_EP_NAME, 0);
             }
         }
         fclose(fp);
@@ -100,7 +101,7 @@ char **argv;
             str_tolower(endpoint);
             if (validate_endpoint(endpoint) == 0)
             {
-                set_ep_url(endpoint);
+                save_ep_url(endpoint);
                 printf("\nEndpoint URL set to: %s\n", endpoint);
                 return 0;
             }
@@ -202,19 +203,11 @@ char **argv;
     return 0;
 }
 
-int set_ep_url(endpoint)
+int save_ep_url(endpoint)
 char *endpoint;
 {
     int len, c;
     FILE *fp;
-
-    len = strlen(endpoint);
-    for (c = 0; c < len; c++)
-    {
-        outp(WG_EPNAME, endpoint[c]);
-    }
-
-    outp(WG_EPNAME, 0);
 
     /* write endpoint to gf.txt */
     fp = fopen("gf.txt", "w");
@@ -333,6 +326,8 @@ int endpoint;
     
     /* Set web endpoint */
     outp(WWG_SET_URL, endpoint);
+    outp(WG_IDX_RESET,0);
+
     for (c = 0; c < len; c++)
     {
         outp(WG_FILENAME, filename[c]);
