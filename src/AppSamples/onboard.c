@@ -9,6 +9,13 @@
  * Usage: Press ESC twice to quit
  * 
  * Based on onboard.bas - converted to BDS C 1.6
+ * 
+ * BDS C Compiler and Libraries with Long Integer support
+ * https://msxhub.com/BDSC
+ * 
+ * To compile with BDS C:
+ * cc onboard
+ * clink onboard long
  */
 
 #include <stdio.h>
@@ -286,9 +293,16 @@ int init_display()
     return 0;
 }
 
+
 /* Optimized sensor data display */
 int display_sensor_data()
 {
+    char luptime[4]; 
+    char l3600[4], l60[4];
+    char lhours[4], lrem[4];
+    char lmins[4];
+    char bufHours[16], bufMins[16];
+
     /* Get and display emulator version */
     cursor_move(7, 1);
     cputs("Emulator version: ");
@@ -305,10 +319,24 @@ int display_sensor_data()
     cputs(sensor_buffer);
     cputs(clear_padding);
     
-    /* Calculate and display uptime in minutes from seconds */
+    /* Calculate and display uptime in hours:minutes format using unsigned long */
     cursor_move(9, 1);
-    cputs("Uptime in mins:   ");
-    putnum(atoi(sensor_buffer) / 60);  /* Convert seconds to minutes */
+    cputs("Uptime hrs:mins:  ");
+    
+    atol(luptime,sensor_buffer);
+    itol(l3600, 3600);
+    itol(l60,   60);
+    ldiv(lhours, luptime, l3600);   /* lhours = luptime / 3600 */
+    lmod(lrem,  luptime, l3600);    /* lrem   = luptime % 3600 */
+
+    ldiv(lmins, lrem, l60);         /* lmins = (luptime % 3600) / 60 */
+
+    ltoa(bufHours, lhours);
+    ltoa(bufMins,  lmins);
+    cputs(bufHours);
+    cputs(":");
+    cputs(bufMins);
+    
     cputs(clear_padding);
     
     /* Get and display temperature */

@@ -60,6 +60,41 @@ int cputs(s) char *s; { while (*s) chput(*s++); return 0; }
 FILE *fp = fopen("file.txt", "r");
 char *line = fgets(buffer, 80, fp);
 ```
+
+### Cursor Key Input (Altair 8800 Specific)
+```c
+/* Altair cursor key decoded values - NOT VT100 escape sequences */
+#define KEY_ESC   27
+#define KEY_UP    5
+#define KEY_DOWN  24
+#define KEY_LEFT  19
+#define KEY_RIGHT 4
+
+/* Simple cursor key detection */
+int read_cursor_key() {
+    int key;
+    if (!check_key_ready()) return 0;
+    key = get_key();
+    
+    /* Return decoded key directly - no escape sequence parsing needed */
+    return key;
+}
+
+/* Game input handling pattern */
+int handle_game_input() {
+    int key = read_cursor_key();
+    
+    if (key == KEY_UP)    { move_up(); }
+    if (key == KEY_DOWN)  { move_down(); }
+    if (key == KEY_LEFT)  { move_left(); }
+    if (key == KEY_RIGHT) { move_right(); }
+    if (key == 'q' || key == 'Q') { quit_game(); }
+    
+    return key;
+}
+```
+
+**Important**: The Altair emulator provides pre-decoded cursor key values, not VT100 escape sequences. Use the numeric constants above directly.
 ```
 
 ## xterm.js Terminal Control (CONFIRMED WORKING)
