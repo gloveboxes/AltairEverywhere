@@ -63,6 +63,17 @@ body {
     padding: 1rem;
 }
 
+
+#terminal {
+    /* for 100 columns, 18px font, ~0.6em average character width */
+    width: calc(100 * 18px * 0.6 + 4px); /* +4 for left/right borders */
+    border: 2px solid #e5b800;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;        /* align terminal to the left */
+}
+
+
 /* pre {
     margin: 10;
   } */

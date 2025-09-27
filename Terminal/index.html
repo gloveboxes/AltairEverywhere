@@ -21,7 +21,7 @@
         ws: null,
         connected: false,
         online: navigator.onLine,
-        characterMode: false,
+        characterMode: true,
         currentLine: "",
         term: null,
         reconnectAttempts: 0,
@@ -36,8 +36,8 @@
       const CONFIG = {
         XTERM_FONT: 'Courier',
         XTERM_FONT_SIZE: 18,
-        XTERM_ROWS: 28,
-        XTERM_COLS: 104,
+        XTERM_ROWS: 30,
+        XTERM_COLS: 100,
         WEBSOCKET_PORT: 8082,
         MAX_PASTE_LENGTH: 256,
         STORAGE_THEME_KEY: 'altair_theme',
@@ -86,28 +86,33 @@
         }
         return true;
       }
+      function getInputModeMessage() {
+        return state.characterMode
+          ? 'Character input mode : Wordmaster (Ctrl+L to toggle)'
+          : 'Line input mode: Default (Ctrl+L to toggle), Reboot Altair (Ctrl+M, R, Enter)';
+      }
+
+      function refreshInputModeUI() {
+        if (elements.toggleInputModeBtn) {
+          elements.toggleInputModeBtn.textContent = state.characterMode ? 'Line mode' : 'Character mode';
+        }
+        if (elements.inputMode) {
+          elements.inputMode.textContent = getInputModeMessage();
+        }
+      }
+
       // Add toggleInputMode button click handler
       function setupToggleInputModeButton() {
         if (!elements.toggleInputModeBtn) return;
         elements.toggleInputModeBtn.onclick = function() {
           // Toggle local state (simulate mode switch)
           state.characterMode = !state.characterMode;
-          // Toggle button text: show the mode you will switch to
-          if (state.characterMode) {
-            elements.toggleInputModeBtn.textContent = 'Line mode';
-          } else {
-            elements.toggleInputModeBtn.textContent = 'Character mode';
-          }
-          // Optionally update the input mode label on the page
-          if (elements.inputMode) {
-            elements.inputMode.textContent = state.characterMode
-              ? 'Character input mode : Wordmaster (Ctrl+L to toggle)'
-              : 'Line input mode: Default (Ctrl+L to toggle), Reboot Altair (Ctrl+M, R, Enter)';
-          }
+          refreshInputModeUI();
           if (state.term) {
             state.term.focus();
           }
         };
+        refreshInputModeUI();
       }
       // Add sendCtrlC button click handler
       function setupSendCtrlCButton() {
@@ -239,7 +244,7 @@
           }
 
           state.term = new Terminal({
-            cursorBlink: "block",
+            cursorBlink: true,
             fontFamily: CONFIG.XTERM_FONT,
             fontSize: CONFIG.XTERM_FONT_SIZE,
             rows: CONFIG.XTERM_ROWS,
@@ -443,16 +448,10 @@
 
       /**
        * Toggle between line and character input modes
-       */
+      */
       function toggleInputMode() {
         state.characterMode = !state.characterMode;
-        const message = state.characterMode 
-          ? "Character input mode : Wordmaster (Ctrl+L to toggle)"
-          : "Line input mode: Default (Ctrl+L to toggle)";
-        
-        if (elements.inputMode) {
-          elements.inputMode.textContent = message;
-        }
+        refreshInputModeUI();
       }
 
       /**
@@ -903,7 +902,7 @@
   <button id="reconnectBtn" class="altair-btn" disabled>Connected</button>
   <button id="sendEscBtn" class="altair-btn">Esc</button>
   <button id="sendCtrlCBtn" class="altair-btn">Ctrl+C</button>
-  <button id="toggleInputModeBtn" class="altair-btn">Character mode</button>
+  <button id="toggleInputModeBtn" class="altair-btn">Line mode</button>
   <button id="monitorBtn" class="altair-btn">CPU Monitor</button>
   <button id="toggleTheme" class="altair-btn" onclick="toggleTheme()">Dark</button>
   </div>
