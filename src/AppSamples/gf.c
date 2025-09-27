@@ -108,9 +108,8 @@ char **argv;
                 printf("Check disk space and write permissions.\n");
                 return -1;
             }
-
-            /* Set selected_ep to the default endpoint (3rd, starting from zero) */
-            selected_ep = 2; /* Default to the third endpoint */
+            
+            selected_ep = 1; 
 
             dxwebfn(filename, strlen(filename), selected_ep);
             wg_result = dxwebcpy(fp_output, &bytes_written);
