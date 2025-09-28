@@ -73,7 +73,7 @@ uint16_t bus_switches = 0x00;
 
 typedef struct
 {
-    char buffer[256];
+    char buffer[512];
     _Atomic size_t head;
     _Atomic size_t tail;
 } TERMINAL_INPUT_QUEUE;

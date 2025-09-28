@@ -54,22 +54,16 @@ static inline size_t terminal_queue_capacity(void)
 
 static void enqueue_terminal_input_character(char character)
 {
-    struct timespec sleep_time = {0, 1 * ONE_MS};
+    size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_relaxed);
+    size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_acquire);
 
-    while (true)
+    if (tail - head >= terminal_queue_capacity())
     {
-        size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_relaxed);
-        size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_acquire);
-
-        if (tail - head < terminal_queue_capacity())
-        {
-            terminal_input_queue.buffer[tail % terminal_queue_capacity()] = character;
-            atomic_store_explicit(&terminal_input_queue.tail, tail + 1, memory_order_release);
-            break;
-        }
-
-        nanosleep(&sleep_time, NULL);
+        return; // drop character if buffer full
     }
+
+    terminal_input_queue.buffer[tail % terminal_queue_capacity()] = character;
+    atomic_store_explicit(&terminal_input_queue.tail, tail + 1, memory_order_release);
 }
 
 static bool dequeue_terminal_input_character(char *character)
