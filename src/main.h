@@ -73,7 +73,7 @@ uint16_t bus_switches = 0x00;
 
 typedef struct
 {
-    char buffer[512];
+    char buffer[256];
     _Atomic size_t head;
     _Atomic size_t tail;
 } TERMINAL_INPUT_QUEUE;
@@ -81,8 +81,6 @@ typedef struct
 static bool haveTerminalOutputMessage = false;
 static int altairOutputBufReadIndex   = 0;
 static int terminalOutputMessageLen   = 0;
-
-static char terminal_input_buffer[512];
 
 static bool stop_cpu = false;
 
