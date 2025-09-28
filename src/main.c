@@ -385,6 +385,7 @@ static void terminal_write(uint8_t c)
 {
     c &= ASCII_MASK_7BIT; // take first 7 bits (127 ascii chars) only and discard 8th bit.
 
+    // This logic is to surpress echoing of characters that were typed on the web console
     if (haveTerminalOutputMessage)
     {
         altairOutputBufReadIndex++;
@@ -410,7 +411,7 @@ static inline uint8_t sense(void)
 /// </summary>
 void print_console_banner(void)
 {
-    static bool first = true;
+    static bool first           = true;
     const char altair_version[] = "\r\nAltair version: ";
 
     if (first)
