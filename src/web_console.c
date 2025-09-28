@@ -11,20 +11,6 @@ static DX_DECLARE_TIMER_HANDLER(expire_session_handler);
 static void (*_client_connected_cb)(void);
 static void cleanup_session(void);
 
-#define WS_MAX_MESSAGE_SIZE 512
-#define WS_INPUT_RING_SIZE  1024
-
-typedef struct
-{
-    char buffer[WS_INPUT_RING_SIZE];
-    _Atomic size_t head;
-    _Atomic size_t tail;
-} WS_INPUT_RING_T;
-
-static WS_INPUT_RING_T ws_input_ring;
-static bool enqueue_input_message(const unsigned char *msg, size_t length);
-static void process_input_queue(void);
-
 static DX_TIMER_BINDING tmr_expire_session = {
     .name    = "tmr_expire_session",
     .handler = expire_session_handler,
@@ -75,79 +61,6 @@ static void cleanup_session(void)
     clear_difference_disk();
 #endif
     cleanup_required = false;
-}
-
-static bool enqueue_input_message(const unsigned char *msg, size_t length)
-{
-    if (msg == NULL || length == 0)
-    {
-        return false;
-    }
-
-    size_t tail = atomic_load_explicit(&ws_input_ring.tail, memory_order_relaxed);
-    size_t head = atomic_load_explicit(&ws_input_ring.head, memory_order_acquire);
-
-    size_t used      = tail - head;
-    size_t available = WS_INPUT_RING_SIZE - used;
-
-    if (length > available)
-    {
-        dx_Log_Debug("enqueue_input_message: input buffer overflow (len=%zu available=%zu)\n", length, available);
-        return false;
-    }
-
-    size_t write_index = tail % WS_INPUT_RING_SIZE;
-    size_t first_copy  = WS_INPUT_RING_SIZE - write_index;
-    if (first_copy > length)
-    {
-        first_copy = length;
-    }
-
-    memcpy(&ws_input_ring.buffer[write_index], msg, first_copy);
-
-    if (length > first_copy)
-    {
-        memcpy(ws_input_ring.buffer, msg + first_copy, length - first_copy);
-    }
-
-    size_t new_tail = tail + length;
-    atomic_store_explicit(&ws_input_ring.tail, new_tail, memory_order_release);
-
-    return true;
-}
-
-static void process_input_queue(void)
-{
-    size_t head = atomic_load_explicit(&ws_input_ring.head, memory_order_relaxed);
-    size_t tail = atomic_load_explicit(&ws_input_ring.tail, memory_order_acquire);
-
-    char batch[WS_MAX_MESSAGE_SIZE];
-
-    while (head != tail)
-    {
-        size_t available = tail - head;
-        size_t chunk_len = available > WS_MAX_MESSAGE_SIZE ? WS_MAX_MESSAGE_SIZE : available;
-
-        size_t start_index = head % WS_INPUT_RING_SIZE;
-        size_t first_copy  = WS_INPUT_RING_SIZE - start_index;
-        if (first_copy > chunk_len)
-        {
-            first_copy = chunk_len;
-        }
-
-        memcpy(batch, &ws_input_ring.buffer[start_index], first_copy);
-        if (chunk_len > first_copy)
-        {
-            memcpy(batch + first_copy, ws_input_ring.buffer, chunk_len - first_copy);
-        }
-
-        head += chunk_len;
-        atomic_store_explicit(&ws_input_ring.head, head, memory_order_release);
-
-        terminal_handler(batch, chunk_len);
-
-        tail = atomic_load_explicit(&ws_input_ring.tail, memory_order_acquire);
-    }
 }
 
 void publish_message(const void *message, size_t message_length)
@@ -236,16 +149,10 @@ void onmessage(ws_cli_conn_t client, const unsigned char *msg, uint64_t size, in
 
     if (msg == NULL || size == 0)
     {
-        printf("onmessage: Invalid message parameters\n");
         return;
     }
 
-    if (!enqueue_input_message(msg, (size_t)size))
-    {
-        return;
-    }
-
-    process_input_queue();
+    terminal_handler((char *)msg, (size_t)size);
 }
 
 void init_web_socket_server(void (*client_connected_cb)(void))
@@ -260,9 +167,6 @@ void init_web_socket_server(void (*client_connected_cb)(void))
     _client_connected_cb = client_connected_cb;
 
     dx_timerStart(&tmr_expire_session);
-
-    atomic_store_explicit(&ws_input_ring.head, 0, memory_order_relaxed);
-    atomic_store_explicit(&ws_input_ring.tail, 0, memory_order_relaxed);
 
     struct ws_server ws_srv = {.host = NULL, // NULL means bind to all interfaces
         .port                        = 8082,

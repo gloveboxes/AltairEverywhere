@@ -332,6 +332,7 @@ void altair_panel_command_handler(void)
             trace(&cpu);
             break;
         case RESET:
+            clear_terminal_input_queue();
             load_boot_disk();
             set_cpu_operating_mode(CPU_RUNNING);
             break;

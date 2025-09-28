@@ -66,23 +66,26 @@ static void enqueue_terminal_input_character(char character)
     atomic_store_explicit(&terminal_input_queue.tail, tail + 1, memory_order_release);
 }
 
-static bool dequeue_terminal_input_character(char *character)
+void clear_terminal_input_queue(void)
 {
+    atomic_store_explicit(&terminal_input_queue.head, 0, memory_order_relaxed);
+    atomic_store_explicit(&terminal_input_queue.tail, 0, memory_order_relaxed);
+}
+
+static char dequeue_terminal_input_character(void)
+{
+    char c;
     size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_relaxed);
     size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_acquire);
 
     if (head == tail)
     {
-        return false;
+        return 0;
     }
 
-    if (character != NULL)
-    {
-        *character = terminal_input_queue.buffer[head % terminal_queue_capacity()];
-    }
-
+    c = terminal_input_queue.buffer[head % terminal_queue_capacity()];
     atomic_store_explicit(&terminal_input_queue.head, head + 1, memory_order_release);
-    return true;
+    return c;
 }
 
 void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode)
@@ -160,9 +163,9 @@ DX_TIMER_HANDLER_END
 /// </summary>
 /// <param name="data">Input data buffer</param>
 /// <returns>true if handled and should cleanup, false to continue processing</returns>
-static bool handle_enter_key(char *data)
+static bool handle_enter_key(char *data, CPU_OPERATING_MODE cpu_mode)
 {
-    switch (get_cpu_operating_mode_fast())
+    switch (cpu_mode)
     {
         case CPU_RUNNING:
             enqueue_terminal_input_character(0x0d);
@@ -186,7 +189,7 @@ static bool handle_enter_key(char *data)
 static bool handle_ctrl_character(char *data, size_t application_message_size)
 {
     char c = data[0];
-    
+
     if (application_message_size == 1 && c > 0 && c < ASCII_CTRL_MAX)
     {
         if (c == CTRL_M_MAPPED_VALUE) // ctrl-m mapped to ASCII 28 to avoid /r
@@ -213,11 +216,11 @@ static bool handle_ctrl_character(char *data, size_t application_message_size)
 /// <param name="data">Input character</param>
 /// <param name="application_message_size">Size of the message</param>
 /// <returns>true if handled and should cleanup, false to continue processing</returns>
-static bool handle_single_character(char *data, size_t application_message_size)
+static bool handle_single_character(char *data, size_t application_message_size, CPU_OPERATING_MODE cpu_mode)
 {
     if (application_message_size == 1)
     {
-        if (get_cpu_operating_mode_fast() == CPU_RUNNING)
+        if (cpu_mode == CPU_RUNNING)
         {
             altairOutputBufReadIndex  = 0;
             terminalOutputMessageLen  = 0;
@@ -246,43 +249,12 @@ static bool handle_single_character(char *data, size_t application_message_size)
 /// </summary>
 void terminal_handler(char *data, size_t application_message_size)
 {
-    if (data == NULL)
-    {
-        return;
-    }
-
-    if (application_message_size == 0)
-    {
-        return;
-    }
-
-    size_t processed_length = application_message_size;
-    if (processed_length > sizeof(terminal_input_buffer))
-    {
-        printf("terminal_handler: message truncated from %zu to %zu bytes\n", application_message_size, sizeof(terminal_input_buffer));
-        processed_length = sizeof(terminal_input_buffer);
-    }
-
-    memcpy(terminal_input_buffer, data, processed_length);
-    if (processed_length < sizeof(terminal_input_buffer))
-    {
-        terminal_input_buffer[processed_length] = '\0';
-    }
-
-    data = terminal_input_buffer;
-
-    application_message_size = processed_length;
-
     char command[TERMINAL_COMMAND_BUFFER_SIZE];
     memset(command, 0x00, sizeof(command));
 
-    // Was just enter pressed
-    if (data[0] == '\r')
+    if (data == NULL || application_message_size == 0 || application_message_size >= 1024)
     {
-        if (handle_enter_key(data))
-        {
-            return;
-        }
+        return;
     }
 
     // Handle control characters
@@ -291,8 +263,19 @@ void terminal_handler(char *data, size_t application_message_size)
         return;
     }
 
+    CPU_OPERATING_MODE cpu_mode = get_cpu_operating_mode_fast();
+
+    // Was just enter pressed
+    if (data[0] == '\r')
+    {
+        if (handle_enter_key(data, cpu_mode))
+        {
+            return;
+        }
+    }
+
     // Handle single character input
-    if (handle_single_character(data, application_message_size))
+    if (handle_single_character(data, application_message_size, cpu_mode))
     {
         return;
     }
@@ -305,7 +288,7 @@ void terminal_handler(char *data, size_t application_message_size)
     }
     command[copy_len] = '\0';
 
-    switch (get_cpu_operating_mode_fast())
+    switch (cpu_mode)
     {
         case CPU_RUNNING:
             if (application_message_size > 0)
@@ -344,17 +327,9 @@ static void client_connected_cb(void)
 /// <returns>true if valid, false otherwise</returns>
 static char terminal_read(void)
 {
-    uint8_t rxBuffer[2] = {0};
-    char retVal;
-    int ch;
-
-    if (dequeue_terminal_input_character(&retVal))
-    {
-        retVal &= ASCII_MASK_7BIT;
-        return retVal;
-    }
-
-    return 0;
+    char retVal = dequeue_terminal_input_character();
+    retVal &= ASCII_MASK_7BIT;
+    return retVal;
 }
 
 static void terminal_write(uint8_t c)
