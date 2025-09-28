@@ -354,7 +354,7 @@ void altair_panel_command_handler(void)
 
 void process_control_panel_commands(void)
 {
-    if (get_cpu_operating_mode() == CPU_STOPPED || cmd_switches == STOP_CMD)
+    if (get_cpu_operating_mode_fast() == CPU_STOPPED || cmd_switches == STOP_CMD)
     {
         switch (cmd_switches)
         {

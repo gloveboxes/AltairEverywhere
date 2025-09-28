@@ -8,7 +8,7 @@
 #include "dx_mqtt.h"
 #include "dx_utilities.h"
 #include "environment.h"
-#include "web_socket_server.h"
+#include "web_console.h"
 
 extern char msgBuffer[MSG_BUFFER_BYTES];
 

@@ -17,15 +17,8 @@ extern DX_ASYNC_BINDING async_expire_session;
 extern DX_TIMER_BINDING tmr_deferred_input;
 extern bool send_partial_msg;
 
-typedef struct
-{
-    size_t length;
-    char buffer[512];
-    pthread_mutex_t block_lock;
-} WS_INPUT_BLOCK_T;
-
 void print_console_banner(void);
-void terminal_handler(WS_INPUT_BLOCK_T *in_block);
+void terminal_handler(char *data, size_t length);
 
 extern DX_TIMER_BINDING tmr_partial_message;
 

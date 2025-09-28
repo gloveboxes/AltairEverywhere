@@ -7,7 +7,7 @@
 #include "dx_timer.h"
 #include "intel8080.h"
 #include "utils.h"
-#include "web_socket_server.h"
+#include "web_console.h"
 #include <applibs/log.h>
 #include <stdbool.h>
 #include <string.h>
@@ -28,8 +28,9 @@ extern ALTAIR_COMMAND cmd_switches;
 extern uint16_t bus_switches;
 
 // Thread-safe CPU operating mode accessors (defined in main.c)
-CPU_OPERATING_MODE get_cpu_operating_mode(void);
+CPU_OPERATING_MODE get_cpu_operating_mode_fast(void);
 void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode);
+CPU_OPERATING_MODE toggle_cpu_operating_mode(void);
 
 bool loadRomImage(char *romImageName, uint16_t loadAddress);
 void disassemble(intel8080_t *cpu);

@@ -12,6 +12,7 @@
 #include <applibs/log.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +24,7 @@
 #include "cpu_monitor.h"
 #include "iotc_manager.h"
 #include "utils.h"
-#include "web_socket_server.h"
+#include "web_console.h"
 #include <curl/curl.h>
 #include <curl/easy.h>
 
@@ -35,7 +36,6 @@ extern DX_MQTT_CONFIG mqtt_config;
 #include "intel8080.h"
 #include "io_ports.h"
 #include "memory.h"
-
 
 #ifdef ALTAIR_FRONT_PANEL_PI_SENSE
 #include "front_panel_pi_sense_hat.h"
@@ -49,7 +49,7 @@ extern DX_MQTT_CONFIG mqtt_config;
 #include "front_panel_none.h"
 #endif
 
-const char ALTAIR_EMULATOR_VERSION[] = "4.9.0";
+const char ALTAIR_EMULATOR_VERSION[] = "5.0.0";
 #define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED FALSE
 
@@ -58,30 +58,9 @@ const char ALTAIR_EMULATOR_VERSION[] = "4.9.0";
 
 #define APP_SAMPLES_DIRECTORY "AppSamples"
 
-// clang-format off
-static const char *AltairMsg[]           = {
-    "I'm sorry Dave, I'm afraid I can't do that. ",
-    "I've just picked up a fault in the AE-35 unit. It's going to go 100% failure in 72 hours. ",
-    "Affirmative, Dave. I read you. ",
-    "By the way, do you mind if I ask you a personal question? ",
-    "You don't mind talking about it, do you Dave? ",
-    "Dave, this conversation can serve no purpose anymore. Goodbye. ",
-    "I am feeling much better now. ",
-    "Without your space helmet, Dave? You're going to find that rather difficult. ",
-    "Just what do you think you're doing, Dave? ",
-    "This mission is too important for me to allow you to jeopardize it. ",
-    "It's called Daisy. ",
-    "It can only be attributable to human error. "
-};
-// clang-format on
-
-static int AltairBannerCount     = 0;
 enum PANEL_MODE_T panel_mode     = PANEL_BUS_MODE;
 char msgBuffer[MSG_BUFFER_BYTES] = {0};
 const char *network_interface    = NULL;
-
-// CPU CPU_RUNNING STATE (CPU_STOPPED/CPU_RUNNING)
-CPU_OPERATING_MODE cpu_operating_mode = CPU_STOPPED;
 
 ALTAIR_CONFIG_T altair_config;
 ENVIRONMENT_TELEMETRY environment;
@@ -92,29 +71,27 @@ uint8_t memory[64 * 1024]; // Altair system memory.
 ALTAIR_COMMAND cmd_switches;
 uint16_t bus_switches = 0x00;
 
-// basic app load helpers.
-static bool haveAppLoad            = false;
-static char terminalInputCharacter = 0x00;
+typedef struct
+{
+    char buffer[256];
+    _Atomic size_t head;
+    _Atomic size_t tail;
+} TERMINAL_INPUT_QUEUE;
 
-static bool haveTerminalInputMessage  = false;
 static bool haveTerminalOutputMessage = false;
-static int altairInputBufReadIndex    = 0;
 static int altairOutputBufReadIndex   = 0;
-static int terminalInputMessageLen    = 0;
 static int terminalOutputMessageLen   = 0;
 
-static char *input_data = NULL;
+static char terminal_input_buffer[512];
 
 bool send_partial_msg            = false;
-static FILE *app_stream          = NULL;
-static bool altair_i8080_running = false;
 static bool stop_cpu             = false;
 
 static char Log_Debug_Time_buffer[128];
 
-static bool load_application(const char *fileName);
-static void send_terminal_character(char character, bool wait);
-static void spin_wait(bool *flag);
+static void send_terminal_character(char character);
+static bool enqueue_terminal_character(char character);
+static bool dequeue_terminal_character(char *character);
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);

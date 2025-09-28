@@ -80,7 +80,7 @@ set(Source
     "cpu_monitor.c"
     "difference_disk.c"
     "iotc_manager.c"
-    "web_socket_server.c"
+    "web_console.c"
     "main.c"
     "environment.c"
     # "env_air_visual.c"

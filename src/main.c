@@ -15,20 +15,27 @@
 #include <string.h>
 #include <sys/types.h>
 
-// Thread synchronization
-static pthread_mutex_t cpu_state_mutex      = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t terminal_state_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t terminal_input_cond   = PTHREAD_COND_INITIALIZER;
+static TERMINAL_INPUT_QUEUE terminal_input_queue = {
+    .buffer = {0},
+    .head   = 0,
+    .tail   = 0,
+};
+
+static pthread_mutex_t altair_start_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t altair_start_cond   = PTHREAD_COND_INITIALIZER;
 
 // Atomic CPU state for high-performance read access
 static _Atomic(CPU_OPERATING_MODE) atomic_cpu_operating_mode = CPU_STOPPED;
 
+// High-performance CPU operating mode getter for emulation loop
+// Uses atomic load with relaxed ordering for maximum performance
+inline CPU_OPERATING_MODE get_cpu_operating_mode_fast(void)
+{
+    return atomic_load_explicit(&atomic_cpu_operating_mode, memory_order_relaxed);
+}
+
 // Constants to replace magic numbers
 #define TERMINAL_COMMAND_BUFFER_SIZE 30
-#define FILE_PATH_BUFFER_SIZE        64
-#define MAX_FILENAME_LENGTH          40
-#define TERMINAL_WAIT_TIMEOUT_MS     200
-#define MAX_RETRY_COUNT              20
 #define CTRL_M_MAPPED_VALUE          28
 #define ASCII_CTRL_MAX               29
 #define ASCII_MASK_7BIT              0x7F
@@ -39,39 +46,60 @@ static _Atomic(CPU_OPERATING_MODE) atomic_cpu_operating_mode = CPU_STOPPED;
 DX_MQTT_CONFIG mqtt_config;
 
 // Forward declarations
-static void wait_for_terminal_completion(bool *flag);
-static void signal_terminal_completion(bool *flag);
 
-/// <summary>
-/// High-performance CPU operating mode getter for emulation loop
-/// Uses atomic load with relaxed ordering for maximum performance
-/// </summary>
-static inline CPU_OPERATING_MODE get_cpu_operating_mode_fast(void)
+static inline size_t terminal_queue_capacity(void)
 {
-    return atomic_load_explicit(&atomic_cpu_operating_mode, memory_order_relaxed);
+    return sizeof(terminal_input_queue.buffer);
 }
 
-/// <summary>
-/// Thread-safe CPU operating mode getter for non-critical paths
-/// </summary>
-CPU_OPERATING_MODE get_cpu_operating_mode(void)
+static bool enqueue_terminal_character(char character)
 {
-    pthread_mutex_lock(&cpu_state_mutex);
-    CPU_OPERATING_MODE mode = cpu_operating_mode;
-    pthread_mutex_unlock(&cpu_state_mutex);
-    return mode;
+    size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_relaxed);
+    size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_acquire);
+
+    if (tail - head >= terminal_queue_capacity())
+    {
+        return false;
+    }
+
+    terminal_input_queue.buffer[tail % terminal_queue_capacity()] = character;
+
+    size_t new_tail = tail + 1;
+    atomic_store_explicit(&terminal_input_queue.tail, new_tail, memory_order_release);
+
+    return true;
 }
 
-/// <summary>
-/// Thread-safe CPU operating mode setter
-/// Updates both the legacy variable and atomic version
-/// </summary>
+static bool dequeue_terminal_character(char *character)
+{
+    size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_relaxed);
+    size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_acquire);
+
+    if (head == tail)
+    {
+        return false;
+    }
+
+    if (character != NULL)
+    {
+        *character = terminal_input_queue.buffer[head % terminal_queue_capacity()];
+    }
+
+    atomic_store_explicit(&terminal_input_queue.head, head + 1, memory_order_release);
+    return true;
+}
+
 void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode)
 {
-    pthread_mutex_lock(&cpu_state_mutex);
-    cpu_operating_mode = new_mode;
     atomic_store_explicit(&atomic_cpu_operating_mode, new_mode, memory_order_release);
-    pthread_mutex_unlock(&cpu_state_mutex);
+}
+
+CPU_OPERATING_MODE toggle_cpu_operating_mode(void)
+{
+    CPU_OPERATING_MODE current_mode = atomic_load_explicit(&atomic_cpu_operating_mode, memory_order_acquire);
+    CPU_OPERATING_MODE new_mode     = (current_mode == CPU_RUNNING) ? CPU_STOPPED : CPU_RUNNING;
+    atomic_store_explicit(&atomic_cpu_operating_mode, new_mode, memory_order_release);
+    return new_mode;
 }
 
 /// <summary>
@@ -80,7 +108,7 @@ void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode)
 /// </summary>
 static DX_TIMER_HANDLER(update_environment_handler)
 {
-     // Hitch a ride on the report_memory_usage event. Only publishes once.
+    // Hitch a ride on the report_memory_usage event. Only publishes once.
     if (dx_isNetworkConnected(network_interface))
     {
         update_geo_location(&environment);
@@ -138,10 +166,10 @@ DX_TIMER_HANDLER_END
 /// <returns>true if handled and should cleanup, false to continue processing</returns>
 static bool handle_enter_key(char *data)
 {
-    switch (get_cpu_operating_mode())
+    switch (get_cpu_operating_mode_fast())
     {
         case CPU_RUNNING:
-            send_terminal_character(0x0d, false);
+            send_terminal_character(0x0d);
             break;
         case CPU_STOPPED:
             data[0] = 0x00;
@@ -166,9 +194,7 @@ static bool handle_ctrl_character(char *data, size_t application_message_size)
         // ctrl-m is mapped to ascii 28 to get around ctrl-m being /r
         if (data[0] == CTRL_M_MAPPED_VALUE)
         {
-            CPU_OPERATING_MODE current_mode = get_cpu_operating_mode();
-            CPU_OPERATING_MODE new_mode     = current_mode == CPU_RUNNING ? CPU_STOPPED : CPU_RUNNING;
-            set_cpu_operating_mode(new_mode);
+            CPU_OPERATING_MODE new_mode = toggle_cpu_operating_mode();
             if (new_mode == CPU_STOPPED)
             {
                 bus_switches = cpu.address_bus;
@@ -176,12 +202,12 @@ static bool handle_ctrl_character(char *data, size_t application_message_size)
             }
             else
             {
-                send_terminal_character(0x0d, false);
+                send_terminal_character(0x0d);
             }
         }
         else // pass through the ctrl character
         {
-            send_terminal_character(data[0], false);
+            send_terminal_character(data[0]);
         }
         return true;
     }
@@ -198,13 +224,12 @@ static bool handle_single_character(char *data, size_t application_message_size)
 {
     if (application_message_size == 1)
     {
-        if (get_cpu_operating_mode() == CPU_RUNNING)
+        if (get_cpu_operating_mode_fast() == CPU_RUNNING)
         {
             altairOutputBufReadIndex  = 0;
             terminalOutputMessageLen  = 0;
-            terminalInputCharacter    = data[0];
             haveTerminalOutputMessage = true;
-            // send_terminal_character(data[0], false);
+            send_terminal_character(data[0]);
         }
         else
         {
@@ -218,88 +243,88 @@ static bool handle_single_character(char *data, size_t application_message_size)
 }
 
 /// <summary>
-/// Handle LOADX command processing
+/// Terminal input handler
 /// </summary>
 /// <param name="command">Command buffer</param>
 /// <param name="application_message_size">Size of the message</param>
 /// <returns>true if handled and should cleanup, false to continue processing</returns>
-static bool handle_loadx_command(char *command, size_t application_message_size)
-{
-    if (strncmp(command, "LOADX ", 6) == 0 && application_message_size > 8 && application_message_size < TERMINAL_COMMAND_BUFFER_SIZE &&
-        (command[application_message_size - 2] == '"'))
-    {
-        command[application_message_size - 2] = '\0'; // replace the '"' with \0
-        load_application(&command[7]);
-        return true;
-    }
-    return false;
-}
-
 /// <summary>
 /// Handler called to process inbound message
 /// </summary>
-void terminal_handler(WS_INPUT_BLOCK_T *in_block)
+void terminal_handler(char *data, size_t application_message_size)
 {
+    if (data == NULL)
+    {
+        return;
+    }
+
+    if (application_message_size == 0)
+    {
+        return;
+    }
+
+    size_t processed_length = application_message_size;
+    if (processed_length > sizeof(terminal_input_buffer))
+    {
+        printf("terminal_handler: message truncated from %zu to %zu bytes\n", application_message_size, sizeof(terminal_input_buffer));
+        processed_length = sizeof(terminal_input_buffer);
+    }
+
+    memcpy(terminal_input_buffer, data, processed_length);
+    if (processed_length < sizeof(terminal_input_buffer))
+    {
+        terminal_input_buffer[processed_length] = '\0';
+    }
+
+    data = terminal_input_buffer;
+
+    application_message_size = processed_length;
+
     char command[TERMINAL_COMMAND_BUFFER_SIZE];
     memset(command, 0x00, sizeof(command));
-
-    pthread_mutex_lock(&in_block->block_lock);
-
-    size_t application_message_size = in_block->length;
-    char *data                      = in_block->buffer;
 
     // Was just enter pressed
     if (data[0] == '\r')
     {
         if (handle_enter_key(data))
         {
-            goto cleanup;
+            return;
         }
     }
 
     // Handle control characters
     if (handle_ctrl_character(data, application_message_size))
     {
-        goto cleanup;
+        return;
     }
 
     // Handle single character input
     if (handle_single_character(data, application_message_size))
     {
-        goto cleanup;
+        return;
     }
 
-    // Check for loadx command
-    // upper case the first 30 chars for command processing with bounds checking
+    // Prepare upper-case copy for virtual command processing when CPU is stopped
     size_t copy_len = (sizeof(command) - 1 < application_message_size) ? sizeof(command) - 1 : application_message_size;
     for (size_t i = 0; i < copy_len; i++)
     {
-        command[i] = (char)toupper(data[i]);
+        command[i] = (char)toupper((unsigned char)data[i]);
     }
-    command[copy_len] = '\0'; // Ensure null termination
+    command[copy_len] = '\0';
 
-    // Handle LOADX command
-    if (handle_loadx_command(command, application_message_size))
-    {
-        goto cleanup;
-    }
-
-    switch (get_cpu_operating_mode())
+    switch (get_cpu_operating_mode_fast())
     {
         case CPU_RUNNING:
-
             if (application_message_size > 0)
             {
-                input_data = data;
+                altairOutputBufReadIndex  = 0;
+                terminalOutputMessageLen  = (int)application_message_size - 1;
+                haveTerminalOutputMessage = true;
 
-                altairInputBufReadIndex  = 0;
-                altairOutputBufReadIndex = 0;
-                terminalInputMessageLen  = (int)application_message_size;
-                terminalOutputMessageLen = (int)application_message_size - 1;
-
-                haveTerminalInputMessage = haveTerminalOutputMessage = true;
-
-                wait_for_terminal_completion(&haveTerminalInputMessage);
+                for (size_t i = 0; i < application_message_size; ++i)
+                {
+                    send_terminal_character(data[i]);
+                }
             }
             break;
         case CPU_STOPPED:
@@ -308,71 +333,23 @@ void terminal_handler(WS_INPUT_BLOCK_T *in_block)
         default:
             break;
     }
-
-cleanup:
-    in_block->length = 0;
-    pthread_mutex_unlock(&in_block->block_lock);
 }
 
-static void send_terminal_character(char character, bool wait)
+static void send_terminal_character(char character)
 {
-    int retry              = 0;
-    terminalInputCharacter = character;
+    struct timespec sleep_time = {0, 1 * ONE_MS};
+    size_t target_tail;
 
-    if (!wait)
+    while (!enqueue_terminal_character(character))
     {
-        return;
+        nanosleep(&sleep_time, NULL);
     }
 
-    while (terminalInputCharacter && retry++ < 10)
+    target_tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_relaxed);
+    while (atomic_load_explicit(&terminal_input_queue.head, memory_order_acquire) < target_tail)
     {
-        nanosleep(&(struct timespec){0, 1 * ONE_MS}, NULL);
+        nanosleep(&sleep_time, NULL);
     }
-}
-
-/// <summary>
-/// Wait for terminal input message with proper synchronization
-/// </summary>
-/// <param name="flag">Pointer to flag to wait for</param>
-static void wait_for_terminal_completion(bool *flag)
-{
-    pthread_mutex_lock(&terminal_state_mutex);
-
-    struct timespec timeout;
-    clock_gettime(CLOCK_REALTIME, &timeout);
-    timeout.tv_nsec += TERMINAL_WAIT_TIMEOUT_MS * ONE_MS; // timeout
-    if (timeout.tv_nsec >= 1000000000)
-    {
-        timeout.tv_sec++;
-        timeout.tv_nsec -= 1000000000;
-    }
-
-    *flag = true;
-
-    // Wait for flag to be reset or timeout
-    while (*flag)
-    {
-        int result = pthread_cond_timedwait(&terminal_input_cond, &terminal_state_mutex, &timeout);
-        if (result == ETIMEDOUT)
-        {
-            dx_Log_Debug("Terminal input wait timeout\n");
-            break;
-        }
-    }
-
-    pthread_mutex_unlock(&terminal_state_mutex);
-}
-
-/// <summary>
-/// Signal terminal completion
-/// </summary>
-/// <param name="flag">Pointer to flag to reset</param>
-static void signal_terminal_completion(bool *flag)
-{
-    pthread_mutex_lock(&terminal_state_mutex);
-    *flag = false;
-    pthread_cond_signal(&terminal_input_cond);
-    pthread_mutex_unlock(&terminal_state_mutex);
 }
 
 /// <summary>
@@ -389,124 +366,18 @@ static void client_connected_cb(void)
 /// </summary>
 /// <param name="filename">Filename to validate</param>
 /// <returns>true if valid, false otherwise</returns>
-static bool validate_filename(const char *filename)
-{
-    if (!filename || strlen(filename) == 0)
-    {
-        dx_Log_Debug("Invalid filename: null or empty\n");
-        return false;
-    }
-
-    size_t len = strlen(filename);
-    if (len >= MAX_FILENAME_LENGTH)
-    { // Leave room for directory and null terminator
-        dx_Log_Debug("Filename too long: %zu characters\n", len);
-        return false;
-    }
-
-    // Check for directory traversal attempts
-    if (strstr(filename, "..") || strstr(filename, "/") || strstr(filename, "\\"))
-    {
-        dx_Log_Debug("Invalid filename: contains path separators or traversal\n");
-        return false;
-    }
-
-    return true;
-}
-
-/// <summary>
-/// Load sample BASIC applications
-/// </summary>
-/// <param name="fileName"></param>
-/// <returns></returns>
-static bool load_application(const char *fileName)
-{
-    if (!validate_filename(fileName))
-    {
-        publish_message("\n\rInvalid filename\n\r", 19);
-        return false;
-    }
-
-    int retry = 0;
-    char filePathAndName[FILE_PATH_BUFFER_SIZE]; // Increased buffer size for safety
-    int result = snprintf(filePathAndName, sizeof(filePathAndName), "%s/%s", APP_SAMPLES_DIRECTORY, fileName);
-
-    if (result >= sizeof(filePathAndName))
-    {
-        dx_Log_Debug("File path too long: %d characters\n", result);
-        publish_message("\n\rFile path too long\n\r", 22);
-        return false;
-    }
-
-    // precaution
-    if (app_stream != NULL)
-    {
-        fclose(app_stream);
-    }
-
-    if ((app_stream = fopen(filePathAndName, "r")) != NULL)
-    {
-        haveTerminalInputMessage = false;
-        haveAppLoad              = true;
-
-        retry = 0;
-        while (haveAppLoad && retry++ < MAX_RETRY_COUNT)
-        {
-            nanosleep(&(struct timespec){0, 10 * ONE_MS}, NULL);
-        }
-        return true;
-    }
-
-    publish_message("\n\rFile not found\n\r", 18);
-    return false;
-}
-
 static char terminal_read(void)
 {
     uint8_t rxBuffer[2] = {0};
     char retVal;
     int ch;
 
-    if (terminalInputCharacter)
+    if (dequeue_terminal_character(&retVal))
     {
-        retVal                 = terminalInputCharacter;
-        terminalInputCharacter = 0x00;
-        retVal &= ASCII_MASK_7BIT; // take first 7 bits (127 ascii chars)
+        retVal &= ASCII_MASK_7BIT;
         return retVal;
     }
 
-    if (haveTerminalInputMessage)
-    {
-        retVal = input_data[altairInputBufReadIndex++];
-
-        if (altairInputBufReadIndex >= terminalInputMessageLen)
-        {
-            signal_terminal_completion(&haveTerminalInputMessage);
-        }
-        retVal &= ASCII_MASK_7BIT; // take first 7 bits (127 ascii chars)
-        return retVal;
-    }
-
-    if (haveAppLoad)
-    {
-        if ((ch = fgetc(app_stream)) == EOF)
-        {
-            retVal = 0x00;
-            fclose(app_stream);
-            app_stream  = NULL;
-            haveAppLoad = false;
-        }
-        else
-        {
-            retVal = (uint8_t)ch;
-            if (retVal == '\n')
-            {
-                retVal = 0x0D;
-            }
-        }
-        retVal &= ASCII_MASK_7BIT; // take first 7 bits (127 ascii chars)
-        return retVal;
-    }
     return 0;
 }
 
@@ -540,22 +411,7 @@ static inline uint8_t sense(void)
 void print_console_banner(void)
 {
     static bool first = true;
-    // char reset[] = "\x1b[2J\r\n";
-    const char reset[]          = "\r\n\r\n";
     const char altair_version[] = "\r\nAltair version: ";
-
-    for (int x = 0; x < strlen(reset); x++)
-    {
-        terminal_write(reset[x]);
-    }
-
-    for (int x = 0; x < strlen(AltairMsg[AltairBannerCount]); x++)
-    {
-        terminal_write(AltairMsg[AltairBannerCount][x]);
-    }
-
-    AltairBannerCount++;
-    AltairBannerCount = AltairBannerCount == NELEMS(AltairMsg) ? 0 : AltairBannerCount;
 
     if (first)
     {
@@ -570,10 +426,6 @@ void print_console_banner(void)
         {
             terminal_write(ALTAIR_EMULATOR_VERSION[x]);
         }
-    }
-    else
-    {
-        send_terminal_character(0x0d, true);
     }
 }
 
@@ -647,7 +499,6 @@ static bool init_altair_disk(const char *disk_path, int *fp, const char *disk_na
 static void init_altair(void)
 {
     Log_Debug("Altair Thread starting...\n");
-    // print_console_banner();
 
     memset(memory, 0x00, MEMORY_SIZE_64K); // clear Altair memory.
 
@@ -731,12 +582,9 @@ static void cleanup_altair_disks(void)
 static void *altair_thread(void *arg)
 {
     // Log_Debug("Altair Thread starting...\n");
-    if (altair_i8080_running)
-    {
-        return NULL;
-    }
-
-    altair_i8080_running = true;
+    pthread_mutex_lock(&altair_start_mutex);
+    pthread_cond_broadcast(&altair_start_cond);
+    pthread_mutex_unlock(&altair_start_mutex);
 
     while (!stop_cpu)
     {
@@ -751,8 +599,6 @@ static void *altair_thread(void *arg)
             send_partial_msg = false;
         }
     }
-
-    altair_i8080_running = false;
 
     return NULL;
 }
@@ -865,10 +711,9 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     init_altair();
     start_altair_thread(altair_thread, NULL, "altair_thread", 1);
-    while (!altair_i8080_running) // spin until i8080 thread starts
-    {
-        nanosleep(&(struct timespec){0, 1 * ONE_MS}, NULL);
-    }
+    pthread_mutex_lock(&altair_start_mutex);
+    pthread_cond_wait(&altair_start_cond, &altair_start_mutex);
+    pthread_mutex_unlock(&altair_start_mutex);
 }
 
 /// <summary>
