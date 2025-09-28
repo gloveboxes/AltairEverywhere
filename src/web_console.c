@@ -11,10 +11,8 @@ static DX_DECLARE_TIMER_HANDLER(expire_session_handler);
 static void (*_client_connected_cb)(void);
 static void cleanup_session(void);
 
-#define WS_MAX_MESSAGE_SIZE  512
-#define WS_OUTPUT_QUEUE_SIZE 1024
-#define WS_FLUSH_CHUNK_SIZE  256
-#define WS_INPUT_RING_SIZE   1024
+#define WS_MAX_MESSAGE_SIZE 512
+#define WS_INPUT_RING_SIZE  1024
 
 typedef struct
 {
@@ -23,20 +21,9 @@ typedef struct
     _Atomic size_t tail;
 } WS_INPUT_RING_T;
 
-typedef struct
-{
-    char data[WS_OUTPUT_QUEUE_SIZE];
-    _Atomic size_t head;
-    _Atomic size_t tail;
-} WS_CHAR_QUEUE_T;
-
 static WS_INPUT_RING_T ws_input_ring;
-static WS_CHAR_QUEUE_T ws_output_queue;
 static bool enqueue_input_message(const unsigned char *msg, size_t length);
 static void process_input_queue(void);
-static bool enqueue_output_character(char character);
-static bool output_queue_has_data(void);
-static bool publish_character_immediate(char character);
 
 static DX_TIMER_BINDING tmr_expire_session = {
     .name    = "tmr_expire_session",
@@ -163,45 +150,6 @@ static void process_input_queue(void)
     }
 }
 
-static bool enqueue_output_character(char character)
-{
-    size_t tail      = atomic_load_explicit(&ws_output_queue.tail, memory_order_relaxed);
-    size_t head      = atomic_load_explicit(&ws_output_queue.head, memory_order_acquire);
-    size_t next_tail = (tail + 1) % WS_OUTPUT_QUEUE_SIZE;
-
-    if (next_tail == head)
-    {
-        return false; // queue full
-    }
-
-    ws_output_queue.data[tail] = character;
-    atomic_store_explicit(&ws_output_queue.tail, next_tail, memory_order_release);
-
-    return true;
-}
-
-static bool output_queue_has_data(void)
-{
-    size_t head = atomic_load_explicit(&ws_output_queue.head, memory_order_acquire);
-    size_t tail = atomic_load_explicit(&ws_output_queue.tail, memory_order_acquire);
-    return head != tail;
-}
-
-static bool publish_character_immediate(char character)
-{
-    size_t head = atomic_load_explicit(&ws_output_queue.head, memory_order_acquire);
-    size_t tail = atomic_load_explicit(&ws_output_queue.tail, memory_order_relaxed);
-
-    if (head != tail)
-    {
-        return false;
-    }
-
-    char immediate_char = character;
-    publish_message(&immediate_char, 1);
-    return true;
-}
-
 void publish_message(const void *message, size_t message_length)
 {
     // Validate input parameters
@@ -227,55 +175,9 @@ void publish_message(const void *message, size_t message_length)
     }
 }
 
-void send_partial_message(void)
-{
-    char chunk[WS_FLUSH_CHUNK_SIZE];
-
-    while (true)
-    {
-        size_t head = atomic_load_explicit(&ws_output_queue.head, memory_order_relaxed);
-        size_t tail = atomic_load_explicit(&ws_output_queue.tail, memory_order_acquire);
-
-        if (head == tail)
-        {
-            break; // queue empty
-        }
-
-        size_t chunk_length = 0;
-        size_t local_head   = head;
-
-        while (local_head != tail && chunk_length < sizeof(chunk))
-        {
-            chunk[chunk_length++] = ws_output_queue.data[local_head];
-            local_head            = (local_head + 1) % WS_OUTPUT_QUEUE_SIZE;
-        }
-
-        atomic_store_explicit(&ws_output_queue.head, local_head, memory_order_release);
-
-        publish_message(chunk, chunk_length);
-    }
-}
-
 inline void publish_character(char character)
 {
-    if (publish_character_immediate(character))
-    {
-        return;
-    }
-
-    if (!enqueue_output_character(character))
-    {
-        printf("publish_character: output queue full, flushing\n");
-        send_partial_message();
-
-        if (!enqueue_output_character(character))
-        {
-            printf("publish_character: character dropped\n");
-            return;
-        }
-    }
-
-    send_partial_msg = true;
+    publish_message(&character, 1);
 }
 
 void onopen(ws_cli_conn_t client)
@@ -361,8 +263,6 @@ void init_web_socket_server(void (*client_connected_cb)(void))
 
     atomic_store_explicit(&ws_input_ring.head, 0, memory_order_relaxed);
     atomic_store_explicit(&ws_input_ring.tail, 0, memory_order_relaxed);
-    atomic_store_explicit(&ws_output_queue.head, 0, memory_order_relaxed);
-    atomic_store_explicit(&ws_output_queue.tail, 0, memory_order_relaxed);
 
     struct ws_server ws_srv = {.host = NULL, // NULL means bind to all interfaces
         .port                        = 8082,
@@ -378,11 +278,3 @@ void init_web_socket_server(void (*client_connected_cb)(void))
 /// Partial message check callback
 /// </summary>
 /// <param name="eventLoopTimer"></param>
-DX_TIMER_HANDLER(partial_message_handler)
-{
-    if (output_queue_has_data())
-    {
-        send_partial_msg = true;
-    }
-}
-DX_TIMER_HANDLER_END

@@ -103,7 +103,6 @@ const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x
 // clang-format off
 // Common Timers
 
-DX_TIMER_BINDING tmr_partial_message = {.repeat = &(struct timespec){0, 250 * ONE_MS}, .name = "tmr_partial_message", .handler = partial_message_handler};
 DX_TIMER_BINDING tmr_timer_seconds_expired = {.name = "tmr_timer_seconds_expired", .handler = timer_seconds_expired_handler};
 DX_TIMER_BINDING tmr_timer_millisecond_expired = {.name = "tmr_timer_millisecond_expired", .handler = timer_millisecond_expired_handler};
 DX_TIMER_BINDING tmr_ws_ping_pong = {.repeat = &(struct timespec){10, 0}, .name = "tmr_partial_message", .handler = ws_ping_pong_handler};
@@ -134,7 +133,6 @@ static DX_ASYNC_BINDING *async_bindings[] = {
 // initialize bindings
 static DX_TIMER_BINDING *timer_bindings[] = {
     &tmr_heart_beat,
-    &tmr_partial_message,
     &tmr_report_memory_usage,
     &tmr_tick_count,
     &tmr_timer_millisecond_expired,

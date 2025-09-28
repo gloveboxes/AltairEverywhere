@@ -594,11 +594,6 @@ static void *altair_thread(void *arg)
             i8080_cycle(&cpu);
         }
 
-        if (send_partial_msg)
-        {
-            send_partial_message();
-            send_partial_msg = false;
-        }
     }
 
     return NULL;
