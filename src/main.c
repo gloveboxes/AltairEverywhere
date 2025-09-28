@@ -52,25 +52,27 @@ static inline size_t terminal_queue_capacity(void)
     return sizeof(terminal_input_queue.buffer);
 }
 
-static bool enqueue_terminal_character(char character)
+static void enqueue_terminal_input_character(char character)
 {
-    size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_relaxed);
-    size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_acquire);
+    struct timespec sleep_time = {0, 1 * ONE_MS};
 
-    if (tail - head >= terminal_queue_capacity())
+    while (true)
     {
-        return false;
+        size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_relaxed);
+        size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_acquire);
+
+        if (tail - head < terminal_queue_capacity())
+        {
+            terminal_input_queue.buffer[tail % terminal_queue_capacity()] = character;
+            atomic_store_explicit(&terminal_input_queue.tail, tail + 1, memory_order_release);
+            break;
+        }
+
+        nanosleep(&sleep_time, NULL);
     }
-
-    terminal_input_queue.buffer[tail % terminal_queue_capacity()] = character;
-
-    size_t new_tail = tail + 1;
-    atomic_store_explicit(&terminal_input_queue.tail, new_tail, memory_order_release);
-
-    return true;
 }
 
-static bool dequeue_terminal_character(char *character)
+static bool dequeue_terminal_input_character(char *character)
 {
     size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_relaxed);
     size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_acquire);
@@ -169,7 +171,7 @@ static bool handle_enter_key(char *data)
     switch (get_cpu_operating_mode_fast())
     {
         case CPU_RUNNING:
-            send_terminal_character(0x0d);
+            enqueue_terminal_input_character(0x0d);
             break;
         case CPU_STOPPED:
             data[0] = 0x00;
@@ -189,26 +191,23 @@ static bool handle_enter_key(char *data)
 /// <returns>true if handled and should cleanup, false to continue processing</returns>
 static bool handle_ctrl_character(char *data, size_t application_message_size)
 {
-    if (application_message_size == 1 && data[0] > 0 && data[0] < ASCII_CTRL_MAX)
+    char c = data[0];
+    
+    if (application_message_size == 1 && c > 0 && c < ASCII_CTRL_MAX)
     {
-        // ctrl-m is mapped to ascii 28 to get around ctrl-m being /r
-        if (data[0] == CTRL_M_MAPPED_VALUE)
+        if (c == CTRL_M_MAPPED_VALUE) // ctrl-m mapped to ASCII 28 to avoid /r
         {
             CPU_OPERATING_MODE new_mode = toggle_cpu_operating_mode();
             if (new_mode == CPU_STOPPED)
             {
                 bus_switches = cpu.address_bus;
                 publish_message("\r\nCPU MONITOR> ", 15);
+                return true;
             }
-            else
-            {
-                send_terminal_character(0x0d);
-            }
+            c = 0x0d;
         }
-        else // pass through the ctrl character
-        {
-            send_terminal_character(data[0]);
-        }
+
+        enqueue_terminal_input_character(c);
         return true;
     }
     return false;
@@ -229,7 +228,7 @@ static bool handle_single_character(char *data, size_t application_message_size)
             altairOutputBufReadIndex  = 0;
             terminalOutputMessageLen  = 0;
             haveTerminalOutputMessage = true;
-            send_terminal_character(data[0]);
+            enqueue_terminal_input_character(data[0]);
         }
         else
         {
@@ -323,7 +322,7 @@ void terminal_handler(char *data, size_t application_message_size)
 
                 for (size_t i = 0; i < application_message_size; ++i)
                 {
-                    send_terminal_character(data[i]);
+                    enqueue_terminal_input_character(data[i]);
                 }
             }
             break;
@@ -332,23 +331,6 @@ void terminal_handler(char *data, size_t application_message_size)
             break;
         default:
             break;
-    }
-}
-
-static void send_terminal_character(char character)
-{
-    struct timespec sleep_time = {0, 1 * ONE_MS};
-    size_t target_tail;
-
-    while (!enqueue_terminal_character(character))
-    {
-        nanosleep(&sleep_time, NULL);
-    }
-
-    target_tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_relaxed);
-    while (atomic_load_explicit(&terminal_input_queue.head, memory_order_acquire) < target_tail)
-    {
-        nanosleep(&sleep_time, NULL);
     }
 }
 
@@ -372,7 +354,7 @@ static char terminal_read(void)
     char retVal;
     int ch;
 
-    if (dequeue_terminal_character(&retVal))
+    if (dequeue_terminal_input_character(&retVal))
     {
         retVal &= ASCII_MASK_7BIT;
         return retVal;
@@ -397,7 +379,7 @@ static void terminal_write(uint8_t c)
     }
     else
     {
-        publish_character(c);
+        publish_message(&c, 1);
     }
 }
 
@@ -593,7 +575,6 @@ static void *altair_thread(void *arg)
         {
             i8080_cycle(&cpu);
         }
-
     }
 
     return NULL;

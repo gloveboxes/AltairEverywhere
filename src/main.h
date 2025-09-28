@@ -89,9 +89,8 @@ static bool stop_cpu             = false;
 
 static char Log_Debug_Time_buffer[128];
 
-static void send_terminal_character(char character);
-static bool enqueue_terminal_character(char character);
-static bool dequeue_terminal_character(char *character);
+static void enqueue_terminal_input_character(char character);
+static bool dequeue_terminal_input_character(char *character);
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
