@@ -536,7 +536,7 @@ static void *altair_thread(void *arg)
 {
     // Log_Debug("Altair Thread starting...\n");
     // Lower thread priority (nice value) to encourage running on efficiency cores
-    nice(1);
+    nice(19);
 
     pthread_mutex_lock(&altair_start_mutex);
     pthread_cond_broadcast(&altair_start_cond);
