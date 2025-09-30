@@ -3,14 +3,13 @@
 
 #include "web_console.h"
 
+#include <stdatomic.h>
 #include <stdint.h>
 #include <string.h>
-#include <time.h>
 
 static DX_DECLARE_TIMER_HANDLER(expire_session_handler);
 static void (*_client_connected_cb)(void);
 static void cleanup_session(void);
-static void publish_message_direct(const char *message, size_t message_length);
 
 static DX_TIMER_BINDING tmr_expire_session = {
     .name    = "tmr_expire_session",
@@ -64,7 +63,7 @@ static void cleanup_session(void)
     cleanup_required = false;
 }
 
-static void publish_message_direct(const char *message, size_t message_length)
+void publish_message(const void *message, size_t message_length)
 {
     // Validate input parameters
     if (message == NULL || message_length == 0)
@@ -91,17 +90,7 @@ static void publish_message_direct(const char *message, size_t message_length)
 
 inline void publish_character(char character)
 {
-    publish_message_direct(&character, 1);
-}
-
-void publish_message(const void *message, size_t message_length)
-{
-    if (message == NULL || message_length == 0)
-    {
-        return;
-    }
-
-    publish_message_direct((const char *)message, message_length);
+    publish_message(&character, 1);
 }
 
 void onopen(ws_cli_conn_t client)
