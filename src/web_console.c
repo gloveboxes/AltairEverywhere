@@ -9,7 +9,7 @@
 #include <time.h>
 
 #define OUTPUT_QUEUE_CAPACITY 4096
-#define OUTPUT_CHUNK_TARGET   256
+#define OUTPUT_CHUNK_TARGET   512
 
 typedef struct
 {
@@ -24,19 +24,21 @@ static OUTPUT_MESSAGE_QUEUE output_queue = {
     .tail   = 0,
 };
 
-static pthread_mutex_t output_queue_mutex  = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t output_queue_cond    = PTHREAD_COND_INITIALIZER;
-static pthread_once_t output_consumer_once = PTHREAD_ONCE_INIT;
 static DX_DECLARE_TIMER_HANDLER(expire_session_handler);
 static void (*_client_connected_cb)(void);
 static void cleanup_session(void);
 static void publish_message_direct(const char *message, size_t message_length);
-static void *output_queue_consumer(void *arg);
 static void start_output_queue_consumer(void);
+static DX_DECLARE_TIMER_HANDLER(output_queue_flush_handler);
 
 static DX_TIMER_BINDING tmr_expire_session = {
     .name    = "tmr_expire_session",
     .handler = expire_session_handler,
+};
+static DX_TIMER_BINDING tmr_output_queue = {
+    .repeat  = &(struct timespec){0, 20 * ONE_MS},
+    .name    = "tmr_output_queue",
+    .handler = output_queue_flush_handler,
 };
 static bool cleanup_required     = false;
 static const int session_minutes = 1 * 60 * 30; // 30 minutes
@@ -91,13 +93,6 @@ static inline size_t output_queue_capacity(void)
     return sizeof(output_queue.buffer);
 }
 
-static inline bool output_queue_is_empty(void)
-{
-    size_t head = atomic_load_explicit(&output_queue.head, memory_order_relaxed);
-    size_t tail = atomic_load_explicit(&output_queue.tail, memory_order_acquire);
-    return head == tail;
-}
-
 static size_t enqueue_output_bytes(const char *message, size_t message_length)
 {
     size_t enqueued = 0;
@@ -123,27 +118,40 @@ static size_t enqueue_output_bytes(const char *message, size_t message_length)
 
 static size_t dequeue_output_bytes(char *destination, size_t max_length)
 {
-    size_t extracted = 0;
-    size_t head      = atomic_load_explicit(&output_queue.head, memory_order_relaxed);
-
-    while (extracted < max_length)
+    if (max_length == 0)
     {
-        size_t tail = atomic_load_explicit(&output_queue.tail, memory_order_acquire);
-        if (head == tail)
-        {
-            break;
-        }
-
-        destination[extracted++] = output_queue.buffer[head % output_queue_capacity()];
-        head++;
+        return 0;
     }
 
-    if (extracted > 0)
+    const size_t capacity = output_queue_capacity();
+    size_t head            = atomic_load_explicit(&output_queue.head, memory_order_relaxed);
+    size_t tail            = atomic_load_explicit(&output_queue.tail, memory_order_acquire);
+    size_t available       = tail - head;
+
+    if (available == 0)
     {
-        atomic_store_explicit(&output_queue.head, head, memory_order_release);
+        return 0;
     }
 
-    return extracted;
+    size_t to_copy = available < max_length ? available : max_length;
+    size_t index   = head % capacity;
+    size_t first_chunk = capacity - index;
+
+    if (first_chunk > to_copy)
+    {
+        first_chunk = to_copy;
+    }
+
+    memcpy(destination, &output_queue.buffer[index], first_chunk);
+
+    if (first_chunk < to_copy)
+    {
+        memcpy(destination + first_chunk, output_queue.buffer, to_copy - first_chunk);
+    }
+
+    atomic_store_explicit(&output_queue.head, head + to_copy, memory_order_release);
+
+    return to_copy;
 }
 
 static void publish_message_direct(const char *message, size_t message_length)
@@ -191,10 +199,6 @@ void publish_message(const void *message, size_t message_length)
         return; // drop when buffer remains full
     }
 
-    pthread_mutex_lock(&output_queue_mutex);
-    pthread_cond_signal(&output_queue_cond);
-    pthread_mutex_unlock(&output_queue_mutex);
-
     if (enqueued < message_length)
     {
         size_t dropped = message_length - enqueued;
@@ -202,23 +206,8 @@ void publish_message(const void *message, size_t message_length)
     }
 }
 
-static void init_output_queue_consumer(void)
+static DX_TIMER_HANDLER(output_queue_flush_handler)
 {
-    if (!dx_startThreadDetached(output_queue_consumer, NULL, "output_queue_consumer"))
-    {
-        printf("Failed to start output_queue_consumer thread\n");
-    }
-}
-
-static void start_output_queue_consumer(void)
-{
-    pthread_once(&output_consumer_once, init_output_queue_consumer);
-}
-
-static void *output_queue_consumer(void *arg)
-{
-    (void)arg;
-
     char chunk[OUTPUT_CHUNK_TARGET];
 
     while (true)
@@ -227,27 +216,20 @@ static void *output_queue_consumer(void *arg)
 
         if (bytes_to_send == 0)
         {
-            pthread_mutex_lock(&output_queue_mutex);
-            while (output_queue_is_empty())
-            {
-                pthread_cond_wait(&output_queue_cond, &output_queue_mutex);
-            }
-            pthread_mutex_unlock(&output_queue_mutex);
-
-            nanosleep(&(struct timespec){0, 50 * ONE_MS}, NULL);
-            continue;
+            break;
         }
+
+        dx_Log_Debug("Flushing %zu byte%s from output queue\n", bytes_to_send, bytes_to_send == 1 ? "" : "s");
 
         publish_message_direct(chunk, bytes_to_send);
 
-        if (bytes_to_send == sizeof(chunk))
+        if (bytes_to_send < sizeof(chunk))
         {
-            continue; // drain queue aggressively when still producing large bursts
+            break;
         }
     }
-
-    return NULL;
 }
+DX_TIMER_HANDLER_END
 
 void onopen(ws_cli_conn_t client)
 {
@@ -322,8 +304,8 @@ void init_web_socket_server(void (*client_connected_cb)(void))
 
     _client_connected_cb = client_connected_cb;
 
-    start_output_queue_consumer();
-
+    // start_output_queue_consumer();
+    dx_timerStart(&tmr_output_queue);
     dx_timerStart(&tmr_expire_session);
 
     struct ws_server ws_srv = {.host = NULL, // NULL means bind to all interfaces
