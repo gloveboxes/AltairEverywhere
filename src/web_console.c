@@ -104,7 +104,7 @@ static size_t enqueue_output_bytes(const char *message, size_t message_length)
 
         if (tail - head >= output_queue_capacity())
         {
-            dx_Log_Debug("Output queue full, dropping remaining %zu byte%s\n", message_length - index, (message_length - index) == 1 ? "" : "s");
+            // dx_Log_Debug("Output queue full, dropping remaining %zu byte%s\n", message_length - index, (message_length - index) == 1 ? "" : "s");
             break; // drop remaining bytes if buffer full
         }
 
