@@ -219,7 +219,7 @@ static DX_TIMER_HANDLER(output_queue_flush_handler)
             break;
         }
 
-        dx_Log_Debug("Flushing %zu byte%s from output queue\n", bytes_to_send, bytes_to_send == 1 ? "" : "s");
+        // dx_Log_Debug("Flushing %zu byte%s from output queue\n", bytes_to_send, bytes_to_send == 1 ? "" : "s");
 
         publish_message_direct(chunk, bytes_to_send);
 
