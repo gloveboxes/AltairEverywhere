@@ -14,6 +14,7 @@
 #include <stdatomic.h>
 #include <string.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 static TERMINAL_INPUT_QUEUE terminal_input_queue = {
     .buffer = {0},
@@ -534,6 +535,9 @@ static void cleanup_altair_disks(void)
 static void *altair_thread(void *arg)
 {
     // Log_Debug("Altair Thread starting...\n");
+    // Lower thread priority (nice value) to encourage running on efficiency cores
+    nice(1);
+
     pthread_mutex_lock(&altair_start_mutex);
     pthread_cond_broadcast(&altair_start_cond);
     pthread_mutex_unlock(&altair_start_mutex);
@@ -560,18 +564,11 @@ bool start_altair_thread(void *(*daemon)(void *), void *arg, char *daemon_name, 
 {
     pthread_t thread;
     pthread_attr_t attr;
-    struct sched_param param;
 
     pthread_attr_init(&attr);
-
-    // https://stackoverflow.com/questions/9392415/linux-sched-other-sched-fifo-and-sched-rr-differences
-    pthread_attr_setschedpolicy(&attr, SCHED_RR);
-
-    param.sched_priority = priority; // Set your desired priority (0-99)
-    pthread_attr_setschedparam(&attr, &param);
-
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
+    // Use default scheduling (SCHED_OTHER), no real-time priority
     if (pthread_create(&thread, &attr, daemon, arg))
     {
         printf("ERROR: Failed to start %s daemon.\n", daemon_name);

@@ -1,3 +1,11 @@
+// Declaration for nice() to avoid implicit declaration warning in main.c
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern int nice(int);
+#ifdef __cplusplus
+}
+#endif
 #pragma once
 
 // DevX Libraries
