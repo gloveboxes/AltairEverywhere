@@ -300,20 +300,40 @@ void publish_message(const void *message, size_t message_length)
         return;
     }
 
+    // Check if message is too large for buffer
+    if (message_length > OUTPUT_BUFFER_SIZE)
+    {
+        // Message too large, flush buffer first to maintain order, then send directly
+        flush_output_buffer();
+        
+        if (ws_sendframe(client, message, message_length, WS_FR_OP_TXT) == -1)
+        {
+            printf("ws_sendframe failed - connection may be broken\n");
+            ws_close_client(client);
+            atomic_store(&current_client, 0);
+            if (cleanup_required)
+            {
+                cleanup_session();
+            }
+        }
+        return;
+    }
+
     // Try to add data to buffer
     bool added = buffer_add_data(message, message_length);
 
     if (!added)
     {
-        // Buffer is full, flush it first
+        // Buffer is full, flush it first then add the message
         flush_output_buffer();
-
-        // Try adding again
+        
+        // Try adding again (should succeed now since buffer was flushed)
         added = buffer_add_data(message, message_length);
-
+        
         if (!added)
         {
-            // Message is too large, send directly
+            // This shouldn't happen since we just flushed, but handle it
+            printf("Failed to buffer message after flush - this shouldn't happen\n");
             if (ws_sendframe(client, message, message_length, WS_FR_OP_TXT) == -1)
             {
                 printf("ws_sendframe failed - connection may be broken\n");
