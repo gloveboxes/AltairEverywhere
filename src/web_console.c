@@ -11,9 +11,9 @@
 // Constants and Configuration
 // =============================================================================
 
-#define OUTPUT_BUFFER_SIZE 4096
-#define FLUSH_INTERVAL_MS 20
-#define FLUSH_THRESHOLD_PERCENT 75
+#define OUTPUT_BUFFER_SIZE         4096
+#define FLUSH_INTERVAL_MS          20
+#define FLUSH_THRESHOLD_PERCENT    75
 #define TERMINAL_INPUT_BUFFER_SIZE 256
 
 // =============================================================================
@@ -21,18 +21,22 @@
 // =============================================================================
 
 // Output buffer structure
-typedef struct {
+typedef struct
+{
     char buffer[OUTPUT_BUFFER_SIZE];
-    _Atomic size_t head;
-    _Atomic size_t tail;
-    _Atomic size_t count;
+    size_t head;
+    size_t tail;
+    size_t count;
+    pthread_mutex_t mutex;
 } output_buffer_t;
 
 // Terminal input queue structure
-typedef struct {
+typedef struct
+{
     char buffer[TERMINAL_INPUT_BUFFER_SIZE];
-    _Atomic size_t head;
-    _Atomic size_t tail;
+    size_t head;
+    size_t tail;
+    pthread_mutex_t mutex;
 } terminal_input_queue_t;
 
 // =============================================================================
@@ -41,9 +45,10 @@ typedef struct {
 
 // Output buffer
 static output_buffer_t output_buffer = {
-    .head = 0,
-    .tail = 0,
+    .head  = 0,
+    .tail  = 0,
     .count = 0,
+    .mutex = PTHREAD_MUTEX_INITIALIZER,
 };
 
 // Terminal input queue
@@ -51,6 +56,7 @@ static terminal_input_queue_t terminal_input_queue = {
     .buffer = {0},
     .head   = 0,
     .tail   = 0,
+    .mutex  = PTHREAD_MUTEX_INITIALIZER,
 };
 
 // WebSocket client management
@@ -58,7 +64,7 @@ static atomic_uintptr_t current_client = 0;
 static void (*_client_connected_cb)(void);
 
 // Session management
-static bool cleanup_required = false;
+static bool cleanup_required     = false;
 static const int session_minutes = 1 * 60 * 30; // 30 minutes
 
 #ifdef ALTAIR_CLOUD
@@ -88,7 +94,7 @@ static DX_TIMER_BINDING tmr_expire_session = {
 static DX_TIMER_BINDING tmr_flush_output = {
     .name    = "tmr_flush_output",
     .handler = flush_output_buffer_handler,
-    .repeat  = &(struct timespec){0, FLUSH_INTERVAL_MS * ONE_MS},
+    .repeat  = &(struct timespec){0, FLUSH_INTERVAL_MS *ONE_MS},
 };
 
 // =============================================================================
@@ -180,26 +186,24 @@ static bool buffer_add_data(const void *data, size_t length)
         return false;
     }
 
-    size_t current_count = atomic_load_explicit(&output_buffer.count, memory_order_relaxed);
-    
+    pthread_mutex_lock(&output_buffer.mutex);
+
     // Check if buffer has enough space
-    if (current_count + length > OUTPUT_BUFFER_SIZE)
+    if (output_buffer.count + length > OUTPUT_BUFFER_SIZE)
     {
+        pthread_mutex_unlock(&output_buffer.mutex);
         return false;
     }
 
     const char *bytes = (const char *)data;
-    size_t head = atomic_load_explicit(&output_buffer.head, memory_order_relaxed);
-    
     for (size_t i = 0; i < length; i++)
     {
-        output_buffer.buffer[(head + i) % OUTPUT_BUFFER_SIZE] = bytes[i];
+        output_buffer.buffer[output_buffer.head] = bytes[i];
+        output_buffer.head                       = (output_buffer.head + 1) % OUTPUT_BUFFER_SIZE;
+        output_buffer.count++;
     }
-    
-    // Update head and count atomically
-    atomic_store_explicit(&output_buffer.head, (head + length) % OUTPUT_BUFFER_SIZE, memory_order_release);
-    atomic_fetch_add_explicit(&output_buffer.count, length, memory_order_release);
-    
+
+    pthread_mutex_unlock(&output_buffer.mutex);
     return true;
 }
 
@@ -212,42 +216,48 @@ static void flush_output_buffer(void)
     if (client == 0)
     {
         // No client connected, clear the buffer
-        atomic_store_explicit(&output_buffer.head, 0, memory_order_relaxed);
-        atomic_store_explicit(&output_buffer.tail, 0, memory_order_relaxed);
-        atomic_store_explicit(&output_buffer.count, 0, memory_order_relaxed);
+        pthread_mutex_lock(&output_buffer.mutex);
+        output_buffer.head  = 0;
+        output_buffer.tail  = 0;
+        output_buffer.count = 0;
+        pthread_mutex_unlock(&output_buffer.mutex);
         return;
     }
 
-    size_t bytes_to_send = atomic_load_explicit(&output_buffer.count, memory_order_acquire);
-    if (bytes_to_send == 0)
+    pthread_mutex_lock(&output_buffer.mutex);
+
+    if (output_buffer.count == 0)
     {
+        pthread_mutex_unlock(&output_buffer.mutex);
         return;
     }
 
     // Prepare data to send
     char temp_buffer[OUTPUT_BUFFER_SIZE];
-    size_t tail = atomic_load_explicit(&output_buffer.tail, memory_order_relaxed);
+    size_t bytes_to_send = output_buffer.count;
 
     // Efficient copy from circular buffer using memcpy
     // Handle potential wraparound in circular buffer
-    if (tail + bytes_to_send <= OUTPUT_BUFFER_SIZE)
+    if (output_buffer.tail + bytes_to_send <= OUTPUT_BUFFER_SIZE)
     {
         // Contiguous data - single memcpy
-        memcpy(temp_buffer, &output_buffer.buffer[tail], bytes_to_send);
+        memcpy(temp_buffer, &output_buffer.buffer[output_buffer.tail], bytes_to_send);
     }
     else
     {
         // Data wraps around - two memcpy operations
-        size_t first_chunk = OUTPUT_BUFFER_SIZE - tail;
+        size_t first_chunk  = OUTPUT_BUFFER_SIZE - output_buffer.tail;
         size_t second_chunk = bytes_to_send - first_chunk;
-        
-        memcpy(temp_buffer, &output_buffer.buffer[tail], first_chunk);
+
+        memcpy(temp_buffer, &output_buffer.buffer[output_buffer.tail], first_chunk);
         memcpy(temp_buffer + first_chunk, &output_buffer.buffer[0], second_chunk);
     }
 
-    // Update buffer state atomically
-    atomic_store_explicit(&output_buffer.tail, (tail + bytes_to_send) % OUTPUT_BUFFER_SIZE, memory_order_release);
-    atomic_store_explicit(&output_buffer.count, 0, memory_order_release);
+    // Update buffer state
+    output_buffer.tail  = (output_buffer.tail + bytes_to_send) % OUTPUT_BUFFER_SIZE;
+    output_buffer.count = 0;
+
+    pthread_mutex_unlock(&output_buffer.mutex);
 
     // Send the buffered data
     if (bytes_to_send > 0)
@@ -297,10 +307,10 @@ void publish_message(const void *message, size_t message_length)
     {
         // Buffer is full, flush it first
         flush_output_buffer();
-        
+
         // Try adding again
         added = buffer_add_data(message, message_length);
-        
+
         if (!added)
         {
             // Message is too large, send directly
@@ -320,7 +330,10 @@ void publish_message(const void *message, size_t message_length)
 
     // Check if we should flush immediately (only on threshold, not newlines)
     size_t threshold = (OUTPUT_BUFFER_SIZE * FLUSH_THRESHOLD_PERCENT) / 100;
-    size_t current_count = atomic_load_explicit(&output_buffer.count, memory_order_relaxed);
+
+    pthread_mutex_lock(&output_buffer.mutex);
+    size_t current_count = output_buffer.count;
+    pthread_mutex_unlock(&output_buffer.mutex);
 
     // Flush only if buffer is above threshold
     // Timer will handle periodic flushing (every 20ms)
@@ -337,6 +350,76 @@ void publish_message(const void *message, size_t message_length)
 inline void publish_character(char character)
 {
     publish_message(&character, 1);
+}
+
+// =============================================================================
+// Terminal Input Queue Functions
+// =============================================================================
+
+/// <summary>
+/// Get terminal queue capacity
+/// </summary>
+/// <returns>Size of the terminal input buffer</returns>
+static inline size_t terminal_queue_capacity(void)
+{
+    return sizeof(terminal_input_queue.buffer);
+}
+
+/// <summary>
+/// Add character to terminal input queue
+/// </summary>
+/// <param name="character">Character to enqueue</param>
+void enqueue_terminal_input_character(char character)
+{
+    pthread_mutex_lock(&terminal_input_queue.mutex);
+
+    size_t tail = terminal_input_queue.tail;
+    size_t head = terminal_input_queue.head;
+
+    if (tail - head >= terminal_queue_capacity())
+    {
+        pthread_mutex_unlock(&terminal_input_queue.mutex);
+        return; // drop character if buffer full
+    }
+
+    terminal_input_queue.buffer[tail % terminal_queue_capacity()] = character;
+    terminal_input_queue.tail                                     = tail + 1;
+
+    pthread_mutex_unlock(&terminal_input_queue.mutex);
+}
+
+/// <summary>
+/// Remove and return character from terminal input queue
+/// </summary>
+/// <returns>Character from queue, or 0 if queue is empty</returns>
+char dequeue_terminal_input_character(void)
+{
+    char c = 0;
+
+    pthread_mutex_lock(&terminal_input_queue.mutex);
+
+    size_t head = terminal_input_queue.head;
+    size_t tail = terminal_input_queue.tail;
+
+    if (head != tail)
+    {
+        c                         = terminal_input_queue.buffer[head % terminal_queue_capacity()];
+        terminal_input_queue.head = head + 1;
+    }
+
+    pthread_mutex_unlock(&terminal_input_queue.mutex);
+    return c;
+}
+
+/// <summary>
+/// Clear the terminal input queue
+/// </summary>
+void clear_terminal_input_queue(void)
+{
+    pthread_mutex_lock(&terminal_input_queue.mutex);
+    terminal_input_queue.head = 0;
+    terminal_input_queue.tail = 0;
+    pthread_mutex_unlock(&terminal_input_queue.mutex);
 }
 
 // =============================================================================
@@ -360,9 +443,11 @@ void onopen(ws_cli_conn_t client)
     atomic_store(&current_client, (uintptr_t)client);
 
     // Clear the output buffer for new client
-    atomic_store_explicit(&output_buffer.head, 0, memory_order_relaxed);
-    atomic_store_explicit(&output_buffer.tail, 0, memory_order_relaxed);
-    atomic_store_explicit(&output_buffer.count, 0, memory_order_relaxed);
+    pthread_mutex_lock(&output_buffer.mutex);
+    output_buffer.head  = 0;
+    output_buffer.tail  = 0;
+    output_buffer.count = 0;
+    pthread_mutex_unlock(&output_buffer.mutex);
 
     if (cleanup_required)
     {
@@ -404,9 +489,11 @@ void onclose(ws_cli_conn_t client)
     atomic_store(&current_client, 0);
 
     // Clear the output buffer
-    atomic_store_explicit(&output_buffer.head, 0, memory_order_relaxed);
-    atomic_store_explicit(&output_buffer.tail, 0, memory_order_relaxed);
-    atomic_store_explicit(&output_buffer.count, 0, memory_order_relaxed);
+    pthread_mutex_lock(&output_buffer.mutex);
+    output_buffer.head  = 0;
+    output_buffer.tail  = 0;
+    output_buffer.count = 0;
+    pthread_mutex_unlock(&output_buffer.mutex);
 
     if (cleanup_required)
     {
@@ -453,11 +540,6 @@ void init_web_socket_server(void (*client_connected_cb)(void))
 
     _client_connected_cb = client_connected_cb;
 
-    // Initialize output buffer (atomics are already initialized to 0)
-    atomic_store_explicit(&output_buffer.head, 0, memory_order_relaxed);
-    atomic_store_explicit(&output_buffer.tail, 0, memory_order_relaxed);
-    atomic_store_explicit(&output_buffer.count, 0, memory_order_relaxed);
-
     // Start timers
     dx_timerStart(&tmr_expire_session);
     dx_timerStart(&tmr_flush_output);
@@ -470,63 +552,4 @@ void init_web_socket_server(void (*client_connected_cb)(void))
         .context                     = NULL};
 
     ws_socket(&ws_srv);
-}
-
-// =============================================================================
-// Terminal Input Queue Functions
-// =============================================================================
-
-/// <summary>
-/// Get terminal queue capacity
-/// </summary>
-/// <returns>Size of the terminal input buffer</returns>
-static inline size_t terminal_queue_capacity(void)
-{
-    return sizeof(terminal_input_queue.buffer);
-}
-
-/// <summary>
-/// Add character to terminal input queue
-/// </summary>
-/// <param name="character">Character to enqueue</param>
-void enqueue_terminal_input_character(char character)
-{
-    size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_relaxed);
-    size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_acquire);
-
-    if (tail - head >= terminal_queue_capacity())
-    {
-        return; // drop character if buffer full
-    }
-
-    terminal_input_queue.buffer[tail % terminal_queue_capacity()] = character;
-    atomic_store_explicit(&terminal_input_queue.tail, tail + 1, memory_order_release);
-}
-
-/// <summary>
-/// Remove and return character from terminal input queue
-/// </summary>
-/// <returns>Character from queue, or 0 if queue is empty</returns>
-char dequeue_terminal_input_character(void)
-{
-    char c = 0;
-    size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_relaxed);
-    size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_acquire);
-
-    if (head != tail)
-    {
-        c = terminal_input_queue.buffer[head % terminal_queue_capacity()];
-        atomic_store_explicit(&terminal_input_queue.head, head + 1, memory_order_release);
-    }
-    
-    return c;
-}
-
-/// <summary>
-/// Clear the terminal input queue
-/// </summary>
-void clear_terminal_input_queue(void)
-{
-    atomic_store_explicit(&terminal_input_queue.head, 0, memory_order_relaxed);
-    atomic_store_explicit(&terminal_input_queue.tail, 0, memory_order_relaxed);
 }
