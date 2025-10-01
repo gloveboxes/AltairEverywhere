@@ -68,7 +68,9 @@ DX_TIMER_HANDLER(ws_ping_pong_handler)
 {
     if (current_client != 0)
     {
-        // allow for up to 60 seconds of no pong response before closing the ws connection
+        // Allow for up to 60 seconds (6 missed pings × 10 sec interval) before closing
+        // Note: Browsers should auto-respond to PING with PONG at protocol level
+        printf("Sending WebSocket PING (threshold=6, interval=10s)\n");
         ws_ping(current_client, 6);
     }
 }
@@ -149,22 +151,35 @@ static void flush_output_buffer(void)
 
     // Prepare data to send
     char temp_buffer[OUTPUT_BUFFER_SIZE];
-    size_t bytes_to_send = 0;
+    size_t bytes_to_send = output_buffer.count;
 
-    // Copy data from circular buffer to temporary buffer
-    while (output_buffer.count > 0 && bytes_to_send < OUTPUT_BUFFER_SIZE)
+    // Efficient copy from circular buffer using memcpy
+    // Handle potential wraparound in circular buffer
+    if (output_buffer.tail + bytes_to_send <= OUTPUT_BUFFER_SIZE)
     {
-        temp_buffer[bytes_to_send++] = output_buffer.buffer[output_buffer.tail];
-        output_buffer.tail = (output_buffer.tail + 1) % OUTPUT_BUFFER_SIZE;
-        output_buffer.count--;
+        // Contiguous data - single memcpy
+        memcpy(temp_buffer, &output_buffer.buffer[output_buffer.tail], bytes_to_send);
     }
+    else
+    {
+        // Data wraps around - two memcpy operations
+        size_t first_chunk = OUTPUT_BUFFER_SIZE - output_buffer.tail;
+        size_t second_chunk = bytes_to_send - first_chunk;
+        
+        memcpy(temp_buffer, &output_buffer.buffer[output_buffer.tail], first_chunk);
+        memcpy(temp_buffer + first_chunk, &output_buffer.buffer[0], second_chunk);
+    }
+
+    // Update buffer state
+    output_buffer.tail = (output_buffer.tail + bytes_to_send) % OUTPUT_BUFFER_SIZE;
+    output_buffer.count = 0;
 
     pthread_mutex_unlock(&output_buffer.mutex);
 
     // Send the buffered data
     if (bytes_to_send > 0)
     {
-        printf("Flushing output buffer: %zu bytes\n", bytes_to_send);
+        // printf("Flushing output buffer: %zu bytes\n", bytes_to_send);
         if (ws_sendframe(current_client, temp_buffer, bytes_to_send, WS_FR_OP_TXT) == -1)
         {
             printf("ws_sendframe failed - connection may be broken\n");
