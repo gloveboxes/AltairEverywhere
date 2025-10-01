@@ -72,7 +72,6 @@ DX_TIMER_HANDLER(ws_ping_pong_handler)
     {
         // Allow for up to 60 seconds (6 missed pings × 10 sec interval) before closing
         // Note: Browsers should auto-respond to PING with PONG at protocol level
-        printf("Sending WebSocket PING (threshold=6, interval=10s)\n");
         ws_ping(client, 6);
     }
 }
