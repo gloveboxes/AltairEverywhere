@@ -66,7 +66,7 @@ This command will:
 ### Option 1: Switch to Default Builder
 
 ```bash
-docker buildx use default
+docker context use default
 ```
 
 ### Option 2: Remove Custom Builder
