@@ -79,12 +79,7 @@ uint8_t memory[64 * 1024]; // Altair system memory.
 ALTAIR_COMMAND cmd_switches;
 uint16_t bus_switches = 0x00;
 
-typedef struct
-{
-    char buffer[256];
-    _Atomic size_t head;
-    _Atomic size_t tail;
-} TERMINAL_INPUT_QUEUE;
+
 
 static bool haveTerminalOutputMessage = false;
 static int altairOutputBufReadIndex   = 0;
@@ -93,9 +88,6 @@ static int terminalOutputMessageLen   = 0;
 static bool stop_cpu = false;
 
 static char Log_Debug_Time_buffer[128];
-
-static void enqueue_terminal_input_character(char character);
-static char dequeue_terminal_input_character(void);
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);

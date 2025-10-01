@@ -16,11 +16,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-static TERMINAL_INPUT_QUEUE terminal_input_queue = {
-    .buffer = {0},
-    .head   = 0,
-    .tail   = 0,
-};
+
 
 static pthread_mutex_t altair_start_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t altair_start_cond   = PTHREAD_COND_INITIALIZER;
@@ -48,46 +44,7 @@ DX_MQTT_CONFIG mqtt_config;
 
 // Forward declarations
 
-static inline size_t terminal_queue_capacity(void)
-{
-    return sizeof(terminal_input_queue.buffer);
-}
 
-static void enqueue_terminal_input_character(char character)
-{
-    size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_relaxed);
-    size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_acquire);
-
-    if (tail - head >= terminal_queue_capacity())
-    {
-        return; // drop character if buffer full
-    }
-
-    terminal_input_queue.buffer[tail % terminal_queue_capacity()] = character;
-    atomic_store_explicit(&terminal_input_queue.tail, tail + 1, memory_order_release);
-}
-
-void clear_terminal_input_queue(void)
-{
-    atomic_store_explicit(&terminal_input_queue.head, 0, memory_order_relaxed);
-    atomic_store_explicit(&terminal_input_queue.tail, 0, memory_order_relaxed);
-}
-
-static char dequeue_terminal_input_character(void)
-{
-    char c;
-    size_t head = atomic_load_explicit(&terminal_input_queue.head, memory_order_relaxed);
-    size_t tail = atomic_load_explicit(&terminal_input_queue.tail, memory_order_acquire);
-
-    if (head == tail)
-    {
-        return 0;
-    }
-
-    c = terminal_input_queue.buffer[head % terminal_queue_capacity()];
-    atomic_store_explicit(&terminal_input_queue.head, head + 1, memory_order_release);
-    return c;
-}
 
 void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode)
 {

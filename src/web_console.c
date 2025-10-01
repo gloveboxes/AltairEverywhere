@@ -50,6 +50,14 @@ static bool cleanup_required     = false;
 static const int session_minutes = 1 * 60 * 30; // 30 minutes
 static atomic_uintptr_t current_client = 0;
 
+// Terminal input queue
+static TERMINAL_INPUT_QUEUE terminal_input_queue = {
+    .buffer = {0},
+    .head   = 0,
+    .tail   = 0,
+    .mutex  = PTHREAD_MUTEX_INITIALIZER,
+};
+
 #ifdef ALTAIR_CLOUD
 static struct timeval ws_timeout = {0, 250 * 1000};
 #endif
@@ -381,6 +389,72 @@ void init_web_socket_server(void (*client_connected_cb)(void))
         .context                     = NULL};
 
     ws_socket(&ws_srv);
+}
+
+/// <summary>
+/// Get terminal queue capacity
+/// </summary>
+/// <returns>Size of the terminal input buffer</returns>
+static inline size_t terminal_queue_capacity(void)
+{
+    return sizeof(terminal_input_queue.buffer);
+}
+
+/// <summary>
+/// Add character to terminal input queue
+/// </summary>
+/// <param name="character">Character to enqueue</param>
+void enqueue_terminal_input_character(char character)
+{
+    pthread_mutex_lock(&terminal_input_queue.mutex);
+    
+    size_t tail = terminal_input_queue.tail;
+    size_t head = terminal_input_queue.head;
+
+    if (tail - head >= terminal_queue_capacity())
+    {
+        pthread_mutex_unlock(&terminal_input_queue.mutex);
+        return; // drop character if buffer full
+    }
+
+    terminal_input_queue.buffer[tail % terminal_queue_capacity()] = character;
+    terminal_input_queue.tail = tail + 1;
+    
+    pthread_mutex_unlock(&terminal_input_queue.mutex);
+}
+
+/// <summary>
+/// Clear the terminal input queue
+/// </summary>
+void clear_terminal_input_queue(void)
+{
+    pthread_mutex_lock(&terminal_input_queue.mutex);
+    terminal_input_queue.head = 0;
+    terminal_input_queue.tail = 0;
+    pthread_mutex_unlock(&terminal_input_queue.mutex);
+}
+
+/// <summary>
+/// Remove and return character from terminal input queue
+/// </summary>
+/// <returns>Character from queue, or 0 if queue is empty</returns>
+char dequeue_terminal_input_character(void)
+{
+    char c = 0;
+    
+    pthread_mutex_lock(&terminal_input_queue.mutex);
+    
+    size_t head = terminal_input_queue.head;
+    size_t tail = terminal_input_queue.tail;
+
+    if (head != tail)
+    {
+        c = terminal_input_queue.buffer[head % terminal_queue_capacity()];
+        terminal_input_queue.head = head + 1;
+    }
+    
+    pthread_mutex_unlock(&terminal_input_queue.mutex);
+    return c;
 }
 
 /// <summary>

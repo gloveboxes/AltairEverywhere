@@ -29,7 +29,6 @@ extern uint16_t bus_switches;
 
 // Thread-safe CPU operating mode accessors (defined in main.c)
 CPU_OPERATING_MODE get_cpu_operating_mode_fast(void);
-void clear_terminal_input_queue(void);
 void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode);
 CPU_OPERATING_MODE toggle_cpu_operating_mode(void);
 
