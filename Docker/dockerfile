@@ -1,40 +1,86 @@
-FROM debian:bookworm-slim
-
+# Multi-stage build for smaller final image
+FROM debian:bookworm-slim AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-EXPOSE 8082
-EXPOSE 80
+# Install build dependencies in one layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libuv1-dev \
+    cmake \
+    build-essential \
+    curl \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    uuid-dev \
+    ca-certificates \
+    git \
+    libi2c-dev \
+    libgpiod-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-RUN apt update && apt-get install -y --no-install-recommends \
-                    libuv1.dev  \
-                    cmake \
-                    build-essential \
-                    curl \
-                    libcurl4-openssl-dev \
-                    libssl-dev \
-                    uuid-dev \
-                    ca-certificates \
-                    git \
-                    libi2c-dev \
-                    libgpiod-dev \
-                    gpiod \
-                    python3 \
-                && rm -rf /var/lib/apt/lists/*
+# Clone source code with better caching
+ARG REPO_URL=https://github.com/gloveboxes/AltairEverywhere.git
+RUN git clone --depth 1 --recurse-submodules ${REPO_URL} /AltairEverywhere
 
-RUN git clone --depth 1 --recurse-submodules https://github.com/gloveboxes/AltairEverywhere.git
+# Optional build configurations (uncomment as needed)
+#RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_FRONT_PI_SENSE_HAT/set(ALTAIR_FRONT_PI_SENSE_HAT/g' CMakeLists.txt
+#RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/g' CMakeLists.txt
+#RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_CLOUD/set(ALTAIR_CLOUD/g' CMakeLists.txt
 
-#<REMOVE_THIS_COMMENT_TO_ENABLE_PI_SENSE_HAT>RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_FRONT_PI_SENSE_HAT/set(ALTAIR_FRONT_PI_SENSE_HAT/g' CMakeLists.txt
-#<REMOVE_THIS_COMMENT_TO_ENABLE_FRONT_PANEL_KIT_ON_RASPBERRY_PI>RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/g' CMakeLists.txt
-#<REMOVE_THIS_COMMENT_TO_ENABLE_CLOUD>RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_CLOUD/set(ALTAIR_CLOUD/g' CMakeLists.txt
+# Build application
+WORKDIR /AltairEverywhere/src
+RUN mkdir -p build \
+    && cmake -B build -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build build --config Release --target all -j$(nproc)
 
-RUN cd /AltairEverywhere/src \
-    && mkdir -p build \
-    && cmake -B build \
-    && cmake --build build --config release --target all -j 8
+# Production stage - much smaller final image
+FROM debian:bookworm-slim AS runtime
 
-# https://docs.docker.com/config/containers/multi-service_container/
+ENV DEBIAN_FRONTEND=noninteractive
 
-COPY altair.sh altair.sh
-RUN chmod +x altair.sh
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libuv1 \
+    libcurl4 \
+    libssl3 \
+    libuuid1 \
+    ca-certificates \
+    libgpiod2 \
+    gpiod \
+    python3 \
+    i2c-tools \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user for security with hardware access groups
+RUN groupadd -r altair \
+    && useradd -r -g altair -G i2c,spi,gpio altair \
+    || useradd -r -g altair altair
+
+# Copy built application and required files
+COPY --from=builder /AltairEverywhere/src/build/Altair_emulator /usr/local/bin/
+COPY --from=builder /AltairEverywhere/Terminal /app/Terminal
+COPY --from=builder /AltairEverywhere/src/Disks /app/Disks
+COPY --from=builder /AltairEverywhere/src/AppSamples /app/AppSamples
+
+# Copy startup script
+COPY altair.sh /app/altair.sh
+RUN chmod +x /app/altair.sh
+
+# Set working directory and ownership
+WORKDIR /app
+RUN chown -R altair:altair /app
+
+# Switch to non-root user
+USER altair
+
+# Expose ports
+EXPOSE 8082 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:80/ || exit 1
+
+# Use exec form and run as non-root
 CMD ["./altair.sh"]

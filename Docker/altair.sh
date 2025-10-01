@@ -1,10 +1,12 @@
 #!/bin/bash
 
-cd /AltairEverywhere/Terminal 
-
+# Start web server for Terminal interface
+cd /app/Terminal 
 python3 -m http.server 80 &
+WEB_PID=$!
 
-cd /AltairEverywhere/src
+# Change to app directory
+cd /app
 
 # Build the command line arguments
 ARGS=""
@@ -51,8 +53,22 @@ if [ ! -z "$OPENAI_API_KEY" ]; then
     ARGS="$ARGS -a $OPENAI_API_KEY"
 fi
 
-./build/Altair_emulator $ARGS &
+# Cleanup function
+cleanup() {
+    echo "Shutting down services..."
+    kill $WEB_PID 2>/dev/null
+    kill $ALTAIR_PID 2>/dev/null
+    exit 0
+}
 
+# Set up signal handlers
+trap cleanup SIGTERM SIGINT
+
+# Start Altair emulator
+/usr/local/bin/Altair_emulator $ARGS &
+ALTAIR_PID=$!
+
+# Wait for any process to exit
 wait -n
 
 exit $?
