@@ -57,7 +57,7 @@ extern DX_MQTT_CONFIG mqtt_config;
 #include "front_panel_none.h"
 #endif
 
-const char ALTAIR_EMULATOR_VERSION[] = "5.0.2";
+const char ALTAIR_EMULATOR_VERSION[] = "5.0.3";
 #define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED FALSE
 
