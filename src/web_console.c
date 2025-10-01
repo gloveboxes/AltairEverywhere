@@ -7,14 +7,45 @@
 #include <stdint.h>
 #include <string.h>
 
+// Output buffering configuration
+#define OUTPUT_BUFFER_SIZE 4096
+#define FLUSH_INTERVAL_MS 20
+#define FLUSH_THRESHOLD_PERCENT 75
+
+// Output buffer structure
+typedef struct {
+    char buffer[OUTPUT_BUFFER_SIZE];
+    size_t head;
+    size_t tail;
+    size_t count;
+    pthread_mutex_t mutex;
+} output_buffer_t;
+
+static output_buffer_t output_buffer = {
+    .head = 0,
+    .tail = 0,
+    .count = 0,
+    .mutex = PTHREAD_MUTEX_INITIALIZER
+};
+
 static DX_DECLARE_TIMER_HANDLER(expire_session_handler);
+static DX_DECLARE_TIMER_HANDLER(flush_output_buffer_handler);
 static void (*_client_connected_cb)(void);
 static void cleanup_session(void);
+static void flush_output_buffer(void);
+static bool buffer_add_data(const void *data, size_t length);
 
 static DX_TIMER_BINDING tmr_expire_session = {
     .name    = "tmr_expire_session",
     .handler = expire_session_handler,
 };
+
+static DX_TIMER_BINDING tmr_flush_output = {
+    .name    = "tmr_flush_output",
+    .handler = flush_output_buffer_handler,
+    .repeat  = &(struct timespec){0, FLUSH_INTERVAL_MS * ONE_MS},
+};
+
 static bool cleanup_required     = false;
 static const int session_minutes = 1 * 60 * 30; // 30 minutes
 ws_cli_conn_t current_client     = 0;
@@ -49,6 +80,104 @@ DX_ASYNC_HANDLER(async_expire_session_handler, handle)
 }
 DX_ASYNC_HANDLER_END
 
+/// <summary>
+/// Timer handler to periodically flush output buffer
+/// </summary>
+static DX_TIMER_HANDLER(flush_output_buffer_handler)
+{
+    flush_output_buffer();
+}
+DX_TIMER_HANDLER_END
+
+/// <summary>
+/// Add data to the output buffer
+/// </summary>
+/// <param name="data">Data to add</param>
+/// <param name="length">Length of data</param>
+/// <returns>true if added successfully, false if buffer full</returns>
+static bool buffer_add_data(const void *data, size_t length)
+{
+    if (data == NULL || length == 0)
+    {
+        return false;
+    }
+
+    pthread_mutex_lock(&output_buffer.mutex);
+
+    // Check if buffer has enough space
+    if (output_buffer.count + length > OUTPUT_BUFFER_SIZE)
+    {
+        pthread_mutex_unlock(&output_buffer.mutex);
+        return false;
+    }
+
+    const char *bytes = (const char *)data;
+    for (size_t i = 0; i < length; i++)
+    {
+        output_buffer.buffer[output_buffer.head] = bytes[i];
+        output_buffer.head = (output_buffer.head + 1) % OUTPUT_BUFFER_SIZE;
+        output_buffer.count++;
+    }
+
+    pthread_mutex_unlock(&output_buffer.mutex);
+    return true;
+}
+
+/// <summary>
+/// Flush the output buffer to the WebSocket client
+/// </summary>
+static void flush_output_buffer(void)
+{
+    if (current_client == 0)
+    {
+        // No client connected, clear the buffer
+        pthread_mutex_lock(&output_buffer.mutex);
+        output_buffer.head = 0;
+        output_buffer.tail = 0;
+        output_buffer.count = 0;
+        pthread_mutex_unlock(&output_buffer.mutex);
+        return;
+    }
+
+    pthread_mutex_lock(&output_buffer.mutex);
+
+    if (output_buffer.count == 0)
+    {
+        pthread_mutex_unlock(&output_buffer.mutex);
+        return;
+    }
+
+    // Prepare data to send
+    char temp_buffer[OUTPUT_BUFFER_SIZE];
+    size_t bytes_to_send = 0;
+
+    // Copy data from circular buffer to temporary buffer
+    while (output_buffer.count > 0 && bytes_to_send < OUTPUT_BUFFER_SIZE)
+    {
+        temp_buffer[bytes_to_send++] = output_buffer.buffer[output_buffer.tail];
+        output_buffer.tail = (output_buffer.tail + 1) % OUTPUT_BUFFER_SIZE;
+        output_buffer.count--;
+    }
+
+    pthread_mutex_unlock(&output_buffer.mutex);
+
+    // Send the buffered data
+    if (bytes_to_send > 0)
+    {
+        printf("Flushing output buffer: %zu bytes\n", bytes_to_send);
+        if (ws_sendframe(current_client, temp_buffer, bytes_to_send, WS_FR_OP_TXT) == -1)
+        {
+            printf("ws_sendframe failed - connection may be broken\n");
+            ws_close_client(current_client);
+            current_client = 0;
+            if (cleanup_required)
+            {
+                cleanup_session();
+            }
+        }
+    }
+}
+
 static void cleanup_session(void)
 {
 #ifdef ALTAIR_CLOUD
@@ -72,19 +201,51 @@ void publish_message(const void *message, size_t message_length)
         return;
     }
 
-    if (current_client != 0)
+    if (current_client == 0)
     {
-        if (ws_sendframe(current_client, message, message_length, WS_FR_OP_TXT) == -1)
+        return;
+    }
+
+    // Try to add data to buffer
+    bool added = buffer_add_data(message, message_length);
+
+    if (!added)
+    {
+        // Buffer is full, flush it first
+        flush_output_buffer();
+        
+        // Try adding again
+        added = buffer_add_data(message, message_length);
+        
+        if (!added)
         {
-            printf("ws_sendframe failed - connection may be broken\n");
-            // Close the problematic connection to prevent further errors
-            ws_close_client(current_client);
-            current_client = 0;
-            if (cleanup_required)
+            // Message is too large, send directly
+            if (ws_sendframe(current_client, message, message_length, WS_FR_OP_TXT) == -1)
             {
-                cleanup_session();
+                printf("ws_sendframe failed - connection may be broken\n");
+                ws_close_client(current_client);
+                current_client = 0;
+                if (cleanup_required)
+                {
+                    cleanup_session();
+                }
             }
+            return;
         }
+    }
+
+    // Check if we should flush immediately (only on threshold, not newlines)
+    size_t threshold = (OUTPUT_BUFFER_SIZE * FLUSH_THRESHOLD_PERCENT) / 100;
+    
+    pthread_mutex_lock(&output_buffer.mutex);
+    size_t current_count = output_buffer.count;
+    pthread_mutex_unlock(&output_buffer.mutex);
+
+    // Flush only if buffer is above threshold
+    // Timer will handle periodic flushing (every 20ms)
+    if (current_count >= threshold)
+    {
+        flush_output_buffer();
     }
 }
 
@@ -104,6 +265,13 @@ void onopen(ws_cli_conn_t client)
 
     printf("New session\n");
     current_client = client;
+
+    // Clear the output buffer for new client
+    pthread_mutex_lock(&output_buffer.mutex);
+    output_buffer.head = 0;
+    output_buffer.tail = 0;
+    output_buffer.count = 0;
+    pthread_mutex_unlock(&output_buffer.mutex);
 
     if (cleanup_required)
     {
@@ -133,8 +301,18 @@ void onclose(ws_cli_conn_t client)
         printf("onclose: Closing client does not match current client\n");
     }
 
+    // Flush any remaining data before closing
+    flush_output_buffer();
+
     printf("Session closed\n");
     current_client = 0;
+
+    // Clear the output buffer
+    pthread_mutex_lock(&output_buffer.mutex);
+    output_buffer.head = 0;
+    output_buffer.tail = 0;
+    output_buffer.count = 0;
+    pthread_mutex_unlock(&output_buffer.mutex);
 
     if (cleanup_required)
     {
@@ -166,7 +344,15 @@ void init_web_socket_server(void (*client_connected_cb)(void))
 
     _client_connected_cb = client_connected_cb;
 
+    // Initialize output buffer
+    pthread_mutex_init(&output_buffer.mutex, NULL);
+    output_buffer.head = 0;
+    output_buffer.tail = 0;
+    output_buffer.count = 0;
+
+    // Start timers
     dx_timerStart(&tmr_expire_session);
+    dx_timerStart(&tmr_flush_output);
 
     struct ws_server ws_srv = {.host = NULL, // NULL means bind to all interfaces
         .port                        = 8082,
