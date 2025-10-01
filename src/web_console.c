@@ -48,7 +48,7 @@ static DX_TIMER_BINDING tmr_flush_output = {
 
 static bool cleanup_required     = false;
 static const int session_minutes = 1 * 60 * 30; // 30 minutes
-ws_cli_conn_t current_client     = 0;
+static atomic_uintptr_t current_client = 0;
 
 #ifdef ALTAIR_CLOUD
 static struct timeval ws_timeout = {0, 250 * 1000};
@@ -56,9 +56,10 @@ static struct timeval ws_timeout = {0, 250 * 1000};
 
 static DX_TIMER_HANDLER(expire_session_handler)
 {
-    if (current_client != 0)
+    ws_cli_conn_t client = (ws_cli_conn_t)atomic_load(&current_client);
+    if (client != 0)
     {
-        ws_close_client(current_client);
+        ws_close_client(client);
     }
     cleanup_session();
 }
@@ -66,12 +67,13 @@ DX_TIMER_HANDLER_END
 
 DX_TIMER_HANDLER(ws_ping_pong_handler)
 {
-    if (current_client != 0)
+    ws_cli_conn_t client = (ws_cli_conn_t)atomic_load(&current_client);
+    if (client != 0)
     {
         // Allow for up to 60 seconds (6 missed pings × 10 sec interval) before closing
         // Note: Browsers should auto-respond to PING with PONG at protocol level
         printf("Sending WebSocket PING (threshold=6, interval=10s)\n");
-        ws_ping(current_client, 6);
+        ws_ping(client, 6);
     }
 }
 DX_TIMER_HANDLER_END
@@ -130,7 +132,8 @@ static bool buffer_add_data(const void *data, size_t length)
 /// </summary>
 static void flush_output_buffer(void)
 {
-    if (current_client == 0)
+    ws_cli_conn_t client = (ws_cli_conn_t)atomic_load(&current_client);
+    if (client == 0)
     {
         // No client connected, clear the buffer
         pthread_mutex_lock(&output_buffer.mutex);
@@ -180,11 +183,11 @@ static void flush_output_buffer(void)
     if (bytes_to_send > 0)
     {
         // printf("Flushing output buffer: %zu bytes\n", bytes_to_send);
-        if (ws_sendframe(current_client, temp_buffer, bytes_to_send, WS_FR_OP_TXT) == -1)
+        if (ws_sendframe(client, temp_buffer, bytes_to_send, WS_FR_OP_TXT) == -1)
         {
             printf("ws_sendframe failed - connection may be broken\n");
-            ws_close_client(current_client);
-            current_client = 0;
+            ws_close_client(client);
+            atomic_store(&current_client, 0);
             if (cleanup_required)
             {
                 cleanup_session();
@@ -216,7 +219,8 @@ void publish_message(const void *message, size_t message_length)
         return;
     }
 
-    if (current_client == 0)
+    ws_cli_conn_t client = (ws_cli_conn_t)atomic_load(&current_client);
+    if (client == 0)
     {
         return;
     }
@@ -235,11 +239,11 @@ void publish_message(const void *message, size_t message_length)
         if (!added)
         {
             // Message is too large, send directly
-            if (ws_sendframe(current_client, message, message_length, WS_FR_OP_TXT) == -1)
+            if (ws_sendframe(client, message, message_length, WS_FR_OP_TXT) == -1)
             {
                 printf("ws_sendframe failed - connection may be broken\n");
-                ws_close_client(current_client);
-                current_client = 0;
+                ws_close_client(client);
+                atomic_store(&current_client, 0);
                 if (cleanup_required)
                 {
                     cleanup_session();
@@ -279,7 +283,7 @@ void onopen(ws_cli_conn_t client)
     }
 
     printf("New session\n");
-    current_client = client;
+    atomic_store(&current_client, (uintptr_t)client);
 
     // Clear the output buffer for new client
     pthread_mutex_lock(&output_buffer.mutex);
@@ -311,7 +315,8 @@ void onopen(ws_cli_conn_t client)
 void onclose(ws_cli_conn_t client)
 {
     // Validate that we're closing the current client
-    if (client != current_client && current_client != 0)
+    ws_cli_conn_t current = (ws_cli_conn_t)atomic_load(&current_client);
+    if (client != current && current != 0)
     {
         printf("onclose: Closing client does not match current client\n");
     }
@@ -320,7 +325,7 @@ void onclose(ws_cli_conn_t client)
     flush_output_buffer();
 
     printf("Session closed\n");
-    current_client = 0;
+    atomic_store(&current_client, 0);
 
     // Clear the output buffer
     pthread_mutex_lock(&output_buffer.mutex);
