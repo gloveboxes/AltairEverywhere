@@ -89,11 +89,18 @@ int row; int col;
 { chput(27); cputs("["); putnum(row); cputs(";"); putnum(col); cputs("H"); return 0; }
 
 int clr_scr()
-{ chput(27); cputs("[2J"); cur_mov(1,1); return 0; }
+{ chput(27); cputs("[2J"); chput(27); cputs("[0m"); cur_mov(1,1); return 0; }
 
 int hid_cur() { chput(27); cputs("[?25l"); return 0; }
 int shw_cur() { chput(27); cputs("[?25h"); return 0; }
 int ers_cur() { chput(27); cputs("[K"); return 0; } /* erase to end of line */
+
+/* Color support for xterm.js */
+int set_col(colcode)
+int colcode;
+{ chput(27); cputs("["); putnum(colcode); cputs("m"); return 0; }
+
+int rst_col() { chput(27); cputs("[0m"); return 0; }
 
 /* ========================= Simple RNG ========================= */
 int iabs(n) int n; { return (n<0)?-n:n; }
@@ -173,6 +180,20 @@ int piece;
     return ' ';
 }
 
+/* Color palette for pieces (ANSI codes) */
+int pcs_col(piece)
+int piece;
+{
+    if (piece==PIECE_I) return 36; /* Cyan */
+    if (piece==PIECE_O) return 33; /* Yellow */
+    if (piece==PIECE_T) return 35; /* Magenta */
+    if (piece==PIECE_S) return 32; /* Green */
+    if (piece==PIECE_Z) return 31; /* Red */
+    if (piece==PIECE_J) return 34; /* Blue */
+    if (piece==PIECE_L) return 93; /* Bright Yellow */
+    return 37; /* White */
+}
+
 /* ========================= UI ========================= */
 int drw_ins()
 {
@@ -229,8 +250,10 @@ int brd_drw()
     int scr_row, scr_col;
     int pr, pc, br, bc;
     int d_row, d_col;
+    int piece;
 
     /* Clear the play area first */
+    rst_col();
     for (r = 0; r < BD_H; r++) {
         scr_row = BD_SROW + r + 1;
         cur_mov(scr_row, BD_SCOL);
@@ -243,9 +266,11 @@ int brd_drw()
     for (r = 0; r < BD_H; r++) {
         scr_row = BD_SROW + r + 1;
         for (c = 0; c < BD_W; c++) {
-            if (board[r][c] != 0) {
+            piece = board[r][c];
+            if (piece != 0) {
                 scr_col = BD_SCOL + c * 2;
                 cur_mov(scr_row, scr_col);
+                set_col(pcs_col(piece));
                 chput('#');
                 chput('#');
             }
@@ -254,6 +279,7 @@ int brd_drw()
 
     /* Draw active falling piece */
     if (game_st == GAME_PLAYING) {
+        set_col(pcs_col(act_pcs));
         for (pr = 0; pr < 4; pr++) {
             for (pc = 0; pc < 4; pc++) {
                 if (pcell(act_pcs, act_rot, pr, pc)) {
@@ -271,12 +297,14 @@ int brd_drw()
         }
     }
 
+    rst_col();
     return 0;
 }
 
 int drw_nxt()
 {
     int i,j,ch;
+    rst_col();
     cur_mov(PRV_ROW, PRV_COL); cputs("Next:");
     cur_mov(PRV_ROW+1, PRV_COL); cputs("    ");
     cur_mov(PRV_ROW+2, PRV_COL); cputs("    ");
@@ -284,7 +312,9 @@ int drw_nxt()
     cur_mov(PRV_ROW+4, PRV_COL); cputs("    ");
     if (nxt_pcs<PIECE_I || nxt_pcs>PIECE_L) return 0;
     ch = pcs_chr(nxt_pcs);
+    set_col(pcs_col(nxt_pcs));
     for (i=0;i<4;i++) for (j=0;j<4;j++) if (pcell(nxt_pcs,0,i,j)) { cur_mov(PRV_ROW+1+i, PRV_COL+j); chput(ch); }
+    rst_col();
     return 0;
 }
 
