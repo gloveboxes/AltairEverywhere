@@ -64,6 +64,12 @@ int soft_dr;    /* soft drop active this tick */
 
 int pcs_shp[8][4]; /* 16-bit 4x4 masks, bit15=TL, bit0=BR */
 
+int prv_ax;    /* previous active x */
+int prv_ay;    /* previous active y */
+int prv_rt;    /* previous active rotation */
+int prv_pc;    /* previous active piece id */
+int prv_on;    /* previous active drawn flag */
+
 /* ========================= Low-level console ========================= */
 int chput(c)
 char c;
@@ -84,23 +90,65 @@ int n;
     return 0;
 }
 
+int num_buf(n,buf)
+int n;
+char *buf;
+{
+    char tmp[8]; int i,j;
+    if (buf==0) return 0;
+    i = 0;
+    if (n==0) { buf[i++] = '0'; return i; }
+    if (n<0) { buf[i++]='-'; n = -n; }
+    j = 0;
+    while (n>0 && j<8) { tmp[j++] = (n%10)+'0'; n/=10; }
+    while (j>0) { buf[i++] = tmp[--j]; }
+    return i;
+}
+
 int cur_mov(row,col)
 int row; int col;
-{ chput(27); cputs("["); putnum(row); cputs(";"); putnum(col); cputs("H"); return 0; }
+{
+    char seq[16]; int idx;
+    idx = 0;
+    seq[idx++] = 27;
+    seq[idx++] = '[';
+    idx += num_buf(row, &seq[idx]);
+    seq[idx++] = ';';
+    idx += num_buf(col, &seq[idx]);
+    seq[idx++] = 'H';
+    seq[idx] = 0;
+    cputs(seq);
+    return 0;
+}
 
 int clr_scr()
-{ chput(27); cputs("[2J"); chput(27); cputs("[0m"); cur_mov(1,1); return 0; }
+{
+    cputs("\033[2J");
+    cputs("\033[0m");
+    cur_mov(1,1);
+    return 0;
+}
 
-int hid_cur() { chput(27); cputs("[?25l"); return 0; }
-int shw_cur() { chput(27); cputs("[?25h"); return 0; }
-int ers_cur() { chput(27); cputs("[K"); return 0; } /* erase to end of line */
+int hid_cur() { cputs("\033[?25l"); return 0; }
+int shw_cur() { cputs("\033[?25h"); return 0; }
+int ers_cur() { cputs("\033[K"); return 0; } /* erase to end of line */
 
 /* Color support for xterm.js */
 int set_col(colcode)
 int colcode;
-{ chput(27); cputs("["); putnum(colcode); cputs("m"); return 0; }
+{
+    char seq[12]; int idx;
+    idx = 0;
+    seq[idx++] = 27;
+    seq[idx++] = '[';
+    idx += num_buf(colcode, &seq[idx]);
+    seq[idx++] = 'm';
+    seq[idx] = 0;
+    cputs(seq);
+    return 0;
+}
 
-int rst_col() { chput(27); cputs("[0m"); return 0; }
+int rst_col() { cputs("\033[0m"); return 0; }
 
 /* ========================= Simple RNG ========================= */
 int iabs(n) int n; { return (n<0)?-n:n; }
@@ -244,60 +292,175 @@ int c;
     return piece;
 }
 
-int brd_drw()
+int brd_syn()
 {
-    int r, c;
-    int scr_row, scr_col;
-    int pr, pc, br, bc;
-    int d_row, d_col;
-    int piece;
+    int r;
+    int c;
+    int scr_row;
+    int scr_col;
+    int color;
+    int cur_col;
 
-    /* Clear the play area first */
     rst_col();
     for (r = 0; r < BD_H; r++) {
         scr_row = BD_SROW + r + 1;
-        cur_mov(scr_row, BD_SCOL);
+        scr_col = BD_SCOL;
+        cur_col = 0;
+        cur_mov(scr_row, scr_col);
         for (c = 0; c < BD_W; c++) {
-            cputs("  ");
-        }
-    }
-
-    /* Draw locked pieces from board array */
-    for (r = 0; r < BD_H; r++) {
-        scr_row = BD_SROW + r + 1;
-        for (c = 0; c < BD_W; c++) {
-            piece = board[r][c];
-            if (piece != 0) {
-                scr_col = BD_SCOL + c * 2;
-                cur_mov(scr_row, scr_col);
-                set_col(pcs_col(piece));
+            color = board[r][c];
+            if (color != 0) {
+                color = pcs_col(color);
+                if (cur_col != color) {
+                    set_col(color);
+                    cur_col = color;
+                }
                 chput('#');
                 chput('#');
+            } else {
+                if (cur_col != 0) {
+                    rst_col();
+                    cur_col = 0;
+                }
+                chput(' ');
+                chput(' ');
             }
         }
+        if (cur_col != 0) {
+            rst_col();
+        }
     }
 
-    /* Draw active falling piece */
-    if (game_st == GAME_PLAYING) {
-        set_col(pcs_col(act_pcs));
-        for (pr = 0; pr < 4; pr++) {
-            for (pc = 0; pc < 4; pc++) {
-                if (pcell(act_pcs, act_rot, pr, pc)) {
-                    br = act_y + pr;
-                    bc = act_x + pc;
-                    if (br >= 0 && br < BD_H && bc >= 0 && bc < BD_W) {
-                        d_row = BD_SROW + br + 1;
-                        d_col = BD_SCOL + bc * 2;
-                        cur_mov(d_row, d_col);
-                        chput('#');
-                        chput('#');
-                    }
+    prv_on = 0;
+    prv_pc = PIECE_NONE;
+    cur_mov(5,1);
+    return 0;
+}
+
+int clr_act(piece,rot,x,y)
+int piece;
+int rot;
+int x;
+int y;
+{
+    int pr;
+    int pc;
+    int run_len;
+    int run_col;
+    int br;
+    int bc;
+    int scr_row;
+    int scr_col;
+    int i;
+
+    if (piece<PIECE_I || piece>PIECE_L) return 0;
+
+    rst_col();
+    for (pr = 0; pr < 4; pr++) {
+        br = y + pr;
+        if (br < 0 || br >= BD_H) continue;
+        run_len = 0;
+        for (pc = 0; pc <= 4; pc++) {
+            if (pc < 4 && pcell(piece, rot, pr, pc)) {
+                bc = x + pc;
+                if (bc >= 0 && bc < BD_W) {
+                    if (run_len == 0) run_col = bc;
+                    run_len++;
+                    continue;
                 }
             }
+            if (run_len > 0) {
+                scr_row = BD_SROW + br + 1;
+                scr_col = BD_SCOL + run_col * 2;
+                cur_mov(scr_row, scr_col);
+                for (i = 0; i < run_len; i++) { chput(' '); chput(' '); }
+                run_len = 0;
+            }
         }
     }
 
-    rst_col();
+    return 0;
+}
+
+int drw_act(piece,rot,x,y)
+int piece;
+int rot;
+int x;
+int y;
+{
+    int pr;
+    int pc;
+    int run_len;
+    int run_col;
+    int br;
+    int bc;
+    int scr_row;
+    int scr_col;
+    int i;
+    int color;
+    int color_on;
+
+    if (piece<PIECE_I || piece>PIECE_L) return 0;
+
+    color = pcs_col(piece);
+    color_on = 0;
+    for (pr = 0; pr < 4; pr++) {
+        br = y + pr;
+        if (br < 0 || br >= BD_H) continue;
+        run_len = 0;
+        for (pc = 0; pc <= 4; pc++) {
+            if (pc < 4 && pcell(piece, rot, pr, pc)) {
+                bc = x + pc;
+                if (bc >= 0 && bc < BD_W) {
+                    if (!color_on) { set_col(color); color_on = 1; }
+                    if (run_len == 0) run_col = bc;
+                    run_len++;
+                    continue;
+                }
+            }
+            if (run_len > 0) {
+                scr_row = BD_SROW + br + 1;
+                scr_col = BD_SCOL + run_col * 2;
+                cur_mov(scr_row, scr_col);
+                for (i = 0; i < run_len; i++) { chput('#'); chput('#'); }
+                run_len = 0;
+            }
+        }
+    }
+    if (color_on) {
+        rst_col();
+    }
+
+    return 0;
+}
+
+int brd_drw()
+{
+    int rot;
+
+    rot = act_rot & 3;
+
+    if (prv_on && game_st == GAME_PLAYING && act_pcs >= PIECE_I && act_pcs <= PIECE_L) {
+        if (prv_pc == act_pcs && prv_rt == rot && prv_ax == act_x && prv_ay == act_y) {
+            return 0;
+        }
+    }
+
+    if (prv_on) {
+        clr_act(prv_pc, prv_rt, prv_ax, prv_ay);
+        prv_on = 0;
+    }
+
+    if (game_st == GAME_PLAYING && act_pcs >= PIECE_I && act_pcs <= PIECE_L) {
+        drw_act(act_pcs, rot, act_x, act_y);
+        prv_ax = act_x;
+        prv_ay = act_y;
+        prv_rt = rot;
+        prv_pc = act_pcs;
+        prv_on = 1;
+    }
+
+    cur_mov(5,1);
     return 0;
 }
 
@@ -350,6 +513,9 @@ int plc_pcs()
         bx = act_x + j; by = act_y + i;
         if (by>=0 && by<BD_H && bx>=0 && bx<BD_W) board[by][bx] = act_pcs;
     }
+    prv_on = 0;
+    prv_pc = PIECE_NONE;
+    act_pcs = PIECE_NONE;
     return 0;
 }
 
@@ -373,7 +539,7 @@ int clr_lin()
         else if (found==4) score += 1200*(level+1);
         level = lines_cl/10; if (level>20) level=20;
         fall_sp = 2; /* Keep constant moderate speed */
-        brd_drw();
+        brd_syn();
         upd_stat();
     }
     return found;
@@ -383,6 +549,7 @@ int spn_new()
 {
     act_pcs = nxt_pcs; act_rot = 0; act_x = 3; act_y = 0; fall_tm = 0;
     if (!is_pos(act_pcs,act_rot,act_x,act_y)) { game_st = GAME_OVER; return 0; }
+    prv_on = 0;
     brd_drw();
     nxt_pcs = rnd_pcs(); /* Random next piece */
     drw_nxt();
@@ -459,14 +626,14 @@ int hnd_inp()
         redraw = 1;
     }
 
-    if (scch)
-    {
-        upd_stat();
-    }
-
     if (redraw || scch || soft_dr)
     {
         brd_drw();
+    }
+
+    if (scch)
+    {
+        upd_stat();
     }
 
     return 0;
@@ -496,7 +663,7 @@ int main()
     for (r=0;r<BD_H;r++) for (c=0;c<BD_W;c++) board[r][c]=0;
     init_shp();
 
-    clr_scr(); hid_cur(); drw_ins(); drw_bor(); brd_drw(); upd_stat();
+    clr_scr(); hid_cur(); drw_ins(); drw_bor(); brd_syn(); brd_drw(); upd_stat();
 
 
 
