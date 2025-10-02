@@ -1,0 +1,91 @@
+site_name: Altair 8800 Emulator
+site_author: Dave Glover
+site_description: >-
+  Altair 8800 Emulator
+site_url: https://github.com/gloveboxes/AltairEverywhere
+
+# Repository ..................................................
+repo_name: Altair 8800 Emulator
+repo_url: https://github.com/gloveboxes/AltairEverywhere
+
+# Copyright ...................................................
+copyright: >
+  Copyright &copy; 2023 - present Microsoft
+
+nav:
+  - Introduction: index.md
+ 
+
+plugins:
+  - search
+  - glightbox
+  - include-markdown
+  # - timetoread:
+  #     wpm: 180
+  - i18n:
+      docs_structure: folder
+      languages:
+        - locale: en
+          name: English
+          default: true
+          site_name: Altair 8800 Emulator
+          admonition_translations:
+            tip: tip
+            warning: Warning
+            info: Information
+            note: Note
+            danger: Danger
+            success: Success
+            question: Question
+
+
+theme:
+  name: material
+  logo: media/favicon.png
+  favicon: media/favicon.png
+  features:
+    - navigation.instant
+    - navigation.footer
+    - content.code.copy
+    - navigation.tabs.sticky
+    - content.tabs.link
+
+  # Change Font: https://squidfunk.github.io/mkdocs-material/setup/changing-the-fonts/?h=fonts
+  # Google Fonts Supported By Default: https://fonts.google.com/
+  font:
+    code: Roboto Mono #Monospaced
+    text: Roboto #Regular
+  # logo: docs/media/azure-ai-studio.svg
+  palette:
+    - scheme: default # Light Mode
+      primary: black
+      accent: pink
+      toggle:
+        icon: material/brightness-2
+        name: Switch to dark mode
+    - scheme: slate # Dark Mode
+      primary: amber
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
+
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 2
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - attr_list
+  - md_in_html
+  # - pymdownx.emoji:
+  # emoji_index: !!python/name:material.extensions.emoji.twemoji
+  # emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra_css:
+  - css/custom.css
