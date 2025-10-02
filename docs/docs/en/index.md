@@ -17,24 +17,20 @@ The Altair project can be viewed through three lenses:
 1. You are interested in retro gaming, and you want to chill playing retro games from yesteryear.
 2. Optionally, the project integrates free weather and pollution cloud services from [Open Weather Map](http://openweathermap.org), along with [ThingsBoard](https://thingsboard.io/) for telemetry and control.
 
-## Running the Altair
-
-The Altair emulator runs on desktop and device operating systems. The [source code](https://github.com/gloveboxes/Altair8800.Emulator.UN-X) is the same, but on devices there are some extended experiences.
-
-### Supported operating systems
+## Supported operating systems
 
 The **fastest** and **easiest** way to run the Altair emulator is on your computer with Docker on Linux, macOS, Windows, ChromeOS, and Raspberry Pi OS.
 
 The Altair emulator can also be compiled to run on [POSIX](https://en.wikipedia.org/wiki/POSIX) compatible operating systems including, Linux, ChromeOS, Windows with [WSL 2](https://docs.microsoft.com/en-us/windows/wsl/install), macOS on Apple Silicon and Intel.
 
-### Supported devices
+## Supported devices
 
 The more **interesting** way to run the Altair emulator is on a device, the Altair emulator has been tested on the following devices:
 
 1. [Raspberry Pi](https://www.raspberrypi.org/), models, 2, 2B, 3B, 3B, and 4 capable of running 64-bit Raspberry Pi OS.
 2. [Azure Sphere Avnet and Seeed Developer Kits](https://azure.microsoft.com/services/azure-sphere/) running embedded Linux.
 
-#### Raspberry Pi with the optional Pi Sense HAT
+### Raspberry Pi with the optional Pi Sense HAT
 
 If you pair a Raspberry Pi with a [Pi Sense HAT](https://www.raspberrypi.com/products/sense-hat/), the Altair address and data bus activity is displayed on the 8x8 LED panel.
 
@@ -42,7 +38,7 @@ If you pair a Raspberry Pi with a [Pi Sense HAT](https://www.raspberrypi.com/pro
 |--|--|
 | ![The image shows the address and data bus LEDs](./img/raspberry_pi_sense_hat_map.png) | ![The gif shows the address and data bus LEDs in action](./img/raspberry_pi_sense_hat.gif) |
 
-#### Azure Sphere with optional Altair front panel kit
+### Azure Sphere with optional Altair front panel kit
 
 The Altair emulator is supported on Azure Sphere devices from Avnet and Seeed Studio. If an Azure Sphere device is paired with the [Altair front panel kit](https://github.com/AzureSphereCloudEnabledAltair8800/AzureSphereAltair8800.Hardware) or the [Mikroe Altair Retro Click](https://www.mikroe.com/blog/8800-retro-click), the Altair address and data bus activity is displayed.
 

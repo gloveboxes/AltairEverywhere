@@ -2,7 +2,7 @@
 
 ## Documentation
 
-Navigate to the [Altair 8800 Project docs](https://gloveboxes.github.io/altair_8800_docs/) for the complete documentation.
+Navigate to the [Altair 8800 Emulator Docs](https://gloveboxes.github.io/Altair-8800-Emulator/) for the complete documentation.
 
 ## Introduction
 
@@ -15,7 +15,6 @@ The Altair 8800 Emulator runs on [POSIX](https://en.wikipedia.org/wiki/POSIX) co
 The project introduces computer fundamentals with a climate sustainability theme and software development. The Altair project can run standalone and is a fantastic safe way to explore machine-level programming, Intel 8080 Assembly programming, along with C and BASIC development. All the source code is provided under an MIT License.
 
 Optionally, the project integrates with free cloud services from [Open Weather Map](http://openweathermap.org) weather and pollution services, along with [Azure IoT Central](https://azure.microsoft.com/en-au/services/iot-central/), and [Azure Anomaly Detection Cognitive Service](https://azure.microsoft.com/services/cognitive-services/anomaly-detector/).
-
 
 ## What you'll learn
 
