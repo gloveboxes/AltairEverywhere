@@ -1,6 +1,6 @@
 # Open Weather Map
 
-Connecting the Open Weather Map cloud service is optional, free, and recommended so the Altair emulator can stream weather and pollution information to Azure IoT Central.
+Connecting the Open Weather Map cloud service is optional, free, and recommended so the Altair emulator can stream weather and pollution information over MQTT.
 
 ## Create an Open Weather Map API Key
 
