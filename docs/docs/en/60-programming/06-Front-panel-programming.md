@@ -1,5 +1,3 @@
-# Front panel programming
-
 The original Altair 8800 was programmed directly on the front panel. It was a painstaking, error-prone process to load and run a program. The Altair 8800 had a series of LEDs and switches for loading apps and determining the state of the machine.
 
 ![The image shows the original Altair 8800](img/altair-8800-smithsonian-museum.png)

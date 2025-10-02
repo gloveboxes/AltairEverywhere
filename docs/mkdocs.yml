@@ -17,14 +17,14 @@ nav:
   - Fundamentals:
     - Introduction: "20-fundamentals/05-Introduction.md"
     - Deployment options: "20-fundamentals/10-deployment-options.md"
-    - The altair emulator: "20-fundamentals/23-Altair-emulator.md"
+    - The Emulator: "20-fundamentals/23-Altair-emulator.md"
     - Start the web terminal: "20-fundamentals/25-Web-Terminal.md"
     - Learn about CP/M: "20-fundamentals/30-introduction-cpm.md"
     - Rebooting the emulator: "20-fundamentals/40-Rebooting-the-Altair.md"
   - Deploy with Docker:
     - Introduction: "40-deploy-with-docker/10-introduction.md"
     - Install prerequisites: "40-deploy-with-docker/15-install-prerequisites.md"
-    - Start the Altair emulator: "40-deploy-with-docker/17-start-container.md"
+    - Start the Emulator: "40-deploy-with-docker/17-start-container.md"
     - Add cloud services: "40-deploy-with-docker/20-Start-cloud-connected-Altair.md"
     - Build docker images: "40-deploy-with-docker/100-Create-Docker-images.md" 
   - Build from source:

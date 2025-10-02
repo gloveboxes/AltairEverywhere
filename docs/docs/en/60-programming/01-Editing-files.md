@@ -1,5 +1,3 @@
-# Editing files
-
 The Altair emulator includes the [MicroPro Word-Master](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf) text editor for editing documents and source code. Word-Master was advanced for its day, but by today's standards, not the most user-friendly.
 
 ## Ten-minute video introduction to editing files

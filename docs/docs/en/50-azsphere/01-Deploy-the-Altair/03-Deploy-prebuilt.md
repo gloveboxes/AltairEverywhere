@@ -1,13 +1,8 @@
 ---
-sidebar_position: 3
----
-
-# Deploy pre-built images
-
 Install the following real-time core app services for the Altair Emulator.
 
 1. The movement classification service.
-1. The storage service.
+2. The storage service.
 
 
 

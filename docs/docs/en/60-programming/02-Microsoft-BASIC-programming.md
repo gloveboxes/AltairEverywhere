@@ -1,5 +1,3 @@
-# Microsoft BASIC
-
 Bill Gates and Paul Allen wrote [Altair BASIC](https://en.wikipedia.org/wiki/Altair_BASIC?azure-portal=true). It was Microsoft's first product. Later, Microsoft released Microsoft BASIC for CP/M, see the [Microsoft BASIC-80 reference manual](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/AA-P226A-TV_BASIC-80_Reference_Manual_VT180_V5.21_1981.pdf?azure-portal=true).
 
 In the following exercise, you'll learn how to write your first Microsoft BASIC application.

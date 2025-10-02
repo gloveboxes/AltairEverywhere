@@ -1,5 +1,3 @@
-# Build docker images
-
 This page describes how to build the Altair Docker images and is provided for reference only. You don't need to build the Docker images to use the Altair emulator.
 
 ## Altair on ARM64 and AMD64

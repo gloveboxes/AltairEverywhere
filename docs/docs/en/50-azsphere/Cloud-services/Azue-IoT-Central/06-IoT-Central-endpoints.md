@@ -1,23 +1,17 @@
----
-sidebar_position: 5
----
-
-# Endpoint security
-
 Azure Sphere applications are secure by default, including hardware and network endpoints. You must declare your IoT Central network endpoints, otherwise, your Azure Sphere application will not be able to connect to IoT Central.
 
 Follow these steps to list the network endpoints of your IoT Central application.
 
 
 1. Open the Command Prompt window.
-1. Navigate to the **azure-sphere-samples** folder.
+2. Navigate to the **azure-sphere-samples** folder.
 
    - **For Windows**: Go to the *Samples\AzureIoT\Tools\win-x64* folder.
    - **For Linux**: Go to the *Samples/AzureIoT/Tools/linux-x64* folder# Azure IoT Central. 
    
       You might need to explicitly set execution permissions for the ShowIoTCentralConfig tool. To do so, from a terminal, run `chmod +x ShowIoTCentralConfig`.
 
-1. Run the ShowIoTCentralConfig tool, and then follow the prompts, as shown in the following table:
+3. Run the ShowIoTCentralConfig tool, and then follow the prompts, as shown in the following table:
 
    > [!NOTE]
    > Your organization might require consent for the ShowIoTCentralConfig tool to access your Azure IoT Central data in the same way that the Azure API requires such consent.
@@ -30,7 +24,7 @@ Follow these steps to list the network endpoints of your IoT Central application
    | **ID Scope** | In the Azure IoT Central application, select **Administration** > **Device Connection**, and then copy the **ID Scope**. |
    | | |
 
-1. Review the output from the ShowIoTCentralConfig tool. It will look similar to the following JSON text:
+4. Review the output from the ShowIoTCentralConfig tool. It will look similar to the following JSON text:
 
    ```json
    "CmdArgs": [ "--ScopeID", "0ne0099999D" ],
@@ -40,4 +34,4 @@ Follow these steps to list the network endpoints of your IoT Central application
    }
    ```
 
-1. Copy the output from the ShowIoTCentralConfig tool to Notepad, because you'll use this information in a later unit.
+5. Copy the output from the ShowIoTCentralConfig tool to Notepad, because you'll use this information in a later unit.

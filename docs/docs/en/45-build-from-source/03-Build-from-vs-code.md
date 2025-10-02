@@ -1,9 +1,3 @@
----
-sidebar_position: 4
----
-
-# Build from Visual Studio Code
-
 ## Install Visual Studio Code
 
 1. Install [Visual Studio Code](https://code.visualstudio.com&azure-portal=true).

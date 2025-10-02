@@ -1,5 +1,3 @@
-# C programming
-
 The BD Software C compiler is included on drive A: or drive B: if you have the CP/M filesystem loaded on the Micro SD card. The following text is an exert from the [BDS C Wikipedia](https://en.wikipedia.org/wiki/BDS_C) article.
 
 *BDS C (or the BD Software C Compiler) is a compiler for a sizeable subset of the C programming language, that ran on and generated code for the Intel 8080 and Zilog Z80 processors. It was the first C compiler for CP/M. It was written by Leor Zolman and first released in 1979 when he was 20 years old. "BDS" stands for "Brain Damage Software."*

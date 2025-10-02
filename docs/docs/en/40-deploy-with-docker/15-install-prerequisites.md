@@ -1,5 +1,3 @@
-# Install prerequisites
-
 Install Docker on your computer.
 
 - [Install Docker Desktop on Windows](https://docs.docker.com/desktop/windows/install/)
@@ -21,4 +19,4 @@ Install Docker on your computer.
         sudo usermod -aG docker $USER
         ```
 
-    1. Reboot the system.
+    2. Reboot the system.

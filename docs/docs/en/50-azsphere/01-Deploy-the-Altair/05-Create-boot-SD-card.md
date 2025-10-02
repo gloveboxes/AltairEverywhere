@@ -1,9 +1,3 @@
----
-sidebar_position: 5
----
-
-# Create a boot SD card
-
 Follow these instructions to create an Altair boot SD card or a Wi-Fi enabled Altair boot SD card.
 
 ## Install the prerequisite software

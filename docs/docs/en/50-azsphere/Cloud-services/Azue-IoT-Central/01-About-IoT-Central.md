@@ -1,9 +1,3 @@
----
-sidebar_position: 1
----
-
-# About Azure IoT Central
-
 Connecting Azure IoT Central is optional and free to try. IoT Central will be very useful as you can stream and report weather, pollution, and diagnostics data, as well as export data for anomaly detection. 
 
 In this exercise, you will create an Azure IoT Central application. Later you will learn about Altair applications that stream data to Azure IoT Central. Applications that stream data to Azure IoT Central include WEATHER.BAS and JSON.BAS.

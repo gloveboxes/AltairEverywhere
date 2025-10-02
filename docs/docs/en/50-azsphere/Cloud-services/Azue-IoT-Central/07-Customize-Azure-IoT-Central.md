@@ -1,9 +1,3 @@
----
-sidebar_position: 6
----
-
-# Customize IoT Central
-
 In this exercise, you will be customizing Azure IoT Central to display the data sent from the applications you run on the Altair emulator. Applications that stream data to Azure IoT Central include WEATHER.BAS and JSON.BAS.
 
 ## Open the Azure IoT Central device explorer

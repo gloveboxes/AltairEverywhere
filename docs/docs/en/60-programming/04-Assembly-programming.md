@@ -1,5 +1,3 @@
-# Intel 8080 Assembler
-
 The following text is an exert from the [Assembly language](https://en.wikipedia.org/wiki/Assembly_language) article.
 
 *In computer programming, assembly language (or assembler language), sometimes abbreviated asm, is any low-level programming language in which there is a very strong correspondence between the instructions in the language and the architecture's machine code instructions. Assembly language usually has one statement per machine instruction (1:1), but constants, comments, assembler directives, and symbolic labels of, e.g., memory locations, registers, and macros are generally also supported.*

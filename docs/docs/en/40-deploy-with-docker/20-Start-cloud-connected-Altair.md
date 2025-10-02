@@ -1,6 +1,3 @@
-# Add cloud services
-
-
 ## Stop the Altair docker container
 
 First, stop the Altair Docker container. From a terminal window, run the following command.

@@ -1,5 +1,3 @@
-# Architecture
-
 The Altair solution is deployed across all three custom app cores on Azure Sphere, including two workloads on the low-power real-time cores. The Altair emulator runs on the high-level Cortex A7 core, a continuous movement classification TinyML model runs on one of the real-time cores, and the other real-time core runs storage services.
 
 ![The following diagram summarizes the Altair emulator architecture.](img/Altair_8800_Application_Architecture.png)

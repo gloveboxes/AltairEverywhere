@@ -1,5 +1,3 @@
-# Intel 8080 IO Ports
-
 The Intel 8080 CPU can address up to 256 input ports and 256 output ports; allowing for virtually unlimited system expansion. Access to the ports is via the IN and OUT [Intel 8080 CPU instructions](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/8080asm.pdf), see page 38.
 
 ## Intel 8080 IO ports and peripherals

@@ -1,5 +1,3 @@
-# Start the Altair emulator
-
 There are two classes of docker images you can use to run the Altair emulator.
 
 1. The first is for general use on 64-bit [Linux, macOS, Windows, and Raspberry Pi operating systems](#general-linux-macos-windows-and-raspberry-pi-users).

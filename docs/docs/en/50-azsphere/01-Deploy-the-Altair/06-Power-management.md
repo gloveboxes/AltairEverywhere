@@ -1,5 +1,3 @@
-# Power management
-
 The Altair running on Azure Sphere takes advantage of advanced power management features to reduce power consumption.
 
 ## Automatic sleep

@@ -1,5 +1,3 @@
-# Manage disk images
-
 ## Backup an Altair boot SD card
 
 You've been creating apps from the Altair emulator and saving them to the CP/M filesystem. Now you want to backup the contents of the SD card and recreate Altair disk images from the backup.

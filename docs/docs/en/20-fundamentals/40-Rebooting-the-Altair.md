@@ -1,10 +1,8 @@
-# Rebooting the emulator
-
 There are various reasons why you might want to reboot the Altair operating system.
 
 1. You may *crash* the Altair operating system if you hack the current CPU instruction pointer or corrupt RAM. You might corrupt memory while programming in Assembly or with the virtual front panel.
-1. You might have tried to access a drive letter that is not available. The only way to recover is to reboot the Altair.
-1. You want to boot Altair BASIC and run the original Altair BASIC written by Bill Gates and Paul Allan.
+2. You might have tried to access a drive letter that is not available. The only way to recover is to reboot the Altair.
+3. You want to boot Altair BASIC and run the original Altair BASIC written by Bill Gates and Paul Allan.
 
 You'll be glad to know it's easy to reboot the Altair.
 

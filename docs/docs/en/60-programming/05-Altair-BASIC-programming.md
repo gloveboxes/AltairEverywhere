@@ -1,5 +1,3 @@
-# Altair BASIC programming
-
 Bill Gates and Paul Allen wrote [Altair BASIC](https://en.wikipedia.org/wiki/Altair_BASIC?azure-portal=true). It was Microsoft's first product. At the time, [Altair BASIC](https://en.wikipedia.org/wiki/Altair_BASIC) was a huge step forward as it allowed people to write programs using a high-level programming language. For more information about Altair BASIC, see the [Altair BASIC reference manual](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/MITS_Altair8800Basic4.1Reference_April1977.pdf).
 
 By default Altair emulator boots CP/M. CP/M is more flexible and you can save files. That said, it's fun to fire up the original Altair BASIC, just keep in mind that you can't save Altair BASIC applications.

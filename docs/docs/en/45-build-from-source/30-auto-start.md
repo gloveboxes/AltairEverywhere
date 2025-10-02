@@ -1,5 +1,3 @@
-# Autostart the Altair services
-
 The following details how to run the Altair emulator and web terminal as a services on Linux. This will ensure the Altair emulator and web terminal are started when the computer is booted.
 
 1. From the command line, navigate to `Services` folder of the Altair emulator project you cloned from GitHub.

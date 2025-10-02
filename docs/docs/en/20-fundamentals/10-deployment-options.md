@@ -1,5 +1,3 @@
-# Deployment options
-
 There are three ways to deploy the Altair 8800 emulator.
 
 1. [Deploy with Docker](../40-deploy-with-docker/10-introduction.md)

@@ -1,12 +1,6 @@
----
-sidebar_position: 7
----
-
-# Add network endpoints
-
 1. Open the **app_manifest.json** file.
-1. Update the **CmdArgs** property with your IoT Central **ID Scope**.
-1. Get your Azure Sphere Tenant ID. From a **command prompt**, run the following command.
+2. Update the **CmdArgs** property with your IoT Central **ID Scope**.
+3. Get your Azure Sphere Tenant ID. From a **command prompt**, run the following command.
 
     ```powershell
     azsphere tenant show-selected -o yaml
@@ -21,9 +15,9 @@ sidebar_position: 7
     - Administrator
     ```
 
-1. Update the **DeviceAuthentication** property with your **Azure Sphere Tenant ID**.
-1. Update the **AllowedConnections** property with the IoT Central Application endpoint URLs you copied to Notepad.
-1. **Review** your updated manifest_app.json file. It should be similar to the following.
+4. Update the **DeviceAuthentication** property with your **Azure Sphere Tenant ID**.
+5. Update the **AllowedConnections** property with the IoT Central Application endpoint URLs you copied to Notepad.
+6. **Review** your updated manifest_app.json file. It should be similar to the following.
 
     ```json
     {

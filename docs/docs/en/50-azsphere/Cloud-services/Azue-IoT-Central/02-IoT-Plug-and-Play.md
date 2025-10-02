@@ -1,9 +1,3 @@
----
-sidebar_position: 2
----
-
-# IoT Plug and Play
-
 This solution uses IoT Plug and Play with IoT Central. IoT Plug and Play (PnP) defines a model that a device uses to advertise its capabilities to a PnP-enabled application like IoT Central. PnP is an open specification, to learn more, refer to [What is IoT Plug and Play](https://docs.microsoft.com/azure/iot-pnp/overview-iot-plug-and-play).
 
 An IoT Plug and Play CO2 monitor model has been published to the [public repository of IoT Plug and Play](https://github.com/Azure/iot-plugandplay-models) models. A local copy of the IoT Plug and Play model is located in the *iot_plug_and_play* directory.

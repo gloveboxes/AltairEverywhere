@@ -1,5 +1,3 @@
-# Connect Altair web terminal
-
 The Altair emulator will start running on the Azure Sphere device. 
 
 ## The Altair emulator web terminal

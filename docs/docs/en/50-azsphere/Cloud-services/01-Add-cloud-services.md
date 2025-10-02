@@ -1,9 +1,3 @@
----
-sidebar_position: 1
----
-
-# Adding Cloud services
-
 To cloud service enable the Altair emulator you must first learn how to [Compile and deploy the Altair emulator](../Compile-and-deploy/01-Install-developer-tools.md)
 
 For the best experience, use the following cloud services.
