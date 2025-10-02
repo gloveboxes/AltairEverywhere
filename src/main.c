@@ -14,6 +14,7 @@
 #include <stdatomic.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <unistd.h>
 
 
@@ -487,19 +488,43 @@ static void cleanup_altair_disks(void)
 }
 
 /// <summary>
+/// Detect if running on Apple Silicon at runtime
+/// </summary>
+static bool is_apple_silicon(void)
+{
+#ifdef __APPLE__
+    struct utsname systemInfo;
+    if (uname(&systemInfo) == 0)
+    {
+        // Check for arm64 AND verify we're on macOS (not other ARM platforms)
+        // On macOS, sysname will be "Darwin"
+        return (strcmp(systemInfo.machine, "arm64") == 0) && 
+               (strcmp(systemInfo.sysname, "Darwin") == 0);
+    }
+#endif
+    return false;
+}
+
+/// <summary>
 /// Thread to run the i8080 cpu emulator on
 /// </summary>
 static void *altair_thread(void *arg)
 {
     // Log_Debug("Altair Thread starting...\n");
     
+    // Runtime detection: use QoS on Apple Silicon, nice() elsewhere
+    if (is_apple_silicon())
+    {
 #ifdef __APPLE__
-    // On Apple Silicon, use QoS to explicitly request efficiency cores
-    pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
-#else
-    // On other platforms, use nice value to lower priority
-    nice(19);
+        // On Apple Silicon, use QoS to explicitly request efficiency cores
+        pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
 #endif
+    }
+    else
+    {
+        // On other platforms (Linux, Intel Mac, etc.), use nice value to lower priority
+        nice(19);
+    }
 
     pthread_mutex_lock(&altair_start_mutex);
     pthread_cond_broadcast(&altair_start_cond);
