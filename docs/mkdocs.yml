@@ -16,17 +16,17 @@ nav:
   - Introduction: index.md
   - Fundamentals:
     - Introduction: "20-fundamentals/05-Introduction.md"
-    - Deployment options: "20-fundamentals/10-deployment-options.md"
+    - Deployment Options: "20-fundamentals/10-deployment-options.md"
     - The Emulator: "20-fundamentals/23-Altair-emulator.md"
-    - Start the web terminal: "20-fundamentals/25-Web-Terminal.md"
+    - Start the Web Terminal: "20-fundamentals/25-Web-Terminal.md"
     - Learn about CP/M: "20-fundamentals/30-introduction-cpm.md"
-    - Rebooting the emulator: "20-fundamentals/40-Rebooting-the-Altair.md"
+    - Rebooting the Emulator: "20-fundamentals/40-Rebooting-the-Altair.md"
   - Deploy with Docker:
     - Introduction: "40-deploy-with-docker/10-introduction.md"
-    - Install prerequisites: "40-deploy-with-docker/15-install-prerequisites.md"
+    - Install Prerequisites: "40-deploy-with-docker/15-install-prerequisites.md"
     - Start the Emulator: "40-deploy-with-docker/17-start-container.md"
-    - Add cloud services: "40-deploy-with-docker/20-Start-cloud-connected-Altair.md"
-    - Build docker images: "40-deploy-with-docker/100-Create-Docker-images.md" 
+    - Cloud Services: "40-deploy-with-docker/20-Start-cloud-connected-Altair.md"
+    - Build Docker Images: "40-deploy-with-docker/100-Create-Docker-images.md" 
   - Build from source:
     - Introduction: "45-build-from-source/01-Introduction.md"
     - Install Prerequisites:
@@ -36,36 +36,36 @@ nav:
       - Raspberry Pi OS: "45-build-from-source/Install prerequisites/04-Raspberry-Pi-users.md"
     - Clone the Altair repo: "45-build-from-source/02-Clone-Altair-repo.md"
     - Build from Visual Studio Code: "45-build-from-source/03-Build-from-vs-code.md"
-    - Build from the command line: "45-build-from-source/04-Compile-from-CLI.md"
-    - Start the emulator: "45-build-from-source/05-Run-the-emulator.md"
-    - Autostart the Altair services: "45-build-from-source/30-auto-start.md"
+    - Build from the Command Line: "45-build-from-source/04-Compile-from-CLI.md"
+    - Start the Emulator: "45-build-from-source/05-Run-the-emulator.md"
+    - Autostart the Altair Services: "45-build-from-source/30-auto-start.md"
   - Program the Altair:
     - Introduction: "60-programming/00-Introduction.md"
     - Manuals: "60-programming/00-Manuals.md"
-    - Editing files: "60-programming/01-Editing-files.md"
+    - Editing Files: "60-programming/01-Editing-files.md"
     - Intel 8080 IO Ports: "60-programming/01-i8080-IO-Ports.md"
     - Microsoft BASIC: "60-programming/02-Microsoft-BASIC-programming.md"
-    - C programming: "60-programming/03-C-programming.md"
+    - C Programming: "60-programming/03-C-programming.md"
     - Intel 8080 Assembler: "60-programming/04-Assembly-programming.md"
-    - Altair BASIC programming: "60-programming/05-Altair-BASIC-programming.md"
-    - Front panel programming: "60-programming/06-Front-panel-programming.md"
+    - Altair BASIC Programming: "60-programming/05-Altair-BASIC-programming.md"
+    - Front Panel Programming: "60-programming/06-Front-panel-programming.md"
   - Run on Azure Sphere:
     - Introduction: "50-azsphere/01-Introduction.md"
     - Architecture: "50-azsphere/03-architecture.md"
     - Deploy the Altair:
-      - Deployment options: "50-azsphere/01-Deploy-the-Altair/01-Deployment-options.md"
+      - Deployment Options: "50-azsphere/01-Deploy-the-Altair/01-Deployment-options.md"
       - Clone the Altair repo: "50-azsphere/01-Deploy-the-Altair/02-Clone-Altair-repo.md"
-      - Deploy pre-built images: "50-azsphere/01-Deploy-the-Altair/03-Deploy-prebuilt.md"
-      - Wi-Fi configuration: "50-azsphere/01-Deploy-the-Altair/04-WiFi-configuration.md"
-      - Create a boot SD card: "50-azsphere/01-Deploy-the-Altair/05-Create-boot-SD-card.md"
-      - Power management: "50-azsphere/01-Deploy-the-Altair/06-Power-management.md"
-      - Connect Altair web terminal: "50-azsphere/01-Deploy-the-Altair/07-Connect-Altair-web-terminal.md"
+      - Deploy Pre-built Images: "50-azsphere/01-Deploy-the-Altair/03-Deploy-prebuilt.md"
+      - Wi-Fi Configuration: "50-azsphere/01-Deploy-the-Altair/04-WiFi-configuration.md"
+      - Create a Boot SD Card: "50-azsphere/01-Deploy-the-Altair/05-Create-boot-SD-card.md"
+      - Power Management: "50-azsphere/01-Deploy-the-Altair/06-Power-management.md"
+      - Connect Altair Web Terminal: "50-azsphere/01-Deploy-the-Altair/07-Connect-Altair-web-terminal.md"
     - Cloud services:
-      - Adding Cloud services: "50-azsphere/Cloud-services/01-Add-cloud-services.md"
-    - Compile and deploy:
-      - Install developer tools: "50-azsphere/Compile-and-deploy/01-Install-developer-tools.md"
-      - Deploy the Altair emulator: "50-azsphere/Compile-and-deploy/02-Deploy-the-Altair-to-Azure-Sphere.md"
-    - Manage disk images: "50-azsphere/40-Manage-disk-images.md"
+      - Adding Cloud Services: "50-azsphere/Cloud-services/01-Add-cloud-services.md"
+    - Compile and Deploy:
+      - Install Developer Tools: "50-azsphere/Compile-and-deploy/01-Install-developer-tools.md"
+      - Deploy the Altair Emulator: "50-azsphere/Compile-and-deploy/02-Deploy-the-Altair-to-Azure-Sphere.md"
+    - Manage Disk Images: "50-azsphere/40-Manage-disk-images.md"
  
 
 plugins:
