@@ -492,8 +492,14 @@ static void cleanup_altair_disks(void)
 static void *altair_thread(void *arg)
 {
     // Log_Debug("Altair Thread starting...\n");
-    // Lower thread priority (nice value) to encourage running on efficiency cores
+    
+#ifdef __APPLE__
+    // On Apple Silicon, use QoS to explicitly request efficiency cores
+    pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
+#else
+    // On other platforms, use nice value to lower priority
     nice(19);
+#endif
 
     pthread_mutex_lock(&altair_start_mutex);
     pthread_cond_broadcast(&altair_start_cond);
