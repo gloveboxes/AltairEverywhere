@@ -2,14 +2,13 @@
 
 #include "graphics.h"
 #include "led_panel.h"
+#include "led_matrix_io.h"
 #include "sense_hat.h"
 #include <string.h>
 
 static uint16_t panel_buffer[NUM_OF_LEDS];
 static int rgb_color = 19 << 1;
 static bool sense_hat_initialized;
-
-extern enum PANEL_MODE_T panel_mode;
 
 typedef union
 {
