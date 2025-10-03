@@ -623,7 +623,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     dx_asyncSetInit(async_bindings, NELEMS(async_bindings));
 
-    init_web_socket_server(client_connected_cb);
+    // Initialize timers but don't start them yet
     dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));
 
     // Initialize MQTT connection only if hostname is specified
@@ -654,11 +654,19 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
         dx_Log_Debug("No hardware front panel active, skipping panel refresh thread\n");
     }
 
+    // Initialize Altair and start CPU thread BEFORE accepting WebSocket connections
     init_altair();
     start_altair_thread(altair_thread, NULL, "altair_thread", 1);
+    
+    // Wait for Altair thread to signal it's ready
     pthread_mutex_lock(&altair_start_mutex);
     pthread_cond_wait(&altair_start_cond, &altair_start_mutex);
     pthread_mutex_unlock(&altair_start_mutex);
+    
+    dx_Log_Debug("Altair thread confirmed running, starting WebSocket server\n");
+    
+    // NOW start the WebSocket server - Altair is fully initialized and ready
+    init_web_socket_server(client_connected_cb);
 }
 
 /// <summary>
