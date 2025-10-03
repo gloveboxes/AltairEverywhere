@@ -407,9 +407,10 @@ static bool init_altair_disk(const char *disk_path, int *fp, const char *disk_na
 /// </summary>
 static void init_altair(void)
 {
-    Log_Debug("Altair Thread starting...\n");
+    Log_Debug("Altair initialization starting...\n");
 
     memset(memory, 0x00, MEMORY_SIZE_64K); // clear Altair memory.
+    Log_Debug("Memory cleared\n");
 
     disk_controller_t disk_controller;
     disk_controller.disk_function = disk_function;
@@ -419,34 +420,46 @@ static void init_altair(void)
     disk_controller.write         = disk_write;
     disk_controller.sector        = sector;
 
+    Log_Debug("Disk controller initialized\n");
+
     // Initialize all disk drives
+    Log_Debug("Opening DISK_A: %s\n", DISK_A);
     if (!init_altair_disk(DISK_A, &disk_drive.disk1.fp, "DISK_A", APP_EXIT_DISK_A_INIT_FAILED))
         return;
     disk_drive.disk1.diskPointer = 0;
     disk_drive.disk1.sector      = 0;
     disk_drive.disk1.track       = 0;
+    Log_Debug("DISK_A opened successfully\n");
 
+    Log_Debug("Opening DISK_B: %s\n", DISK_B);
     if (!init_altair_disk(DISK_B, &disk_drive.disk2.fp, "DISK_B", APP_EXIT_DISK_B_INIT_FAILED))
         return;
     disk_drive.disk2.diskPointer = 0;
     disk_drive.disk2.sector      = 0;
     disk_drive.disk2.track       = 0;
+    Log_Debug("DISK_B opened successfully\n");
 
+    Log_Debug("Opening DISK_C: %s\n", DISK_C);
     if (!init_altair_disk(DISK_C, &disk_drive.disk3.fp, "DISK_C", APP_EXIT_DISK_C_INIT_FAILED))
         return;
     disk_drive.disk3.diskPointer = 0;
     disk_drive.disk3.sector      = 0;
     disk_drive.disk3.track       = 0;
+    Log_Debug("DISK_C opened successfully\n");
 
+    Log_Debug("Opening DISK_D: %s\n", DISK_D);
     if (!init_altair_disk(DISK_D, &disk_drive.disk4.fp, "DISK_D", APP_EXIT_DISK_D_INIT_FAILED))
         return;
     disk_drive.disk4.diskPointer = 0;
     disk_drive.disk4.sector      = 0;
     disk_drive.disk4.track       = 0;
+    Log_Debug("DISK_D opened successfully\n");
 
+    Log_Debug("Initializing i8080 CPU\n");
     i8080_reset(
         &cpu, (port_in)terminal_read, (port_out)terminal_write, sense, &disk_controller, (azure_sphere_port_in)io_port_in, (azure_sphere_port_out)io_port_out);
 
+    Log_Debug("Loading ROM image: %s\n", DISK_LOADER);
     // load Disk Loader at ROM_LOADER_ADDRESS
     if (!loadRomImage(DISK_LOADER, ROM_LOADER_ADDRESS))
     {
@@ -455,7 +468,10 @@ static void init_altair(void)
         return;
     }
 
+    Log_Debug("Setting CPU to examine ROM_LOADER_ADDRESS\n");
     i8080_examine(&cpu, ROM_LOADER_ADDRESS); // ROM_LOADER_ADDRESS loads from disk, 0x0000 loads basic
+    
+    Log_Debug("Altair initialization completed successfully\n");
 }
 
 /// <summary>
