@@ -45,18 +45,6 @@ extern DX_MQTT_CONFIG mqtt_config;
 #include "io_ports.h"
 #include "memory.h"
 
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-#include "front_panel_pi_sense_hat.h"
-#endif
-
-#ifdef ALTAIR_FRONT_PANEL_KIT
-#include "front_panel_kit.h"
-#endif // ALTAIR_FRONT_PANEL_PI_SENSE
-
-#if !defined(ALTAIR_FRONT_PANEL_KIT) && !defined(ALTAIR_FRONT_PANEL_PI_SENSE)
-#include "front_panel_none.h"
-#endif
-
 const char ALTAIR_EMULATOR_VERSION[] = "5.0.3";
 #define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED FALSE

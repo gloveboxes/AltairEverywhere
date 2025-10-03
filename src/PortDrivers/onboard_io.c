@@ -3,11 +3,12 @@
 
 #include "onboard_io.h"
 #include "dx_utilities.h"
+#include "front_panel_manager.h"
 
-
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
+// Include sense_hat header only on Linux where the hardware is available
+#if defined(__linux__)
 #include "sense_hat.h"
-#endif // ALTAIR_FRONT_PANEL_PI_SENSE
+#endif
 
 #ifdef AZURE_SPHERE
 #include "device_id.h"
@@ -133,27 +134,28 @@ size_t onboard_output(int port, uint8_t data, char *buffer, size_t buffer_length
             break;
 #endif // AZURE_SPHERE
 
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-
-        case 63: // Onboard sensors temperature, pressure, and light
-            switch (data)
+        case 63: // Onboard sensors temperature, pressure, and light - runtime check for Sense HAT
+#if defined(__linux__)
+            if (front_panel_manager_is_active(FRONT_PANEL_TYPE_SENSE_HAT))
             {
-                case 0: // Temperature minus 1 for very rough calibration
-                    len = (size_t)snprintf(buffer, buffer_length, "%d", (int)get_temperature_from_lps25h() - 1);
-                    break;
-                case 1: // pressure
-                    len = (size_t)snprintf(buffer, buffer_length, "%d", get_pressure());
-                    break;
-                case 2: // light
-                    len = (size_t)snprintf(buffer, buffer_length, "%d", 0);
-                    break;
-                case 3: // humidity
-                    len = (size_t)snprintf(buffer, buffer_length, "%d", (int)get_humidity());
-                    break;
+                switch (data)
+                {
+                    case 0: // Temperature minus 1 for very rough calibration
+                        len = (size_t)snprintf(buffer, buffer_length, "%d", (int)get_temperature_from_lps25h() - 1);
+                        break;
+                    case 1: // pressure
+                        len = (size_t)snprintf(buffer, buffer_length, "%d", get_pressure());
+                        break;
+                    case 2: // light
+                        len = (size_t)snprintf(buffer, buffer_length, "%d", 0);
+                        break;
+                    case 3: // humidity
+                        len = (size_t)snprintf(buffer, buffer_length, "%d", (int)get_humidity());
+                        break;
+                }
             }
+#endif
             break;
-
-#endif // ALTAIR_FRONT_PANEL_PI_SENSE
 
 #ifdef OEM_AVNET
         case 64: // Accelerometer data and settings

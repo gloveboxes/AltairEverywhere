@@ -6,8 +6,13 @@ project (Altair_emulator C)
 
 # SELECT FRONT PANEL CONFIG #######################################################################################
 #
-# set(ALTAIR_FRONT_PI_SENSE_HAT TRUE "Enable Raspberry Pi Sense HAT")
-# set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")
+# Front panel selection is now done at runtime via command line argument (-f or --FrontPanel)
+# All front panel drivers are compiled into the binary for runtime selection
+# Options: auto (default), sensehat, kit, none
+#
+# Example: ./Altair_emulator -f sensehat
+#          ./Altair_emulator -f kit
+#          ./Altair_emulator -f none
 #
 ###################################################################################################################
 
@@ -32,43 +37,33 @@ add_compile_definitions(MAX_CLIENTS=1)
 #    add_compile_definitions(DISABLE_IO_MOCKING=TRUE)
 #endif(DISABLE_IO_MOCKING)
 
-if (ALTAIR_FRONT_PI_SENSE_HAT)
+message(STATUS "ALTAIR PROJECT CONFIGURATION: All front panel drivers included for runtime selection")
 
-    message(STATUS, "ALTAIR PROJECT CONFIGURATION SELECTED: RASPBERRY PI SENSE HAT FRONT PANEL")
+# Include all front panel drivers for runtime selection
+# Note: Linux-specific drivers (Sense HAT and Kit) are only included on Linux platforms
+set(FrontPanels
+    "FrontPanels/front_panel_manager.c"
+    "FrontPanels/front_panel_none.c"
+)
 
-    add_compile_definitions(ALTAIR_FRONT_PANEL_PI_SENSE)
-
-    set(Oem
+# Add platform-specific front panel drivers
+if(UNIX AND NOT APPLE)
+    # Linux-specific drivers that require linux headers
+    list(APPEND FrontPanels
         "FrontPanels/front_panel_pi_sense_hat.c"
+        "FrontPanels/front_panel_kit.c"
         "Drivers/pi_sense_hat/led_panel.c"
         "Drivers/pi_sense_hat/graphics.c"
         "Drivers/sensehat-driver/src/sense_hat.c"
-    )
-    source_group("Oem" FILES ${Oem})
-
-else()
-
-    message(STATUS, "ALTAIR PROJECT CONFIGURATION SELECTED: NO FRONT PANEL")
-
-    set(Oem
-    "FrontPanels/front_panel_none.c"
-    )
-    source_group("Oem" FILES ${Oem})
-
-endif(ALTAIR_FRONT_PI_SENSE_HAT)
-
-if (ALTAIR_FRONT_PANEL_KIT)
-
-    add_compile_definitions(ALTAIR_FRONT_PANEL_KIT)
-    add_compile_definitions(DEVICE_PANEL="Front Panel Kit")
-
-    set(Oem
-        "FrontPanels/front_panel_kit.c"
         "Drivers/front_panel/graphics.c"
         "Drivers/spidev-lib/src/spidev_lib.c"
     )
-    source_group("Oem" FILES ${Oem})
-endif(ALTAIR_FRONT_PANEL_KIT)
+    message(STATUS "Including Linux-specific front panel drivers (Sense HAT and Kit)")
+else()
+    message(STATUS "Skipping Linux-specific front panel drivers on non-Linux platform")
+endif()
+
+source_group("FrontPanels" FILES ${FrontPanels})
 
 
 set(Source
@@ -110,7 +105,7 @@ source_group("wsServer" FILES ${wsServer})
 
 set(ALL_FILES
     ${Source}
-    ${Oem}
+    ${FrontPanels}
     ${wsServer}
 )
 

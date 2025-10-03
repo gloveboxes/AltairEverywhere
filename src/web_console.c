@@ -369,6 +369,10 @@ void publish_message(const void *message, size_t message_length)
 /// <param name="character">Character to send</param>
 inline void publish_character(char character)
 {
+    // print to stdout for debugging
+    // the text is not appearing in vs code terminal?
+    fflush(stdout);
+    dx_Log_Debug("%c", character);
     publish_message(&character, 1);
 }
 

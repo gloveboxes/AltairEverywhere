@@ -2,6 +2,7 @@
    Licensed under the MIT License. */
 
 #include "led_matrix_io.h"
+#include "front_panel_manager.h"
 
 #ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
 
@@ -16,27 +17,16 @@ static int led_brightness = 0;
 
 #endif
 
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-#include "front_panel_pi_sense_hat.h"
-#include "graphics.h"
-#include "sense_hat.h"
-#endif
+#ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
 
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-// Font buffers
-static uint8_t bitmap[8];
-uint16_t panel_8x8_buffer[64];
-
-#endif // ALTAIR_FRONT_PANEL_PI_SENSE
-
-#if defined(ALTAIR_FRONT_PANEL_RETRO_CLICK) || defined(ALTAIR_FRONT_PANEL_PI_SENSE)
-
-union {
+union
+{
     uint32_t mask[2];
     uint64_t mask64;
 } pixel_mask;
 
-typedef union {
+typedef union
+{
     uint8_t bitmap[8];
     uint64_t bitmap64;
 } PIXEL_MAP;
@@ -44,6 +34,7 @@ typedef union {
 PIXEL_MAP pixel_map;
 
 #endif // ALTAIR_FRONT_PANEL_RETRO_CLICK
+
 
 DX_ASYNC_HANDLER(async_stop_panel_io_handler, handle)
 {
@@ -74,12 +65,16 @@ DX_ASYNC_HANDLER_END
 
 size_t led_matrix_output(int port_number, uint8_t data, char *buffer, size_t buffer_length)
 {
+    size_t handled_length = 0;
 
-    switch (port_number)
+    if (front_panel_manager_handle_led_matrix_output(port_number, data, buffer, buffer_length, &handled_length))
     {
+        return handled_length;
+    }
 
 #ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
-
+    switch (port_number)
+    {
         case 65: // Enable/Disable 8x8 LED Panel and 4x4 keypad
             if (data == 0)
             {
@@ -91,16 +86,6 @@ size_t led_matrix_output(int port_number, uint8_t data, char *buffer, size_t buf
                 dx_asyncSend(&async_start_panel_io, &led_brightness);
             }
             break;
-#endif
-
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-        case 65: // Set brightness of the 8x8 LED Panel
-            set_led_panel_color(data);
-            break;
-#endif
-
-#ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
-
         case 80: // panel_mode 0 = bus data, 1 = font, 2 = bitmap
             if (data < 3)
             {
@@ -114,38 +99,6 @@ size_t led_matrix_output(int port_number, uint8_t data, char *buffer, size_t buf
             gfx_rotate_counterclockwise(retro_click.bitmap, 1, 1, retro_click.bitmap);
             as1115_panel_write(&retro_click);
             break;
-
-#endif // ALTAIR_FRONT_PANEL_RETRO_CLICK
-
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-        case 80: // panel_mode 0 = bus data, 1 = font, 2 = bitmap
-            if (data < 3)
-            {
-                panel_mode = data;
-            }
-            break;
-        case 81: // set font color
-            gfx_set_color(data);
-            break;
-        case 82: // set pixel red color
-            break;
-        case 83: // set pixel green color
-            break;
-        case 84: // set pixel blue color
-            break;
-        case 85: // display character
-            memset(panel_8x8_buffer, 0x00, sizeof(panel_8x8_buffer));
-            gfx_load_character(data, bitmap);
-            gfx_rotate_counterclockwise(bitmap, 1, 1, bitmap);
-            gfx_reverse_panel(bitmap);
-            gfx_rotate_counterclockwise(bitmap, 1, 1, bitmap);
-            gfx_bitmap_to_rgb(bitmap, panel_8x8_buffer, sizeof(panel_8x8_buffer));
-            pi_sense_8x8_panel_update(panel_8x8_buffer, sizeof(panel_8x8_buffer));
-            break;
-#endif // PI SENSE HAT
-
-#if defined(ALTAIR_FRONT_PANEL_RETRO_CLICK) || defined(ALTAIR_FRONT_PANEL_PI_SENSE)
-
         case 90: // Bitmap row 0
             pixel_map.bitmap[0] = data;
             break;
@@ -175,7 +128,7 @@ size_t led_matrix_output(int port_number, uint8_t data, char *buffer, size_t buf
             {
                 pixel_mask.mask64                 = 0;
                 pixel_mask.mask[(int)(data / 32)] = data < 32 ? 1u << data : 1u << (data - 32);
-                pixel_map.bitmap64                = pixel_map.bitmap64 | pixel_mask.mask64;
+                pixel_map.bitmap64                |= pixel_mask.mask64;
             }
             break;
         case 99: // Pixel off
@@ -184,7 +137,7 @@ size_t led_matrix_output(int port_number, uint8_t data, char *buffer, size_t buf
                 pixel_mask.mask64                 = 0;
                 pixel_mask.mask[(int)(data / 32)] = data < 32 ? 1u << data : 1u << (data - 32);
                 pixel_mask.mask64 ^= 0xFFFFFFFFFFFFFFFF;
-                pixel_map.bitmap64 = pixel_map.bitmap64 & pixel_mask.mask64;
+                pixel_map.bitmap64 &= pixel_mask.mask64;
             }
             break;
         case 100: // Pixel flip
@@ -192,37 +145,27 @@ size_t led_matrix_output(int port_number, uint8_t data, char *buffer, size_t buf
             {
                 pixel_mask.mask64                 = 0;
                 pixel_mask.mask[(int)(data / 32)] = data < 32 ? 1u << data : 1u << (data - 32);
-                pixel_map.bitmap64                = pixel_map.bitmap64 ^ pixel_mask.mask64;
+                pixel_map.bitmap64                ^= pixel_mask.mask64;
             }
             break;
         case 101: // clear all pixels
             pixel_map.bitmap64 = 0;
             break;
-
-#endif // defined(ALTAIR_FRONT_PANEL_RETRO_CLICK) || defined(ALTAIR_FRONT_PANEL_PI_SENSE)
-
-#ifdef ALTAIR_FRONT_PANEL_RETRO_CLICK
         case 102: // Bitmap draw
             gfx_rotate_counterclockwise(pixel_map.bitmap, 1, 1, retro_click.bitmap);
             gfx_reverse_panel(retro_click.bitmap);
             gfx_rotate_counterclockwise(retro_click.bitmap, 1, 1, retro_click.bitmap);
-            // retro_click.bitmap64 = pixel_map.bitmap64;
             as1115_panel_write(&retro_click);
             break;
-
-#endif // ALTAIR_FRONT_PANEL_RETRO_CLICK
-
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-        case 102: // Bitmap draw
-            gfx_rotate_counterclockwise(pixel_map.bitmap, 1, 1, bitmap);
-            gfx_reverse_panel(bitmap);
-            gfx_rotate_counterclockwise(bitmap, 1, 1, bitmap);
-            gfx_bitmap_to_rgb(bitmap, panel_8x8_buffer, sizeof(panel_8x8_buffer));
-            pi_sense_8x8_panel_update(panel_8x8_buffer, sizeof(panel_8x8_buffer));
+        default:
             break;
-#endif // ALTAIR_FRONT_PANEL_PI_SENSE
+    }
+#else
+    (void)port_number;
+    (void)data;
+#endif
 
-    } // switch (port_number)
-
+    (void)buffer;
+    (void)buffer_length;
     return 0;
 }

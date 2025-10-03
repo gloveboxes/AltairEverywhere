@@ -345,6 +345,8 @@ void print_console_banner(void)
 /// </summary>
 static void *panel_refresh_thread(void *arg)
 {
+    dx_Log_Debug("Panel refresh thread started\n");
+    
     uint8_t last_status = 0;
     uint8_t last_data   = 0;
     uint16_t last_bus   = 0;
@@ -368,7 +370,7 @@ static void *panel_refresh_thread(void *arg)
             bus    = (uint16_t)(reverse_lut[(bus & 0xf000) >> 12] << 8 | reverse_lut[(bus & 0x0f00) >> 8] << 12 | reverse_lut[(bus & 0xf0) >> 4] |
                              reverse_lut[bus & 0xf] << 4);
 
-            front_panel_io(status, data, bus, process_control_panel_commands);
+            front_panel_manager_io(status, data, bus, process_control_panel_commands);
             // }
             nanosleep(&(struct timespec){0, 5 * ONE_MS}, NULL);
         }
@@ -611,7 +613,13 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     dx_Log_Debug("Network interface %s %s\n", network_interface, dx_isNetworkConnected(network_interface) ? "connected" : "NOT connected");
 
-    init_altair_hardware();
+    if (!front_panel_manager_init(altair_config.front_panel_selection))
+    {
+        dx_Log_Debug("Front panel initialization failed; running without hardware panel\n");
+    }
+
+    dx_Log_Debug("Active front panel: %s\n", front_panel_manager_get_active_name());
+    dx_Log_Debug("Active front panel type: %d\n", front_panel_manager_get_active_type());
 
     dx_asyncSetInit(async_bindings, NELEMS(async_bindings));
 
@@ -636,9 +644,15 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
         dx_Log_Debug("No MQTT broker specified - running without MQTT connectivity\n");
     }
 
-#if defined(ALTAIR_FRONT_PANEL_PI_SENSE) || defined(ALTAIR_FRONT_PANEL_KIT)
-    dx_startThreadDetached(panel_refresh_thread, NULL, "panel_refresh_thread");
-#endif
+    if (front_panel_manager_get_active_type() != FRONT_PANEL_TYPE_NONE)
+    {
+        dx_Log_Debug("Starting panel refresh thread for front panel type %d\n", front_panel_manager_get_active_type());
+        dx_startThreadDetached(panel_refresh_thread, NULL, "panel_refresh_thread");
+    }
+    else
+    {
+        dx_Log_Debug("No hardware front panel active, skipping panel refresh thread\n");
+    }
 
     init_altair();
     start_altair_thread(altair_thread, NULL, "altair_thread", 1);
@@ -663,9 +677,7 @@ static void ClosePeripheralAndHandlers(void)
 
     cleanup_altair_disks();
 
-#ifdef ALTAIR_FRONT_PANEL_PI_SENSE
-    pi_sense_hat_sensors_close();
-#endif
+    front_panel_manager_shutdown();
 
     curl_global_cleanup();
 }

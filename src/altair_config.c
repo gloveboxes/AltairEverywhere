@@ -4,8 +4,10 @@
 #include "altair_config.h"
 #include "EdgeMqttDevX/include/dx_utilities.h"
 #include <stdio.h>
-#include <time.h>
+#include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+#include <time.h>
 
 // Usage text for command line arguments in application manifest.
 static const char *cmdLineArgsUsageText =
@@ -21,6 +23,9 @@ static const char *cmdLineArgsUsageText =
 	"Network Configuration:\n"
 	"  -n, --NetworkInterface <iface> Network interface to use\n"
 	"\n"
+	"Hardware Configuration:\n"
+	"  -f, --FrontPanel <mode>        Front panel selection: sensehat, kit, none (default: none)\n"
+	"\n"
 	"External Services:\n"
 	"  -o, --OpenWeatherMapKey <key>  OpenWeatherMap API key\n"
 	"  -u, --CopyXUrl <url>           CopyX service URL\n"
@@ -31,6 +36,44 @@ static const char *cmdLineArgsUsageText =
 	"\n"
 	"Example:\n"
 	"  ./Altair_emulator -m mqtt.example.com -p 1883 -c MyAltair -U myuser -P mypass\n";
+
+static FRONT_PANEL_SELECTION parse_front_panel_selection(const char *value, FRONT_PANEL_SELECTION default_selection)
+{
+	if (value == NULL)
+	{
+		return default_selection;
+	}
+
+	if (strcasecmp(value, "sensehat") == 0 || strcasecmp(value, "sense-hat") == 0 || strcasecmp(value, "sense_hat") == 0)
+	{
+		return FRONT_PANEL_SELECTION_SENSE_HAT;
+	}
+	if (strcasecmp(value, "kit") == 0 || strcasecmp(value, "front-panel-kit") == 0 || strcasecmp(value, "front_panel_kit") == 0)
+	{
+		return FRONT_PANEL_SELECTION_KIT;
+	}
+	if (strcasecmp(value, "none") == 0 || strcasecmp(value, "off") == 0)
+	{
+		return FRONT_PANEL_SELECTION_NONE;
+	}
+
+	return default_selection;
+}
+
+static const char *front_panel_selection_to_string(FRONT_PANEL_SELECTION selection)
+{
+	switch (selection)
+	{
+		case FRONT_PANEL_SELECTION_NONE:
+			return "none";
+		case FRONT_PANEL_SELECTION_SENSE_HAT:
+			return "sensehat";
+		case FRONT_PANEL_SELECTION_KIT:
+			return "kit";
+		default:
+			return "unknown";
+	}
+}
 
 bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *altair_config)
 {
@@ -43,6 +86,7 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 		{.name = "MqttUsername", .has_arg = required_argument, .flag = NULL, .val = 'U'},
 		{.name = "MqttPassword", .has_arg = required_argument, .flag = NULL, .val = 'P'},
 		{.name = "NetworkInterface", .has_arg = required_argument, .flag = NULL, .val = 'n'},
+		{.name = "FrontPanel", .has_arg = required_argument, .flag = NULL, .val = 'f'},
 		{.name = "OpenWeatherMapKey", .has_arg = required_argument, .flag = NULL, .val = 'o'},
 		{.name = "CopyXUrl", .has_arg = required_argument, .flag = NULL, .val = 'u'},
 		{.name = "OpenAIKey", .has_arg = required_argument, .flag = NULL, .val = 'a'},
@@ -55,6 +99,7 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 	altair_config->user_config.mqtt_port = "1883";
 	altair_config->user_config.mqtt_username = NULL;
 	altair_config->user_config.mqtt_password = NULL;
+	altair_config->front_panel_selection      = FRONT_PANEL_SELECTION_NONE;
 	
 	// Generate a unique client ID with timestamp to avoid conflicts
 	static char unique_client_id[64];
@@ -63,7 +108,9 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 	altair_config->user_config.mqtt_client_id = unique_client_id;
 
 	// Loop over all of the options.
-	while ((option = getopt_long(argc, argv, "m:p:c:U:P:n:o:u:a:h", cmdLineOptions, NULL)) != -1)
+	bool front_panel_option_set = false;
+
+	while ((option = getopt_long(argc, argv, "m:p:c:U:P:n:f:o:u:a:h", cmdLineOptions, NULL)) != -1)
 	{
 		// Check if arguments are missing. Every option requires an argument.
 		if (optarg != NULL && optarg[0] == '-')
@@ -88,9 +135,13 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 			case 'P':
 				altair_config->user_config.mqtt_password = optarg;
 				break;
-			case 'n':
-				altair_config->user_config.network_interface = optarg;
-				break;
+		case 'n':
+			altair_config->user_config.network_interface = optarg;
+			break;
+		case 'f':
+			altair_config->front_panel_selection = parse_front_panel_selection(optarg, FRONT_PANEL_SELECTION_NONE);
+			front_panel_option_set              = true;
+			break;
 			case 'o':
 				altair_config->open_weather_map_api_key = optarg;
 				break;
@@ -108,6 +159,12 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 				// Unknown options are ignored.
 				break;
 		}
+	}
+
+	if (!front_panel_option_set)
+	{
+		const char *front_panel_env = getenv("ALTAIR_FRONT_PANEL");
+		altair_config->front_panel_selection = parse_front_panel_selection(front_panel_env, altair_config->front_panel_selection);
 	}
 
 	switch (altair_config->user_config.connectionType)
@@ -131,6 +188,7 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 		{
 			dx_Log_Debug("Using MQTT client ID: %s\n", altair_config->user_config.mqtt_client_id);
 		}
+		dx_Log_Debug("Front panel selection: %s\n", front_panel_selection_to_string(altair_config->front_panel_selection));
 	}
 
 	return result;

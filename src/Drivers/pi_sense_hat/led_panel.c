@@ -4,10 +4,11 @@ static const char *FILEPATH_FB_0 = "/dev/fb0";
 static const char *FILEPATH_FB_1 = "/dev/fb1";
 static const int NUM_WORDS = 64;
 
-static int fbfd;
+static int fbfd = -1;
 static uint16_t *map;
 static uint16_t *p;
 static struct fb_fix_screeninfo fix_info;
+static bool panel_initialized;
 
 static bool open_8x8_panel(const char *filepath)
 {
@@ -37,11 +38,11 @@ static bool open_8x8_panel(const char *filepath)
     return true;
 }
 
-static void init_8x8_panel(void)
+static bool init_8x8_panel(void)
 {
     if (!open_8x8_panel(FILEPATH_FB_0)) {
         if (!open_8x8_panel(FILEPATH_FB_1)) {
-            exit(EXIT_FAILURE);
+            return false;
         }
     }
 
@@ -49,8 +50,9 @@ static void init_8x8_panel(void)
     map = mmap(NULL, PI_SENSE_8x8_BUFFER_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
     if (map == MAP_FAILED) {
         close(fbfd);
+        fbfd = -1;
         perror("Error mmapping the file");
-        exit(EXIT_FAILURE);
+        return false;
     }
 
     /* set a pointer to the start of the memory area */
@@ -58,15 +60,30 @@ static void init_8x8_panel(void)
 
     /* clear the led matrix */
     memset(map, 0, PI_SENSE_8x8_BUFFER_SIZE);
+
+    return true;
 }
 
-void pi_sense_hat_init(void)
+bool pi_sense_hat_init(void)
 {
-    init_8x8_panel();
+    if (panel_initialized) {
+        return true;
+    }
+
+    if (!init_8x8_panel()) {
+        return false;
+    }
+
+    panel_initialized = true;
+    return true;
 }
 
 bool pi_sense_8x8_panel_update(uint16_t *panel_buffer, size_t buffer_len)
 {
+    if (!panel_initialized) {
+        return false;
+    }
+
     if (buffer_len != PI_SENSE_8x8_BUFFER_SIZE) {
         return false;
     }
@@ -74,4 +91,24 @@ bool pi_sense_8x8_panel_update(uint16_t *panel_buffer, size_t buffer_len)
     memcpy(map, panel_buffer, PI_SENSE_8x8_BUFFER_SIZE);
 
     return true;
+}
+
+void pi_sense_hat_close(void)
+{
+    if (!panel_initialized) {
+        return;
+    }
+
+    if (map && map != MAP_FAILED) {
+        munmap(map, PI_SENSE_8x8_BUFFER_SIZE);
+    }
+
+    if (fbfd >= 0) {
+        close(fbfd);
+    }
+
+    map              = NULL;
+    p                = NULL;
+    fbfd             = -1;
+    panel_initialized = false;
 }

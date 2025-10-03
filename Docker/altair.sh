@@ -40,6 +40,11 @@ else
     ARGS="$ARGS -n eth0"
 fi
 
+# Hardware Configuration
+if [ ! -z "$FRONT_PANEL" ]; then
+    ARGS="$ARGS -f $FRONT_PANEL"
+fi
+
 # External Services
 if [ ! -z "$OPEN_WEATHER_MAP_API_KEY" ]; then
     ARGS="$ARGS -o $OPEN_WEATHER_MAP_API_KEY"
