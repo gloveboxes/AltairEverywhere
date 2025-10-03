@@ -135,6 +135,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC Drivers/front_panel)
 target_include_directories(${PROJECT_NAME} PUBLIC Drivers/spidev-lib/src)
 target_include_directories(${PROJECT_NAME} PUBLIC Drivers/sensehat-driver/src)
 target_include_directories(${PROJECT_NAME} PUBLIC uthash/src)
+target_include_directories(${PROJECT_NAME} PUBLIC PortDrivers)
 
 
 include_directories(${CMAKE_SOURCE_DIR} FrontPanels)
