@@ -668,12 +668,14 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
     // Initialize Altair and start CPU thread BEFORE accepting WebSocket connections
     init_altair();
     
+    // Lock mutex BEFORE starting thread to prevent race condition
+    pthread_mutex_lock(&altair_start_mutex);
+    
     dx_Log_Debug("Starting altair thread\n");
     start_altair_thread(altair_thread, NULL, "altair_thread", 1);
 
     // Wait for Altair thread to signal it's ready
     dx_Log_Debug("Waiting for altair thread to signal ready\n");
-    pthread_mutex_lock(&altair_start_mutex);
     pthread_cond_wait(&altair_start_cond, &altair_start_mutex);
     pthread_mutex_unlock(&altair_start_mutex);
 
