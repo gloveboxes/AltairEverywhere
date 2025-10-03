@@ -507,8 +507,13 @@ static bool is_apple_silicon(void)
 /// </summary>
 static void *altair_thread(void *arg)
 {
-    // Log_Debug("Altair Thread starting...\n");
-
+    // Signal that thread is starting BEFORE changing priority
+    // This prevents deadlocks on single-core systems
+    pthread_mutex_lock(&altair_start_mutex);
+    pthread_cond_broadcast(&altair_start_cond);
+    pthread_mutex_unlock(&altair_start_mutex);
+    
+    // Now set priority - this won't affect the signaling above
     // Runtime detection: use QoS on Apple Silicon, nice() elsewhere
     if (is_apple_silicon())
     {
@@ -521,13 +526,7 @@ static void *altair_thread(void *arg)
     {
         // On other platforms (Linux, Intel Mac, etc.), use nice value to lower priority
         nice(19);
-    }
-
-    pthread_mutex_lock(&altair_start_mutex);
-    pthread_cond_broadcast(&altair_start_cond);
-    pthread_mutex_unlock(&altair_start_mutex);
-
-    while (!stop_cpu)
+    }    while (!stop_cpu)
     {
         if (get_cpu_operating_mode_fast() == CPU_RUNNING)
         {
