@@ -6,7 +6,6 @@
 #include "dx_utilities.h"
 #include <stdbool.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 
 static volatile bool delay_milliseconds_enabled = false;
@@ -96,13 +95,9 @@ uint8_t time_input(uint8_t port)
     switch (port)
     {
         case 29: // Has milliseconds timer expired
-            // allow thread switch
-            usleep(500);
             retVal = delay_milliseconds_enabled;
             break;
         case 30: // Has seconds timer expired
-            // allow thread switch
-            usleep(500);
             retVal = delay_seconds_enabled;
             break;
     }

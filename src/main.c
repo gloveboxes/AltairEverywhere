@@ -43,6 +43,23 @@ DX_MQTT_CONFIG mqtt_config;
 
 // Forward declarations
 
+/// <summary>
+/// Detect if running on Apple Silicon at runtime
+/// </summary>
+static bool is_apple_silicon(void)
+{
+#ifdef __APPLE__
+    struct utsname systemInfo;
+    if (uname(&systemInfo) == 0)
+    {
+        // Check for arm64 AND verify we're on macOS (not other ARM platforms)
+        // On macOS, sysname will be "Darwin"
+        return (strcmp(systemInfo.machine, "arm64") == 0) && (strcmp(systemInfo.sysname, "Darwin") == 0);
+    }
+#endif
+    return false;
+}
+
 void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode)
 {
     atomic_store_explicit(&atomic_cpu_operating_mode, new_mode, memory_order_release);
@@ -342,12 +359,27 @@ void print_console_banner(void)
 static void *panel_refresh_thread(void *arg)
 {
     dx_Log_Debug("Panel refresh thread started\n");
-
+    
+    // Set low priority like altair_thread to avoid interfering with main threads
+    // Runtime detection: use QoS on Apple Silicon, nice() elsewhere
+    if (is_apple_silicon())
+    {
+#ifdef __APPLE__
+        // On Apple Silicon, use QoS to explicitly request efficiency cores
+        pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
+        dx_Log_Debug("Panel refresh thread: Set QoS class to background\n");
+#endif
+    }
+    else
+    {
+        // On other platforms (Linux, Intel Mac, etc.), use nice value to lower priority
+        nice(19);
+        dx_Log_Debug("Panel refresh thread: Set nice priority to 19\n");
+    }
+    
     uint8_t last_status = 0;
     uint8_t last_data   = 0;
-    uint16_t last_bus   = 0;
-
-    while (true)
+    uint16_t last_bus   = 0;    while (true)
     {
         if (panel_mode == PANEL_BUS_MODE)
         {
@@ -502,21 +534,7 @@ static void cleanup_altair_disks(void)
 }
 
 /// <summary>
-/// Detect if running on Apple Silicon at runtime
-/// </summary>
-static bool is_apple_silicon(void)
-{
-#ifdef __APPLE__
-    struct utsname systemInfo;
-    if (uname(&systemInfo) == 0)
-    {
-        // Check for arm64 AND verify we're on macOS (not other ARM platforms)
-        // On macOS, sysname will be "Darwin"
-        return (strcmp(systemInfo.machine, "arm64") == 0) && (strcmp(systemInfo.sysname, "Darwin") == 0);
-    }
-#endif
-    return false;
-}
+
 
 /// <summary>
 /// Thread to run the i8080 cpu emulator on
