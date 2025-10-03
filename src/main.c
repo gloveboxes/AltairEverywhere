@@ -17,8 +17,6 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 
-
-
 static pthread_mutex_t altair_start_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t altair_start_cond   = PTHREAD_COND_INITIALIZER;
 
@@ -44,8 +42,6 @@ inline CPU_OPERATING_MODE get_cpu_operating_mode_fast(void)
 DX_MQTT_CONFIG mqtt_config;
 
 // Forward declarations
-
-
 
 void set_cpu_operating_mode(CPU_OPERATING_MODE new_mode)
 {
@@ -346,7 +342,7 @@ void print_console_banner(void)
 static void *panel_refresh_thread(void *arg)
 {
     dx_Log_Debug("Panel refresh thread started\n");
-    
+
     uint8_t last_status = 0;
     uint8_t last_data   = 0;
     uint16_t last_bus   = 0;
@@ -500,8 +496,7 @@ static bool is_apple_silicon(void)
     {
         // Check for arm64 AND verify we're on macOS (not other ARM platforms)
         // On macOS, sysname will be "Darwin"
-        return (strcmp(systemInfo.machine, "arm64") == 0) && 
-               (strcmp(systemInfo.sysname, "Darwin") == 0);
+        return (strcmp(systemInfo.machine, "arm64") == 0) && (strcmp(systemInfo.sysname, "Darwin") == 0);
     }
 #endif
     return false;
@@ -513,7 +508,7 @@ static bool is_apple_silicon(void)
 static void *altair_thread(void *arg)
 {
     // Log_Debug("Altair Thread starting...\n");
-    
+
     // Runtime detection: use QoS on Apple Silicon, nice() elsewhere
     if (is_apple_silicon())
     {
@@ -644,6 +639,21 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
         dx_Log_Debug("No MQTT broker specified - running without MQTT connectivity\n");
     }
 
+    // Initialize Altair and start CPU thread BEFORE accepting WebSocket connections
+    init_altair();
+    start_altair_thread(altair_thread, NULL, "altair_thread", 1);
+
+    // Wait for Altair thread to signal it's ready
+    pthread_mutex_lock(&altair_start_mutex);
+    pthread_cond_wait(&altair_start_cond, &altair_start_mutex);
+    pthread_mutex_unlock(&altair_start_mutex);
+
+    dx_Log_Debug("Altair thread confirmed running, starting WebSocket server\n");
+
+    // NOW start the WebSocket server - Altair is fully initialized and ready
+    init_web_socket_server(client_connected_cb);
+
+    // Now start the panel refresh thread if a front panel is active
     if (front_panel_manager_get_active_type() != FRONT_PANEL_TYPE_NONE)
     {
         dx_Log_Debug("Starting panel refresh thread for front panel type %d\n", front_panel_manager_get_active_type());
@@ -653,20 +663,6 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
     {
         dx_Log_Debug("No hardware front panel active, skipping panel refresh thread\n");
     }
-
-    // Initialize Altair and start CPU thread BEFORE accepting WebSocket connections
-    init_altair();
-    start_altair_thread(altair_thread, NULL, "altair_thread", 1);
-    
-    // Wait for Altair thread to signal it's ready
-    pthread_mutex_lock(&altair_start_mutex);
-    pthread_cond_wait(&altair_start_cond, &altair_start_mutex);
-    pthread_mutex_unlock(&altair_start_mutex);
-    
-    dx_Log_Debug("Altair thread confirmed running, starting WebSocket server\n");
-    
-    // NOW start the WebSocket server - Altair is fully initialized and ready
-    init_web_socket_server(client_connected_cb);
 }
 
 /// <summary>
