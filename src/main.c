@@ -523,11 +523,16 @@ static bool is_apple_silicon(void)
 /// </summary>
 static void *altair_thread(void *arg)
 {
+    Log_Debug("Altair thread: Starting\n");
+    
     // Signal that thread is starting BEFORE changing priority
     // This prevents deadlocks on single-core systems
+    Log_Debug("Altair thread: Signaling main thread\n");
     pthread_mutex_lock(&altair_start_mutex);
     pthread_cond_broadcast(&altair_start_cond);
     pthread_mutex_unlock(&altair_start_mutex);
+    
+    Log_Debug("Altair thread: Signal sent, setting thread priority\n");
     
     // Now set priority - this won't affect the signaling above
     // Runtime detection: use QoS on Apple Silicon, nice() elsewhere
@@ -536,13 +541,18 @@ static void *altair_thread(void *arg)
 #ifdef __APPLE__
         // On Apple Silicon, use QoS to explicitly request efficiency cores
         pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
+        Log_Debug("Altair thread: Set QoS class to background\n");
 #endif
     }
     else
     {
         // On other platforms (Linux, Intel Mac, etc.), use nice value to lower priority
         nice(19);
-    }    while (!stop_cpu)
+        Log_Debug("Altair thread: Set nice priority to 19\n");
+    }
+
+    Log_Debug("Altair thread: Entering main CPU loop\n");
+    while (!stop_cpu)
     {
         if (get_cpu_operating_mode_fast() == CPU_RUNNING)
         {
@@ -550,6 +560,7 @@ static void *altair_thread(void *arg)
         }
     }
 
+    Log_Debug("Altair thread: Exiting CPU loop\n");
     return NULL;
 }
 
@@ -656,9 +667,12 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     // Initialize Altair and start CPU thread BEFORE accepting WebSocket connections
     init_altair();
+    
+    dx_Log_Debug("Starting altair thread\n");
     start_altair_thread(altair_thread, NULL, "altair_thread", 1);
 
     // Wait for Altair thread to signal it's ready
+    dx_Log_Debug("Waiting for altair thread to signal ready\n");
     pthread_mutex_lock(&altair_start_mutex);
     pthread_cond_wait(&altair_start_cond, &altair_start_mutex);
     pthread_mutex_unlock(&altair_start_mutex);
