@@ -45,7 +45,7 @@ extern DX_MQTT_CONFIG mqtt_config;
 #include "io_ports.h"
 #include "memory.h"
 
-const char ALTAIR_EMULATOR_VERSION[] = "5.0.3";
+const char ALTAIR_EMULATOR_VERSION[] = "5.0.4";
 #define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED FALSE
 
