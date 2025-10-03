@@ -55,7 +55,6 @@ if(UNIX AND NOT APPLE)
         "Drivers/pi_sense_hat/led_panel.c"
         "Drivers/pi_sense_hat/graphics.c"
         "Drivers/sensehat-driver/src/sense_hat.c"
-        "Drivers/front_panel/graphics.c"
         "Drivers/spidev-lib/src/spidev_lib.c"
     )
     message(STATUS "Including Linux-specific front panel drivers (Sense HAT and Kit)")
