@@ -541,7 +541,7 @@ static void *altair_thread(void *arg)
 #ifdef __APPLE__
         // On Apple Silicon, use QoS to explicitly request efficiency cores
         pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
-        Log_Debug("Altair thread: Set QoS class to background\n");
+        dx_Log_Debug("Altair thread: Set QoS class to background\n");
 #endif
     }
     else
