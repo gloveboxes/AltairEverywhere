@@ -23,11 +23,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ARG REPO_URL=https://github.com/gloveboxes/AltairEverywhere.git
 RUN git clone --depth 1 --recurse-submodules ${REPO_URL} /AltairEverywhere
 
-# Optional build configurations (uncomment as needed)
-#RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_FRONT_PI_SENSE_HAT/set(ALTAIR_FRONT_PI_SENSE_HAT/g' CMakeLists.txt
-#RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/set(ALTAIR_FRONT_PANEL_KIT TRUE "Front_Panel_Kit")/g' CMakeLists.txt
-#RUN cd /AltairEverywhere/src && sed -i 's/# set(ALTAIR_CLOUD/set(ALTAIR_CLOUD/g' CMakeLists.txt
-
 # Build application
 WORKDIR /AltairEverywhere/src
 RUN mkdir -p build \
