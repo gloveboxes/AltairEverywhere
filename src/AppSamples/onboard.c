@@ -340,6 +340,11 @@ int display_sensor_data()
     ltoa(bufMins,  lmins);
     cputs(bufHours);
     cputs(":");
+    
+    /* Pad minutes with leading zero if less than 10 */
+    if (atoi(bufMins) < 10) {
+        cputs("0");
+    }
     cputs(bufMins);
     
     cputs(clear_padding);
