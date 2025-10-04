@@ -2,11 +2,11 @@ site_name: Altair 8800 Emulator
 site_author: Dave Glover
 site_description: >-
   Altair 8800 Emulator
-# site_url: https://github.com/gloveboxes/AltairEverywhere
+# site_url: https://github.com/gloveboxes/Altair-8800-Emulator
 
 # Repository ..................................................
 repo_name: Altair 8800 Emulator
-repo_url: https://github.com/gloveboxes/AltairEverywhere
+repo_url: https://github.com/gloveboxes/Altair-8800-Emulator
 
 # Copyright ...................................................
 copyright: >
