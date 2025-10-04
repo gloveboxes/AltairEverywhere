@@ -25,7 +25,8 @@ void io_port_out(uint8_t port, uint8_t data)
     switch (port)
     {
         // Time IO Ports
-        case 29: // Set milliseconds timer
+        case 28: // Set milliseconds timer high byte (bits 15-8)
+        case 29: // Set milliseconds timer low byte (bits 7-0) and start timer
         case 30: // Set seconds timer
         case 41: // Load system tick count
         case 42: // Load UTC date and time
