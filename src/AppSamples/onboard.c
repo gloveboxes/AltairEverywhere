@@ -1,6 +1,6 @@
 /*
  * onboard.c - Onboard sensor monitoring for Altair 8800
- * Version 1.0
+ * Version 1.1
  * 
  * Reads temperature, pressure, humidity and system information
  * from the emulator's onboard sensors using I/O ports.
@@ -39,6 +39,11 @@ int check_key_ready();
 int get_key();
 int display_sensor_data();
 int init_display();
+
+/* Timer library functions */
+int x_delay();
+int x_tmrset();
+int x_tmrexp();
 
 
 /* I/O port functions */
@@ -86,9 +91,9 @@ int main()
         cursor_move(14, 1);
         cputs("Status: Monitoring continuously... (5 sec delay)");
         
-        /* Sleep using timer with keyboard checking */
-        outp(30, 5);                    /* Start 5 second timer */
-        while (inp(30) != 0 && !quit_requested) {
+        /* Sleep using timer library with keyboard checking */
+        x_tmrset(5000);                 /* Start 5 second timer (5000 ms) */
+        while (x_tmrexp() && !quit_requested) {
             /* Check for keypress during sleep */
             if (check_key_ready()) {
                 key_pressed = get_key();
@@ -284,7 +289,7 @@ int init_display()
     
     /* Draw static header */
     cursor_move(1, 1);
-    cputs("===== Altair 8800 Onboard Sensor Monitor v1.0 =====");
+    cputs("===== Altair 8800 Onboard Sensor Monitor v1.1 =====");
     cursor_move(2, 1);
     cputs("===================================================");
     cursor_move(3, 1);

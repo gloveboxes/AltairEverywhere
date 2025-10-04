@@ -54,6 +54,11 @@ int status_counter; /* Counter for status display timing */
 /* Collision handling */
 int paddle_needs_redraw; /* Flag to force paddle redraw after collision */
 
+/* Timer library functions */
+int x_delay();
+int x_tmrset();
+int x_tmrexp();
+
 /* --- Console I/O --- */
 
 int chput(c)
@@ -269,15 +274,15 @@ int future_col;
 
 int start_game_loop_timer()
 {
-    /* Start a 10ms game loop timer */
-    outp(29, 10);
+    /* Start a 50ms game loop timer */
+    x_tmrset(50);
     return 0;
 }
 
 int is_game_loop_timer_expired()
 {
-    /* Check if the 50ms timer has expired - returns 0 when expired */
-    return (inp(29) == 0);
+    /* Check if the 50ms timer has expired - returns 1 when expired */
+    return (x_tmrexp() == 0);
 }
 
 int should_move_ball()
@@ -292,10 +297,10 @@ int should_move_ball()
 
     /* Calculate current speed: base speed reduced by bounce count */
     speed_cycles = base_speed - (effective_bounces / 10);
-    if (speed_cycles < 4)
-        speed_cycles = 4; /* Minimum speed: 4 cycles (40ms) */
+    if (speed_cycles < 1)
+        speed_cycles = 1; /* Minimum speed: 1 cycle (50ms) */
 
-    /* Adjust for 10ms timer resolution */
+    /* Adjust for 50ms timer resolution */
     return (ball_counter >= speed_cycles);
 }
 
@@ -425,7 +430,7 @@ int update_ball_position()
         ball_dy      = 1;                          /* Always start going down */
         bounce_count = 0;                          /* Reset speed to default for new ball */
         ball_counter = 0;                          /* Reset ball timing counter for fresh start */
-        base_speed   = 10;                         /* Ensure base speed is reset to default (4 cycles = 100ms) */
+        base_speed   = 2;                          /* Ensure base speed is reset to default (2 cycles = 100ms) */
         if (score > 0)
             score--; /* Lose a point */
         return 1;    /* Signal that ball was reset - force immediate counter reset */
@@ -504,7 +509,7 @@ int main()
 
     /* Initialize speed system */
     bounce_count = 0;  /* Start with no bounces */
-    base_speed   = 10; /* Base speed: 10 cycles = 100ms */
+    base_speed   = 2;  /* Base speed: 2 cycles = 100ms (50ms per cycle) */
 
     /* Initialize game loop timer and counters */
     ball_counter        = 0;
@@ -539,7 +544,7 @@ int main()
             paddle_counter++;
             status_counter++;
 
-            /* Handle paddle input every 1 cycles (1 * 10ms = 10ms) */
+            /* Handle paddle input every 1 cycles (1 * 50ms = 50ms) */
             if (paddle_counter >= 1)
             {
                 ch = handle_paddle_input();
@@ -559,7 +564,7 @@ int main()
                 ball_counter = 0; /* Reset ball counter after movement */
             }
 
-            start_game_loop_timer(); /* Restart 10ms timer */
+            start_game_loop_timer(); /* Restart 50ms timer */
         }
 
         /* Only redraw objects that moved */
@@ -575,8 +580,8 @@ int main()
             paddle_needs_redraw = 0; /* Reset flag after redraw */
         }
 
-        /* Update status every 100 cycles (100 * 10ms = 1000ms) */
-        if (status_counter >= 200)
+        /* Update status every 20 cycles (20 * 50ms = 1000ms) */
+        if (status_counter >= 20)
         {
             update_status();
             status_counter = 0; /* Reset status counter */
