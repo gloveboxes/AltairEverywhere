@@ -42,6 +42,7 @@ nav:
   - Program the Altair:
     - Introduction: "60-programming/00-Introduction.md"
     - Manuals: "60-programming/00-Manuals.md"
+    - Vibe Coding the Altair: "60-programming/01-Vibe-Coding.md"
     - Editing Files: "60-programming/01-Editing-files.md"
     - Intel 8080 IO Ports: "60-programming/01-i8080-IO-Ports.md"
     - Microsoft BASIC: "60-programming/02-Microsoft-BASIC-programming.md"
