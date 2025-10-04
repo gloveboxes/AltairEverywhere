@@ -1,5 +1,5 @@
 # Multi-stage build for smaller final image
-FROM debian:bookworm-slim AS builder
+FROM debian:trixie-slim AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -30,7 +30,7 @@ RUN mkdir -p build \
     && cmake --build build --config Release --target all -j$(nproc)
 
 # Production stage - much smaller final image
-FROM debian:bookworm-slim AS runtime
+FROM debian:trixie-slim AS runtime
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -41,7 +41,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl3 \
     libuuid1 \
     ca-certificates \
-    libgpiod2 \
+    libgpiod3 \
     gpiod \
     python3 \
     i2c-tools \

@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define GF_VERSION "1.1"
+#define GF_VERSION "1.2"
 
 /* Function prototypes */
 int get_endpoint();
@@ -90,7 +90,24 @@ char **argv;
         }
         else if (strcmp(argv[1], "-f") == 0 || strcmp(argv[1], "-F") == 0)
         {
+            char *save_filename;
+            char *path_iter;
+
             filename = argv[2];
+            save_filename = filename;
+            path_iter = filename;
+
+            while (*path_iter != '\0')
+            {
+                if (*path_iter == '/' || *path_iter == '\\')
+                {
+                    if (*(path_iter + 1) != '\0')
+                    {
+                        save_filename = path_iter + 1;
+                    }
+                }
+                path_iter++;
+            }
 
             if (strlen(file_content) == 0)
             {
@@ -101,10 +118,14 @@ char **argv;
 
 
             printf("\nDownloading file '%s' from URL '%s'\n", filename, file_content);
-
-            if ((fp_output = fopen(filename, "w")) == NULL)
+            if (save_filename != filename)
             {
-                printf("Error: Failed to create output file '%s'\n", filename);
+                printf("Saving as '%s'\n", save_filename);
+            }
+
+            if ((fp_output = fopen(save_filename, "w")) == NULL)
+            {
+                printf("Error: Failed to create output file '%s'\n", save_filename);
                 printf("Check disk space and write permissions.\n");
                 return -1;
             }
@@ -125,8 +146,8 @@ char **argv;
             fclose(fp_output);
             if (wg_result == -1)
             {
-                printf("\n\nWeb copy failed for file '%s'. Check filename and network connection\n", filename);
-                unlink(filename);
+                printf("\n\nWeb copy failed for file '%s'. Check filename and network connection\n", save_filename);
+                unlink(save_filename);
             }
             return 0;
         }
