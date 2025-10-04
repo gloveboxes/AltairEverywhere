@@ -36,9 +36,8 @@
  *  29 - Set milliseconds timer low byte (bits 7-0) and start timer
  */
 
-#define TMR_MSH   28
-#define TMR_MSL   29
-#define CHUNK_MAX 255
+#define TMR_MSH 28
+#define TMR_MSL 29
 
 /* BDS C I/O entry points */
 int inp(); /* int inp(port) */
