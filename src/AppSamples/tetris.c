@@ -3,7 +3,7 @@
  * BDS C 1.6 on CP/M
  *
  * Rewritten for BDS C constraints:
- *  - All external identifiers unique within first 7 characters
+ *  - All symbols unique within first 7 characters
  *  - No goto labels named 'end'
  *  - Simple deterministic gravity; timer port 29: 1 while running, 0 on expiry
  *  - K&R style definitions only
@@ -14,6 +14,8 @@ int bdos();
 int bios();
 int inp();
 int outp();
+int x_tmrset();
+int x_tmrexp();
 
 /* --- Key codes --- */
 #define KEY_ESC   27
@@ -639,10 +641,6 @@ int hnd_inp()
     return 0;
 }
 
-/* ========================= Timer ========================= */
-int tmr_st() { outp(29,255); return 0; }
-int tmr_exp() { return (inp(29) == 0); }
-
 /* ========================= Game over ========================= */
 int show_go()
 {
@@ -669,7 +667,7 @@ int main()
 
     nxt_pcs = rnd_pcs(); if (!spn_new()) { /* immediate game over */ }
 
-    tmr_st();
+    x_tmrset(255);
 
     while (game_st==GAME_PLAYING) {
         if (key_rdy())
@@ -677,9 +675,9 @@ int main()
             hnd_inp();
         }
 
-        if (tmr_exp())
+        if (!x_tmrexp())
         {
-            tmr_st();
+            x_tmrset(255);
 
             drop_sp = soft_dr ? 2 : fall_sp;
             fall_tm++;
