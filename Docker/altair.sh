@@ -50,10 +50,6 @@ if [ ! -z "$OPEN_WEATHER_MAP_API_KEY" ]; then
     ARGS="$ARGS -o $OPEN_WEATHER_MAP_API_KEY"
 fi
 
-if [ ! -z "$COPYX_URL" ]; then
-    ARGS="$ARGS -u $COPYX_URL"
-fi
-
 if [ ! -z "$OPENAI_API_KEY" ]; then
     ARGS="$ARGS -a $OPENAI_API_KEY"
 fi

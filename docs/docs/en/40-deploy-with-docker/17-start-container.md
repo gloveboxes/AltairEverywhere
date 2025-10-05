@@ -1,83 +1,95 @@
 There are two classes of docker images you can use to run the Altair emulator.
 
-1. The first is for general use on 64-bit [Linux, macOS, Windows, and Raspberry Pi operating systems](#general-linux-macos-windows-and-raspberry-pi-users).
-2. The second image is for a Raspberry Pi running [Raspberry Pi OS with a Pi Sense HAT](#raspberry-pi-with-pi-sense-hat-users). The Pi Sense HAT 8x8 LED panel can display the Altair address and data bus information can also be switched between *Font* and *bitmap* modes for games.
+## Altair 8800 Standard Mode
 
-    | Raspberry Pi with Pi Sense HAT  | Raspberry Pi Sense HAT |
-    |--|--|
-    | ![The image shows the address and data bus LEDs](img/raspberry_pi_sense_hat_map.png) | ![The gif shows the address and data bus LEDs in action](img/raspberry_pi_sense_hat.gif) |
+1. The first is for general use on 64-bit [Linux, macOS, Windows, and Raspberry Pi operating systems](#general-linux-macos-windows-and-raspberry-pi-users).
+
+    ```shell
+    docker run --user root -p 8082:8082 -p 80:80 --name altair8800 --rm glovebox/altair8800:latest
+    ```
+
+## Altair 8800 Advanced Modes
+
+The Altair 8800 emulator can also run in advanced mode, you can:
+
+1. Set the time zone.
+1. Connect to an MQTT broker to publish the Altair address and data bus information.
+1. Connect to the Open Weather Map service to get the current weather information for your location.
+1. Run on a Raspberry Pi with a Pi Sense HAT to display the address and data bus information on the Pi Sense HAT 8x8 LED panel.
+
+### Docker environment variables
+
+The Altair emulator supports several Docker environment variables to configure its behavior and the easiest way to set these is with the env file `--env-file` option.
+
+Open the `altair.env` file in a text editor and set the environment variables you want to use. Then, start the Altair emulator Docker container with the `--env-file` option.
+
+```shell
+docker run --env-file altair.env --user root -p 8082:8082 -p 80:80 --name altair8800 --rm glovebox/altair8800:latest
+```
+
+### Time Zone
+
+You can set the time zone with the `TZ=YOUR_TIME_ZONE` environment variable. For example, to set the time zone to Sydney, Australia, use `TZ=Australia/Sydney`. See the [list of time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for your location.
+
+### MQTT Broker
+
+You can connect to an MQTT broker to publish the Altair address and data bus information. You need to set the following environment variables.
+
+* MQTT_HOST=`YOUR_MQTT_HOST`
+* MQTT_PORT=`YOUR_MQTT_PORT` (default is 1883)
+* MQTT_CLIENT_ID=`YOUR_MQTT_CLIENT_ID` (must be unique for each client connected to the MQTT broker)
+
+### Open Weather Map
+
+You can connect to the Open Weather Map service to get the current weather information for your location. You need to set the following environment variable.
+
+* OPEN_WEATHER_MAP_API_KEY=`YOUR_OPEN_WEATHER_MAP_API_KEY` (you can get a free API key by signing up at [Open Weather Map](https://openweathermap.org/api))
+
+### Raspberry Pi with Pi Sense HAT
+
+You can run the Altair emulator on a Raspberry Pi with a Pi Sense HAT Attached. The Pi Sense HAT 8x8 LED panel can display the Altair address and data bus information can also be switched between *Font* and *bitmap* modes for games.
+
+| Raspberry Pi with Pi Sense HAT  | Raspberry Pi Sense HAT |
+|--|--|
+| ![The image shows the address and data bus LEDs](img/raspberry_pi_sense_hat_map.png) | ![The gif shows the address and data bus LEDs in action](img/raspberry_pi_sense_hat.gif) |
+
+#### Enable the Pi Sense HAT
+
+You must set the front panel environment variable.
+
+* FRONT_PANEL=`sensehat` (Options include sensehat, kit, none, the default is `none`)
+
+#### Enable I2C hardware access
+
+You must enable I2C hardware access and pass the `--device` option to the `docker run` command.
+
+1. Enable I2C hardware access on the Raspberry Pi. You can do this with the `raspi-config` tool.
+
+    ```bash
+    sudo raspi-config nonint do_i2c 0
+    ```
+
+2. Pass the `--device` option to the `docker run` command.
+
+   * `--device=/dev/i2c-1` (this enables I2C hardware access to the Pi Sense HAT)
+
+   ```shell
+   docker run --device=/dev/i2c-1 --env-file altair.env --user root -p 8082:8082 -p 80:80 --name altair8800 --rm glovebox/altair8800-pisense:latest
+   ```
 
 ## Altair disk storage
 
-The Altair emulator disks are stored in a Docker persistent storage volume. This ensures any changes made to the contents of the Altair disks are saved if the Docker container is stopped or deleted.
+The Altair emulator disks can be stored in a Docker persistent storage volume. This ensures any changes made to the contents of the Altair disks are saved if the Docker container is stopped or deleted.
 
-## Start the docker container
-
-You need to follow these steps to start the Altair emulator Docker container.
-
-1. Enable I2C hardware access. This is only required if you are running the Altair emulator on a Raspberry Pi with a Pi Sense HAT.
-1. Create a Docker persistent storage volume.
-1. Select and start a Docker container.
-
-## Enable the Pi Sense HAT
-
-If you are running the Altair emulator on a Raspberry Pi with a Pi Sense HAT, you need to enable I2C hardware access with the following command.
-
-```bash
-sudo raspi-config nonint do_i2c 0
+```shell
+docker run -v altair-disks:/app/Disks --user root -p 8082:8082 -p 80:80 --name altair8800 --rm glovebox/altair8800:latest
 ```
 
-## Select the Altair Docker image
+or passing environment variables using the environment file
 
-Select the Altair Docker image that matches your system. Be sure to replace the Australia/Sydney time zone with your local time zone.
-
-### General Linux, macOS, Windows, and Raspberry Pi users
-
-1. For general use on 64-bit Linux, macOS, Windows, and Raspberry Pi operating systems. Run the following command.
-
-    Note, MQTT and Open Weather Map environment variables are optional. If you do not want to use these features, you can remove the `-e` options from the command.
-
-    For MacOs and Linux, run the following command.
-
-    ```bash
-    docker run -e TZ=Australia/Sydney \
-    -e MQTT_HOST=YOUR_MQTT_HOST -e MQTT_PORT=YOUR_MQTT_PORT -e MQTT_CLIENT_ID=YOUR_MQTT_CLIENT_ID \
-    -e OPEN_WEATHER_MAP_API_KEY=YOUR_OPEN_WEATHER_MAP_API_KEY \
-    -d --privileged --user root \
-    -p 8082:8082 -p 80:80 \
-    --name altair8800 \
-    -v altair-disks:/app/Disks \
-    --rm glovebox/altair8800:latest
-    ```
-
-    For Windows, run the following command.
-
-    ```powershell
-    docker run -e TZ=Australia/Sydney `
-    -e MQTT_HOST=YOUR_MQTT_HOST -e MQTT_PORT=YOUR_MQTT_PORT -e MQTT_CLIENT_ID=YOUR_MQTT_CLIENT_ID `
-    -e OPEN_WEATHER_MAP_API_KEY=YOUR_OPEN_WEATHER_MAP_API_KEY `
-    -d --privileged --user root `
-    -p 8082:8082 -p 80:80 `
-    --name altair8800 `
-    -v altair-disks:/app/Disks `
-    --rm glovebox/altair8800:latest
-    ```
-
-### Raspberry Pi with Pi Sense HAT users
-
-1. For a Raspberry Pi running Raspberry Pi OS with a Pi Sense HAT. Run the following command.
-
-    ```bash
-    docker run -e TZ=Australia/Sydney \
-    -e MQTT_HOST=YOUR_MQTT_HOST -e MQTT_PORT=YOUR_MQTT_PORT -e MQTT_CLIENT_ID=YOUR_MQTT_CLIENT_ID \
-    -e OPEN_WEATHER_MAP_API_KEY=YOUR_OPEN_WEATHER_MAP_API_KEY \
-    -d --privileged --user root \
-    -p 8082:8082 -p 80:80 \
-    --name altair8800 \
-    -v altair-disks:/app/Disks \
-    --device=/dev/i2c-1 \
-    --rm glovebox/altair8800-pisense:latest
-    ```
+```shell
+docker run -v altair-disks:/app/Disks --env-file altair.env --user root -p 8082:8082 -p 80:80 --name altair8800 --rm glovebox/altair8800:latest
+```
 
 ## Open the Web Terminal
 
@@ -89,6 +101,10 @@ Open the Web Terminal to access the Altair emulator. Follow these steps.
     * Navigate to `http://hostname_or_ip_address` if you deployed the Altair emulator on a remote computer.
 
     ![The following image is of the web terminal command prompt](../20-fundamentals/img/web_terminal_intro.png)
+
+### Connecting a remote Altair emulator
+
+You can pass an optional `altair` query parameter to the URL to connect to a remote Altair emulator. For example, if the Altair emulator is running on a computer with the IP address `192.168.1.100`, you can connect to it by navigating to `http://localhost?altair=192.168.1.100`.
 
 ## Docker tips and tricks
 
@@ -135,12 +151,3 @@ sudo ls /var/lib/docker/volumes/altair-disks/_data -all
 ```bash
 docker volume rm altair-disks
 ```
-
-<!-- ## Trouble shooting Raspberry Pi issues
-
-1. Ensure strong WiFi connection
-1. Disabling the WiFi power management can improve stability
-
-    ```bash
-    sudo iw wlan0 set power_save off
-    ``` -->
