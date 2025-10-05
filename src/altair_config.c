@@ -28,7 +28,6 @@ static const char *cmdLineArgsUsageText =
 	"\n"
 	"External Services:\n"
 	"  -o, --OpenWeatherMapKey <key>  OpenWeatherMap API key\n"
-	"  -u, --CopyXUrl <url>           CopyX service URL\n"
 	"  -a, --OpenAIKey <key>          OpenAI API key\n"
 	"\n"
 	"Help:\n"
@@ -88,7 +87,6 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 		{.name = "NetworkInterface", .has_arg = required_argument, .flag = NULL, .val = 'n'},
 		{.name = "FrontPanel", .has_arg = required_argument, .flag = NULL, .val = 'f'},
 		{.name = "OpenWeatherMapKey", .has_arg = required_argument, .flag = NULL, .val = 'o'},
-		{.name = "CopyXUrl", .has_arg = required_argument, .flag = NULL, .val = 'u'},
 		{.name = "OpenAIKey", .has_arg = required_argument, .flag = NULL, .val = 'a'},
 		{.name = "help", .has_arg = no_argument, .flag = NULL, .val = 'h'}};
 
@@ -110,7 +108,7 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 	// Loop over all of the options.
 	bool front_panel_option_set = false;
 
-	while ((option = getopt_long(argc, argv, "m:p:c:U:P:n:f:o:u:a:h", cmdLineOptions, NULL)) != -1)
+	while ((option = getopt_long(argc, argv, "m:p:c:U:P:n:f:o:a:h", cmdLineOptions, NULL)) != -1)
 	{
 		// Check if arguments are missing. Every option requires an argument.
 		if (optarg != NULL && optarg[0] == '-')
@@ -145,9 +143,7 @@ bool parse_altair_cmd_line_arguments(int argc, char *argv[], ALTAIR_CONFIG_T *al
 			case 'o':
 				altair_config->open_weather_map_api_key = optarg;
 				break;
-			case 'u':
-				altair_config->copy_x_url = optarg;
-				break;
+			// ...existing code...
 			case 'a':
 				altair_config->openai_api_key = optarg;
 				break;

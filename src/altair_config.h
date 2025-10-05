@@ -14,7 +14,6 @@
 {
 	DX_USER_CONFIG user_config;
 	char *open_weather_map_api_key;
-	char *copy_x_url;
 	char *openai_api_key;
 	FRONT_PANEL_SELECTION front_panel_selection;
 } ALTAIR_CONFIG_T;
