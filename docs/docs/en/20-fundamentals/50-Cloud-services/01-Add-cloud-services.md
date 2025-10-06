@@ -4,7 +4,7 @@ Adding cloud services to the Altair 8800 emulator is **optional**, but it does p
 
 You can use the following cloud services with the Altair emulator.
 
-- [Open Weather Map](https://openweathermap.org/) provides planet-scale weather and pollution data services. Open Weather Map provides free access to weather and pollution data.
+- [Open Weather Map](https://openweathermap.org/){:target=_blank} provides planet-scale weather and pollution data services. Open Weather Map provides free access to weather and pollution data.
 
 ## Cloud service access keys
 

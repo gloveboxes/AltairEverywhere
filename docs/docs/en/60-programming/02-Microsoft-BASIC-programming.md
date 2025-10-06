@@ -1,4 +1,4 @@
-Bill Gates and Paul Allen wrote [Altair BASIC](https://en.wikipedia.org/wiki/Altair_BASIC?azure-portal=true). It was Microsoft's first product. Later, Microsoft released Microsoft BASIC for CP/M, see the [Microsoft BASIC-80 reference manual](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/AA-P226A-TV_BASIC-80_Reference_Manual_VT180_V5.21_1981.pdf?azure-portal=true).
+Bill Gates and Paul Allen wrote [Altair BASIC](https://en.wikipedia.org/wiki/Altair_BASIC?azure-portal=true){:target=_blank}. It was Microsoft's first product. Later, Microsoft released Microsoft BASIC for CP/M, see the [Microsoft BASIC-80 reference manual](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/AA-P226A-TV_BASIC-80_Reference_Manual_VT180_V5.21_1981.pdf?azure-portal=true){:target=_blank}.
 
 In the following exercise, you'll learn how to write your first Microsoft BASIC application.
 
@@ -75,7 +75,7 @@ You can learn more about BASIC from the following BASIC applications included wi
 - **STARTREK.BAS** is a game.
 - **TICTAK.BAS:** A simple game of naughts and crosses.
 - **TIME.BAS** demonstrates how to use the time Intel 8080 IO ports including setting a sleep timer, access to the system tick counter, and local and UTC date and times.
-- **WEATHER.BAS** reads weather and pollution data from Open Weather Map and adds random [jitter](https://en.wikipedia.org/wiki/Jitter) to the temperature data at random intervals. The jittered temperature is used for anomaly detection. The weather and pollution data is then streamed to Azure IoT Central at regular intervals.
+- **WEATHER.BAS** reads weather and pollution data from Open Weather Map and adds random [jitter](https://en.wikipedia.org/wiki/Jitter){:target=_blank} to the temperature data at random intervals. The jittered temperature is used for anomaly detection. The weather and pollution data is then streamed to Azure IoT Central at regular intervals.
 
 ## Setting text colors
 
@@ -94,7 +94,7 @@ The BASIC language has support for Intel 8080 CPU input and output port instruct
 - gets the local date and time from port 43
 - and sets a sleep period using output port 30, and then waits on input port 30 for the delay period to expire.
 
-For more information about Intel 8080 IO port mappings, refer to [Intel 8080 input and output ports](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki#intel-8080-input-and-output-ports).
+For more information about Intel 8080 IO port mappings, refer to [Intel 8080 input and output ports](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki#intel-8080-input-and-output-ports){:target=_blank}.
 
 ![The image shows the time app running](img/time_app.png)
 

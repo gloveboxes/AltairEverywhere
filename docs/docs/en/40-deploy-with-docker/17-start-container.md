@@ -47,7 +47,7 @@ docker run --env-file altair.env --user root -p 8082:8082 -p 80:80 --name altair
 
 ### Time Zone
 
-Set the time zone with the `TZ=YOUR_TIME_ZONE` environment variable. For example, to set the time zone to Sydney, Australia, use `TZ=Australia/Sydney`. See the [list of time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for your location.
+Set the time zone with the `TZ=YOUR_TIME_ZONE` environment variable. For example, to set the time zone to Sydney, Australia, use `TZ=Australia/Sydney`. See the [list of time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones){:target=_blank} for your location.
 
 ### MQTT Broker
 
@@ -60,14 +60,14 @@ Connect to an MQTT broker to publish Altair address and data bus information. Se
 #### ThingsBoard
 
 Telemetry data is sent to the MQTT topic `v1/devices/me/telemetry` in ThingsBoard format.
-You can install the free ThingsBoard Community Edition locally, including on devices like a Raspberry Pi. See the [ThingsBoard installation guide](https://thingsboard.io/docs/user-guide/install/installation-options/).
+You can install the free ThingsBoard Community Edition locally, including on devices like a Raspberry Pi. See the [ThingsBoard installation guide](https://thingsboard.io/docs/user-guide/install/installation-options/){:target=_blank}.
 In ThingsBoard, create an MQTT device to represent your Altair emulator. Use the same `MQTT_CLIENT_ID` when connecting from the Altair emulator.
 
 ### Open Weather Map
 
 Connect to the Open Weather Map service for current weather information. Set:
 
-- OPEN_WEATHER_MAP_API_KEY=`YOUR_OPEN_WEATHER_MAP_API_KEY` (get a free API key at [Open Weather Map](https://openweathermap.org/api))
+- OPEN_WEATHER_MAP_API_KEY=`YOUR_OPEN_WEATHER_MAP_API_KEY` (get a free API key at [Open Weather Map](https://openweathermap.org/api){:target=_blank})
 
 ### Raspberry Pi with Pi Sense HAT
 

@@ -1,23 +1,23 @@
 The Altair 8800 emulator is a software program that emulates the Altair 8800 computer. The Altair emulator is written in C and runs on most desktop operating systems as well as devices like the Raspberry Pi, Beaglebone, and Azure Sphere.
 
-This is version 2 of the Altair 8800 emulator project and it shares the same code base as the [Azure Sphere Cloud-Enabled Altair 8800](https://github.com/AzureSphereCloudEnabledAltair8800/AltairOnAzureSphere) as featured on the Register "[Microsoft adds cloud enablement to 1970s Altair 8800 tech](https://www.theregister.com/2021/07/16/altair_redux/)".
+This is version 2 of the Altair 8800 emulator project and it shares the same code base as the [Azure Sphere Cloud-Enabled Altair 8800](https://github.com/AzureSphereCloudEnabledAltair8800/AltairOnAzureSphere){:target=_blank} as featured on the Register "[Microsoft adds cloud enablement to 1970s Altair 8800 tech](https://www.theregister.com/2021/07/16/altair_redux/){:target=_blank}".
 
 ## Source code
 
-- The Altair emulator source code is maintained in the [Altair Everywhere](https://github.com/gloveboxes/AltairEverywhere) GitHub repo.
+- The Altair emulator source code is maintained in the [Altair Everywhere](https://github.com/gloveboxes/AltairEverywhere){:target=_blank} GitHub repo.
 - The soltion is Open Source and is provided under an MIT License, and contributions are very welcome.
 
 ## Architecture
 
-The Altair emulator runs on [POSIX](https://en.wikipedia.org/wiki/POSIX) compatible operating systems including, Linux, Windows with [WSL 2](https://docs.microsoft.com/en-us/windows/wsl/install), macOS on Apple Silicon and Intel, as well as devices like Raspberry Pi, Beaglebone, and Azure Sphere.
+The Altair emulator runs on [POSIX](https://en.wikipedia.org/wiki/POSIX){:target=_blank} compatible operating systems including, Linux, Windows with [WSL 2](https://docs.microsoft.com/en-us/windows/wsl/install){:target=_blank}, macOS on Apple Silicon and Intel, as well as devices like Raspberry Pi, Beaglebone, and Azure Sphere.
 
 ![The following diagram summarizes the Altair emulator architecture.](./img/Altair_8800_Application_Architecture.png)
 
 Starting from the bottom left and moving up and then to the right.
 
-- **POSIX Compatible OS:**. The Altair 8800 emulator runs on [POSIX](https://en.wikipedia.org/wiki/POSIX) compatible operating systems, including Linux, macOS, [Windows WSL 2](https://docs.microsoft.com/windows/wsl), and Raspberry Pi OS.
-- **WebSocket & Azure IoT C:** These communication libraries connect the Altair emulator to the web terminal and cloud services. The Altair terminal IO messages are routed over [WebSockets](https://en.wikipedia.org/wiki/WebSocket), and the IoT data over MQTT.
-- **Event library:** The Altair coordinates activities on the main thread using the [event](https://libevent.org/) event loop library.
+- **POSIX Compatible OS:**. The Altair 8800 emulator runs on [POSIX](https://en.wikipedia.org/wiki/POSIX){:target=_blank} compatible operating systems, including Linux, macOS, [Windows WSL 2](https://docs.microsoft.com/windows/wsl){:target=_blank}, and Raspberry Pi OS.
+- **WebSocket & Azure IoT C:** These communication libraries connect the Altair emulator to the web terminal and cloud services. The Altair terminal IO messages are routed over [WebSockets](https://en.wikipedia.org/wiki/WebSocket){:target=_blank}, and the IoT data over MQTT.
+- **Event library:** The Altair coordinates activities on the main thread using the [event](https://libevent.org/){:target=_blank} event loop library.
 - **EdgeDevX:** This library simplifies access to Azure IoT services, provides event-timer services, along with several useful utilities.
 - **Terminal IO & Cloud Services:** The Intel 8080 CPU provides 256 input ports and 256 output ports. The Intel 8080 ports were used to integrate peripherals such as disk drives, printers, and modems. However, for the Altair emulator, these ports are used to integrate communications and cloud services. Terminal input and output ports are routed over WebSockets, other ports are used for timing services, access to weather and pollution data, plus Azure IoT services.
 - **Intel 8080 emulator:** This is an open-source software implementation of the Intel 8080 CPU. The Intel 8080 emulator executes Intel 8080 applications including the CP/M operating system, compilers, apps, and games.
@@ -30,9 +30,9 @@ Starting from the bottom left and moving up and then to the right.
 
 ## Raspberry Pi with a Pi Sense HAT
 
-There is specific support for the Altair emulator running on a Raspberry Pi with a Pi Sense HAT. The Altair emulator has been tested on the following [Raspberry Pi](https://www.raspberrypi.org/) models: Zero 2W, 2B, 3A, 3B, 4B, 5B running Raspberry Pi OS 64-bit.
+There is specific support for the Altair emulator running on a Raspberry Pi with a Pi Sense HAT. The Altair emulator has been tested on the following [Raspberry Pi](https://www.raspberrypi.org/){:target=_blank} models: Zero 2W, 2B, 3A, 3B, 4B, 5B running Raspberry Pi OS 64-bit.
 
-The Raspberry Pi paired with a [Pi Sense HAT](https://www.raspberrypi.com/products/sense-hat/) displays the Altair address and data bus activity on the 8x8 LED panel.
+The Raspberry Pi paired with a [Pi Sense HAT](https://www.raspberrypi.com/products/sense-hat/){:target=_blank} displays the Altair address and data bus activity on the 8x8 LED panel.
 
 | Raspberry Pi with Pi Sense HAT  | Raspberry Pi Sense HAT |
 |--|--|

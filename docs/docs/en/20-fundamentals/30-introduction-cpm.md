@@ -2,11 +2,11 @@ CP/M originally stood for Control Program/Monitor. Later, CP/M became known as C
 
 The first version was single-tasking on 8-bit processors with support for up to 64 kilobytes of memory. Later versions of CP/M added multiple-user variations and were migrated to 16-bit processors.
 
-For more information about CP/M, see the [CP/M Wikipedia article](https://en.wikipedia.org/wiki/CP/M?azure-portal=true) and [CP/M Frequently Asked Questions](http://www.gaby.de/faq.htm).
+For more information about CP/M, see the [CP/M Wikipedia article](https://en.wikipedia.org/wiki/CP/M?azure-portal=true){:target=_blank} and [CP/M Frequently Asked Questions](http://www.gaby.de/faq.htm){:target=_blank}.
 
 ## Digital Research CP/M Operating System Manual
 
-You will find a wealth of information about CP/M, including compilers, assemblers, debuggers, and more in the [Digital Research CP/M Operating System Manual](http://www.gaby.de/cpm/manuals/archive/cpm22htm/)
+You will find a wealth of information about CP/M, including compilers, assemblers, debuggers, and more in the [Digital Research CP/M Operating System Manual](http://www.gaby.de/cpm/manuals/archive/cpm22htm/){:target=_blank}
 
 ## Programming the Altair emulator
 
@@ -66,7 +66,7 @@ The following is an example of copying the `love.bas` game to the CP/M filesyste
 
 ![](img/retro-games-snippet.png)
 
-1. Review the [Retro Games](https://github.com/AzureSphereCloudEnabledAltair8800/RetroGames) repo.
+1. Review the [Retro Games](https://github.com/AzureSphereCloudEnabledAltair8800/RetroGames){:target=_blank} repo.
 1. From the Altair web terminal CP/M command prompt, run the **Get File** command:
 
     ```cpm
@@ -86,4 +86,4 @@ Note, a lot of the retro games in the repo expect to find **MENU.BAS** in the CP
 
 ## Retro game acknowledgments
 
-This list of games was made possible by the dedicated work of [CP/M Games](http://www.retroarchive.org/cpm/games/games.htm) and [Vintage BASIC](http://www.vintage-basic.net/games.html).
+This list of games was made possible by the dedicated work of [CP/M Games](http://www.retroarchive.org/cpm/games/games.htm){:target=_blank} and [Vintage BASIC](http://www.vintage-basic.net/games.html){:target=_blank}.

@@ -1,14 +1,14 @@
-The BD Software C compiler is included on drive A: or drive B: if you have the CP/M filesystem loaded on the Micro SD card. The following text is an exert from the [BDS C Wikipedia](https://en.wikipedia.org/wiki/BDS_C) article.
+The BD Software C compiler is included on drive A: or drive B: if you have the CP/M filesystem loaded on the Micro SD card. The following text is an exert from the [BDS C Wikipedia](https://en.wikipedia.org/wiki/BDS_C){:target=_blank} article.
 
 *BDS C (or the BD Software C Compiler) is a compiler for a sizeable subset of the C programming language, that ran on and generated code for the Intel 8080 and Zilog Z80 processors. It was the first C compiler for CP/M. It was written by Leor Zolman and first released in 1979 when he was 20 years old. "BDS" stands for "Brain Damage Software."*
 
 ## BDS C User's Guide
 
-Refer to the [BDS C User's Guide](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/BDS_C_Compiler.pdf) for more about the language and its implementation.
+Refer to the [BDS C User's Guide](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/BDS_C_Compiler.pdf){:target=_blank} for more about the language and its implementation.
 
 ## Compile C applications
 
-The CP/M disk image includes a simple *HW.C* (Hello, world) application. BDS C language has support for Intel 8080 CPU input and output port instructions. The *HW.C* application displays the system tick count, UTC, and local date and time, and then sleeps for 1 second. For more information about Intel 8080 IO port mappings, refer to [Intel 8080 input and output ports](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki#intel-8080-input-and-output-ports).
+The CP/M disk image includes a simple *HW.C* (Hello, world) application. BDS C language has support for Intel 8080 CPU input and output port instructions. The *HW.C* application displays the system tick count, UTC, and local date and time, and then sleeps for 1 second. For more information about Intel 8080 IO port mappings, refer to [Intel 8080 input and output ports](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki#intel-8080-input-and-output-ports){:target=_blank}.
 
 Follow these steps to list, compile, link, and run the *HW.C* file:
 
@@ -92,7 +92,7 @@ Follow these steps to list, compile, link, and run the *HW.C* file:
 
 ## Editing hw.c with Word-Master
 
-In the following steps use the [Word-Master text editor](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf) to edit a file. It's highly recommended to [edit files with Visual Studio Code](01-Editing-files.md) and then copy the file to the Altair filesystem using the CP/M gf command.
+In the following steps use the [Word-Master text editor](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf){:target=_blank} to edit a file. It's highly recommended to [edit files with Visual Studio Code](01-Editing-files.md) and then copy the file to the Altair filesystem using the CP/M gf command.
 
 1. Edit the *hw.c* file with Word-Master:
 

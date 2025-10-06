@@ -27,13 +27,13 @@ Reasons to do this include:
 
 Building the Altair 8800 emulator from source has been tested and is supported on the following POSIX compatible operating systems.
 
-- Windows 11 with [WSL 2](https://docs.microsoft.com/windows/wsl/)
+- Windows 11 with [WSL 2](https://docs.microsoft.com/windows/wsl/){:target=_blank}
 - Ubuntu 20.04 and 22.04
 - macOS,
 - Raspberry Pi OS 64-bit
 
 ## Azure Sphere
 
-If you have an [Azure Sphere](https://azure.microsoft.com/services/azure-sphere/) device, you can run the Altair 8800 emulator on it. The Altair emulator runs as a native application on the Azure Sphere device. The Altair emulator is a [POSIX](https://en.wikipedia.org/wiki/POSIX) compatible application and runs on the Azure Sphere OS.
+If you have an [Azure Sphere](https://azure.microsoft.com/services/azure-sphere/){:target=_blank} device, you can run the Altair 8800 emulator on it. The Altair emulator runs as a native application on the Azure Sphere device. The Altair emulator is a [POSIX](https://en.wikipedia.org/wiki/POSIX){:target=_blank} compatible application and runs on the Azure Sphere OS.
 
 Follow the [Deploy on Azure Sphere](../50-azsphere/01-Introduction.md) instructions.

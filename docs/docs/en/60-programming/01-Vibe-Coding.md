@@ -36,5 +36,5 @@ Vibe-Coding with an LLM can be a powerful tool for programming the Altair 8800, 
 
 ## Additional Resources
 
-- [OpenAI GPT-4](https://openai.com/research/gpt-4)
-- [Emulators for the Altair 8800](https://www.pcjs.org/machines/altair/)
+- [OpenAI GPT-4](https://openai.com/research/gpt-4){:target=_blank}
+- [Emulators for the Altair 8800](https://www.pcjs.org/machines/altair/){:target=_blank}

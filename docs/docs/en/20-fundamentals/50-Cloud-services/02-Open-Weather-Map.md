@@ -4,7 +4,7 @@ Connecting the Open Weather Map cloud service is optional, free, and recommended
 
 ## Create an Open Weather Map API Key
 
-1. From your web browser navigate to [https://openweathermap.org/api](https://openweathermap.org/api)
+1. From your web browser navigate to [https://openweathermap.org/api](https://openweathermap.org/api){:target=_blank}
 1. Sign in to Open Weather Map
 1. Select **API** from the Open Weather Map main menu.
 1. Subscribe to the Current Weather Data. Select the **Free** option, and select **Get API key**.
@@ -18,4 +18,4 @@ Open Weather Map air quality calculation is based on the Common Air Quality Inde
 
 ![The image shows how Open Weather Map calculate air quality index](img/open_weather_map_air_quality_index.png)
 
-For more information, refer to the [calculation of Air Quality index](https://en.wikipedia.org/wiki/Air_quality_index#CAQI).
+For more information, refer to the [calculation of Air Quality index](https://en.wikipedia.org/wiki/Air_quality_index#CAQI){:target=_blank}.

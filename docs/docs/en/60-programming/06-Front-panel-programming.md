@@ -3,7 +3,7 @@ The original Altair 8800 was programmed directly on the front panel. It was a pa
 ![The image shows the original Altair 8800](img/altair-8800-smithsonian-museum.png)
 
 <!-- :::image type="content" source="../../static/img/altair-8800-smithsonian-museum.png" alt-text="Picture of the Altair 8800." border = "false"::: -->
-[Altair 8800 image attribution - Smithsonian Museum](https://commons.wikimedia.org/wiki/File:Altair_8800,_Smithsonian_Museum.jpg)
+[Altair 8800 image attribution - Smithsonian Museum](https://commons.wikimedia.org/wiki/File:Altair_8800,_Smithsonian_Museum.jpg){:target=_blank}
 
 Programming the Altair emulator by using the front panel and Intel opcodes is a great way for you to understand how computers work.
 
@@ -15,7 +15,7 @@ Programming the Altair emulator with the virtual front panel is best experienced
 
 To access the virtual front panel, you must be connected to the Altair emulator via the web terminal.
 
-> In the following procedure, you're directly setting memory addresses. You might overwrite something important and crash the Altair emulator. If this happens, just [reboot the Altair](../20-fundamentals/40-Rebooting-the-Altair.md) and experiment again.
+> In the following procedure, you're directly setting memory addresses. You might overwrite something important and crash the Altair emulator. If this happens, just [reboot the Altair](../20-fundamentals/40-Rebooting-the-Altair.md){:target=_blank} and experiment again.
 
 1. From the web terminal, select **Ctrl+M** to enter the CPU monitor.
 2. You can enter binary strings to represent the switches on a real Altair front panel. For example, if you type **0000000011110000** and then select the **Enter** key, you set 12 switches off and 4 switches on.
@@ -27,7 +27,7 @@ To access the virtual front panel, you must be connected to the Altair emulator 
     * **dn** = DEPOSIT NEXT
     * **s** = SINGLE STEP
 
-3. If you want to load the 3-byte [Intel 8080 Jmp](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/8080asm.pdf?azure-portal=true) at address 0x0100, use the following sequence of commands. Be sure to select **Enter** after you finish typing each instruction.
+3. If you want to load the 3-byte [Intel 8080 Jmp](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/8080asm.pdf?azure-portal=true){:target=_blank} at address 0x0100, use the following sequence of commands. Be sure to select **Enter** after you finish typing each instruction.
 
     1. Enter **100000000** (0x0100).
     2. Enter **e** to set the CPU current instruction pointer to address 0x0100.
@@ -217,7 +217,7 @@ The trace command disassembles while executing the next 20 instructions from the
     Trace: Address bus: 1110011100110000 (0xe730), Data bus 11110100 (0xf4)
     ```
 
-1. From the web terminal, select **Ctrl+M** to exit the CPU monitor. This will resume code execution from the current CPU instruction pointer. Depending on what you have been changing in memory, you may need to [reboot CP/M](../20-fundamentals/40-Rebooting-the-Altair.md).
+1. From the web terminal, select **Ctrl+M** to exit the CPU monitor. This will resume code execution from the current CPU instruction pointer. Depending on what you have been changing in memory, you may need to [reboot CP/M](../20-fundamentals/40-Rebooting-the-Altair.md){:target=_blank}.
 
 ## Loop example
 

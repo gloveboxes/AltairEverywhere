@@ -1,4 +1,4 @@
-The Altair emulator includes the [MicroPro Word-Master](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf) text editor for editing documents and source code. Word-Master was advanced for its day, but by today's standards, not the most user-friendly.
+The Altair emulator includes the [MicroPro Word-Master](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf){:target=_blank} text editor for editing documents and source code. Word-Master was advanced for its day, but by today's standards, not the most user-friendly.
 
 ## Ten-minute video introduction to editing files
 
@@ -63,7 +63,7 @@ Note, a lot of the retro games in the repo expect to find **MENU.BAS** in the CP
 
 <!-- ## Editing files with VS Code
 
-It's easier to edit files including Assembly, C, and BASIC code on your computer using [Visual Studio Code](https://code.visualstudio.com/), and then copy the file to the Altair filesystem using the CP/M GetFile program. -->
+It's easier to edit files including Assembly, C, and BASIC code on your computer using [Visual Studio Code](https://code.visualstudio.com/){:target=_blank}, and then copy the file to the Altair filesystem using the CP/M GetFile program. -->
 
 <!-- ### GetFile Configuration
 
@@ -77,9 +77,9 @@ To switch between line input mode and character input mode, select **Ctrl+L**. W
 
 ![Screenshot of Altair running the Word-Master text editor.](img/word-master-character-mode.png)
 
-For more information, view the [Word-Master user's guide](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf?azure-portal=true).
+For more information, view the [Word-Master user's guide](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf?azure-portal=true){:target=_blank}.
 
-The following table lists the Ctrl characters that Word-Master uses. This list is sourced from the [Experiencing the Altair 8800](https://glasstty.com/?p=1235) blog.
+The following table lists the Ctrl characters that Word-Master uses. This list is sourced from the [Experiencing the Altair 8800](https://glasstty.com/?p=1235){:target=_blank} blog.
 
 ```text
 VIDEO MODE SUMMARY
