@@ -10,13 +10,14 @@ Head to [Get started](/start/Deploy){:target=_blank} to learn how to deploy and 
 
 <iframe width="100%" height="420" src="https://www.youtube.com/embed/fSz5lTaXS0E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-The Altair project can be viewed through three lenses:
+The Altair project provides a fun way to learn:
 
-1. [Vibe code](https://en.wikipedia.org/wiki/Vibe_coding){:target=_blank} Altair 8800 applications using Intel 8080 Assembly, BDS C, and Microsoft BASIC, assisted by Large Language Models (LLMs) like Claude Sonnet or OpenAI Codex using VS Code and GitHub Copilot.
-2. Learn how to develop multithreaded event-driven IoT C applications that scale from [microcontrollers](https://en.wikipedia.org/wiki/Microcontroller){:target=_blank}, to [Raspberry Pis](https://en.wikipedia.org/wiki/Raspberry_Pi){:target=_blank}, to desktop-class computers.
-3. A fantastic safe way to explore machine-level programming, Intel 8080 Assembly programming, along with C and BASIC development.
-4. You are interested in retro gaming, and you want to chill playing retro games from yesteryear.
-5. Optionally, the project integrates free weather and pollution cloud services from [Open Weather Map](http://openweathermap.org){:target=_blank}, along with [ThingsBoard](https://thingsboard.io/){:target=_blank} for telemetry and control.
+1. [Vibe code](https://en.wikipedia.org/wiki/Vibe_coding){:target=_blank} Altair 8800 applications using Intel 8080 Assembly, BDS C, and Microsoft BASIC, with help from Large Language Models (LLMs) such as Claude Sonnet or OpenAI Codex, in VS Code with GitHub Copilot.
+2. Learn to build multithreaded, event-driven IoT C applications that scale from [microcontrollers](https://en.wikipedia.org/wiki/Microcontroller){:target=_blank} and [Raspberry Pis](https://en.wikipedia.org/wiki/Raspberry_Pi){:target=_blank} to desktop-class computers.
+3. Safely explore machine-level programming, including Intel 8080 Assembly, C, and BASIC development.
+4. Enjoy retro gaming and play classic games from the past.
+5. Optionally, integrate free weather and pollution cloud services from [Open Weather Map](http://openweathermap.org){:target=_blank} and [ThingsBoard](https://thingsboard.io/){:target=_blank} for telemetry and control.
+6. Optionally, stream telemetry data to the `ThingsBoard` MQTT Broker or a standalone Mosquitto MQTT Broker.
 
 ## Supported operating systems
 
