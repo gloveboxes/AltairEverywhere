@@ -1,10 +1,10 @@
 The Altair 8800 emulator is a software program that emulates the Altair 8800 computer. The Altair emulator is written in C and runs on most desktop operating systems as well as devices like the Raspberry Pi, Beaglebone, and Azure Sphere.
 
-This is version 5 of the Altair 8800 emulator project and it shares the same code base as the [Azure Sphere Cloud-Enabled Altair 8800](https://github.com/AzureSphereCloudEnabledAltair8800/AltairOnAzureSphere){:target=_blank} as featured on the Register "[Microsoft adds cloud enablement to 1970s Altair 8800 tech](https://www.theregister.com/2021/07/16/altair_redux/){:target=_blank}".
+This is version 5 of the Altair 8800 emulator project and it shares a similar code base as the [Azure Sphere Cloud-Enabled Altair 8800](https://github.com/AzureSphereCloudEnabledAltair8800/AltairOnAzureSphere){:target=_blank} as featured on the Register "[Microsoft adds cloud enablement to 1970s Altair 8800 tech](https://www.theregister.com/2021/07/16/altair_redux/){:target=_blank}".
 
 ## Source code
 
-- The Altair emulator source code is maintained in the [Altair Everywhere](https://github.com/gloveboxes/AltairEverywhere){:target=_blank} GitHub repo.
+- The Altair emulator source code is maintained in the [Altair 8800 Emulator](https://github.com/gloveboxes/Altair-8800-Emulator){:target=_blank} GitHub repo.
 - The soltion is Open Source and is provided under an MIT License, and contributions are very welcome.
 
 ## Architecture

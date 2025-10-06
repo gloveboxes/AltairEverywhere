@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean
 
 # Clone source code with better caching
-ARG REPO_URL=https://github.com/gloveboxes/AltairEverywhere.git
+ARG REPO_URL=https://github.com/gloveboxes/Altair-8800-Emulator.git
 RUN git clone --depth 1 --recurse-submodules ${REPO_URL} /AltairEverywhere
 
 # Build application
