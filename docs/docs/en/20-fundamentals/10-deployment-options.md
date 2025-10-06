@@ -6,11 +6,9 @@ There are three ways to deploy the Altair 8800 emulator.
 
 ## Deploying the Altair 8800 with Docker
 
-The **fastest** and **easiest** way to get started with the Altair emulator is on a system running Docker. 
+The **fastest** and **easiest** way to get started with the Altair emulator is on a system running Docker.
 
-You can run Docker on 64-bit versions of Linux, macOS, Windows, and Raspberry Pi OS. There are 64-bit Docker images for Linux, macOS, Windows, ChromeOS, and Raspberry Pi OS. 
-
-There is also a separate Raspberry Pi OS image for a Raspberry Pi with a Pi Sense HAT.
+You can run Docker on 64-bit versions of Linux, macOS, Windows, and Raspberry Pi OS. There are 64-bit Docker images for Linux, macOS, Windows, ChromeOS, and Raspberry Pi OS.
 
 For more information, refer to [Deploy with Docker](../40-deploy-with-docker/10-introduction.md).
 
