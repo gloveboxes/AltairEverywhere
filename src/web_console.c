@@ -2,10 +2,19 @@
    Licensed under the MIT License. */
 
 #include "web_console.h"
+#include "cpu_monitor.h"   // For CPU_OPERATING_MODE, process_virtual_input, mode accessors, and intel8080_t
 
 #include <stdatomic.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
+
+// External function declarations (defined in main.c)
+extern CPU_OPERATING_MODE toggle_cpu_operating_mode(void);
+extern CPU_OPERATING_MODE get_cpu_operating_mode_fast(void);
+extern uint16_t bus_switches;
+extern intel8080_t cpu;
 
 // =============================================================================
 // Constants and Configuration
@@ -36,7 +45,9 @@ typedef struct
     char buffer[TERMINAL_INPUT_BUFFER_SIZE];
     size_t head;
     size_t tail;
+    size_t count;
     pthread_mutex_t mutex;
+    size_t suppress_remaining;
 } terminal_input_queue_t;
 
 // =============================================================================
@@ -56,7 +67,9 @@ static terminal_input_queue_t terminal_input_queue = {
     .buffer = {0},
     .head   = 0,
     .tail   = 0,
+    .count  = 0,
     .mutex  = PTHREAD_MUTEX_INITIALIZER,
+    .suppress_remaining = 0,
 };
 
 // WebSocket client management
@@ -79,8 +92,15 @@ static DX_DECLARE_TIMER_HANDLER(expire_session_handler);
 static DX_DECLARE_TIMER_HANDLER(flush_output_buffer_handler);
 static void cleanup_session(void);
 static void flush_output_buffer(void);
-static bool buffer_add_data(const void *data, size_t length);
+static void reset_output_buffer(void);
+static bool output_buffer_write(const void *data, size_t length, size_t *resulting_count);
+static inline bool output_buffer_write_bytes(const void *data, size_t length)
+{
+    return output_buffer_write(data, length, NULL);
+}
 static inline size_t terminal_queue_capacity(void);
+static void handle_websocket_error(ws_cli_conn_t client, const char *error_msg);
+static bool send_direct_websocket_message(ws_cli_conn_t client, const void *message, size_t length, const char *error_msg);
 
 // =============================================================================
 // Timer Bindings
@@ -116,6 +136,22 @@ static void cleanup_session(void)
     clear_difference_disk();
 #endif
     cleanup_required = false;
+}
+
+/// <summary>
+/// Centralized WebSocket error handling
+/// </summary>
+/// <param name="client">WebSocket client connection</param>
+/// <param name="error_msg">Error message to log</param>
+static void handle_websocket_error(ws_cli_conn_t client, const char *error_msg)
+{
+    printf("%s\n", error_msg);
+    ws_close_client(client);
+    atomic_store(&current_client, 0);
+    if (cleanup_required)
+    {
+        cleanup_session();
+    }
 }
 
 // =============================================================================
@@ -174,12 +210,25 @@ DX_TIMER_HANDLER_END
 // =============================================================================
 
 /// <summary>
+/// Reset the output buffer contents and indices
+/// </summary>
+static void reset_output_buffer(void)
+{
+    pthread_mutex_lock(&output_buffer.mutex);
+    output_buffer.head  = 0;
+    output_buffer.tail  = 0;
+    output_buffer.count = 0;
+    pthread_mutex_unlock(&output_buffer.mutex);
+}
+
+/// <summary>
 /// Add data to the output buffer
 /// </summary>
 /// <param name="data">Data to add</param>
 /// <param name="length">Length of data</param>
+/// <param name="resulting_count">Optional pointer to receive the buffer fill level after the write</param>
 /// <returns>true if added successfully, false if buffer full</returns>
-static bool buffer_add_data(const void *data, size_t length)
+static bool output_buffer_write(const void *data, size_t length, size_t *resulting_count)
 {
     if (data == NULL || length == 0)
     {
@@ -195,12 +244,30 @@ static bool buffer_add_data(const void *data, size_t length)
         return false;
     }
 
-    const char *bytes = (const char *)data;
-    for (size_t i = 0; i < length; i++)
+    const size_t capacity   = OUTPUT_BUFFER_SIZE;
+    const char *bytes       = (const char *)data;
+    size_t head             = output_buffer.head;
+    size_t first_chunk      = length;
+
+    if (head + first_chunk > capacity)
     {
-        output_buffer.buffer[output_buffer.head] = bytes[i];
-        output_buffer.head                       = (output_buffer.head + 1) % OUTPUT_BUFFER_SIZE;
-        output_buffer.count++;
+        first_chunk = capacity - head;
+    }
+
+    memcpy(&output_buffer.buffer[head], bytes, first_chunk);
+
+    size_t remaining = length - first_chunk;
+    if (remaining > 0)
+    {
+        memcpy(&output_buffer.buffer[0], bytes + first_chunk, remaining);
+    }
+
+    output_buffer.head  = (head + length) % capacity;
+    output_buffer.count += length;
+
+    if (resulting_count != NULL)
+    {
+        *resulting_count = output_buffer.count;
     }
 
     pthread_mutex_unlock(&output_buffer.mutex);
@@ -216,11 +283,7 @@ static void flush_output_buffer(void)
     if (client == 0)
     {
         // No client connected, clear the buffer
-        pthread_mutex_lock(&output_buffer.mutex);
-        output_buffer.head  = 0;
-        output_buffer.tail  = 0;
-        output_buffer.count = 0;
-        pthread_mutex_unlock(&output_buffer.mutex);
+        reset_output_buffer();
         return;
     }
 
@@ -265,13 +328,7 @@ static void flush_output_buffer(void)
         // printf("Flushing output buffer: %zu bytes\n", bytes_to_send);
         if (ws_sendframe(client, temp_buffer, bytes_to_send, WS_FR_OP_TXT) == -1)
         {
-            printf("ws_sendframe failed - connection may be broken\n");
-            ws_close_client(client);
-            atomic_store(&current_client, 0);
-            if (cleanup_required)
-            {
-                cleanup_session();
-            }
+            handle_websocket_error(client, "ws_sendframe failed - connection may be broken");
         }
     }
 }
@@ -305,22 +362,13 @@ void publish_message(const void *message, size_t message_length)
     {
         // Message too large, flush buffer first to maintain order, then send directly
         flush_output_buffer();
-        
-        if (ws_sendframe(client, message, message_length, WS_FR_OP_TXT) == -1)
-        {
-            printf("ws_sendframe failed - connection may be broken\n");
-            ws_close_client(client);
-            atomic_store(&current_client, 0);
-            if (cleanup_required)
-            {
-                cleanup_session();
-            }
-        }
+        send_direct_websocket_message(client, message, message_length, "ws_sendframe failed for large message - connection may be broken");
         return;
     }
 
     // Try to add data to buffer
-    bool added = buffer_add_data(message, message_length);
+    size_t current_count = 0;
+    bool added = output_buffer_write(message, message_length, &current_count);
 
     if (!added)
     {
@@ -328,22 +376,13 @@ void publish_message(const void *message, size_t message_length)
         flush_output_buffer();
         
         // Try adding again (should succeed now since buffer was flushed)
-        added = buffer_add_data(message, message_length);
+    added = output_buffer_write(message, message_length, &current_count);
         
         if (!added)
         {
             // This shouldn't happen since we just flushed, but handle it
             printf("Failed to buffer message after flush - this shouldn't happen\n");
-            if (ws_sendframe(client, message, message_length, WS_FR_OP_TXT) == -1)
-            {
-                printf("ws_sendframe failed - connection may be broken\n");
-                ws_close_client(client);
-                atomic_store(&current_client, 0);
-                if (cleanup_required)
-                {
-                    cleanup_session();
-                }
-            }
+            send_direct_websocket_message(client, message, message_length, "ws_sendframe failed for fallback message - connection may be broken");
             return;
         }
     }
@@ -351,16 +390,30 @@ void publish_message(const void *message, size_t message_length)
     // Check if we should flush immediately (only on threshold, not newlines)
     size_t threshold = (OUTPUT_BUFFER_SIZE * FLUSH_THRESHOLD_PERCENT) / 100;
 
-    pthread_mutex_lock(&output_buffer.mutex);
-    size_t current_count = output_buffer.count;
-    pthread_mutex_unlock(&output_buffer.mutex);
-
     // Flush only if buffer is above threshold
     // Timer will handle periodic flushing (every 20ms)
     if (current_count >= threshold)
     {
         flush_output_buffer();
     }
+}
+
+/// <summary>
+/// Send message directly via WebSocket (bypassing buffer)
+/// </summary>
+/// <param name="client">WebSocket client</param>
+/// <param name="message">Message to send</param>
+/// <param name="length">Message length</param>
+/// <param name="error_msg">Error message for logging</param>
+/// <returns>true if sent successfully</returns>
+static bool send_direct_websocket_message(ws_cli_conn_t client, const void *message, size_t length, const char *error_msg)
+{
+    if (ws_sendframe(client, message, length, WS_FR_OP_TXT) == -1)
+    {
+        handle_websocket_error(client, error_msg);
+        return false;
+    }
+    return true;
 }
 
 /// <summary>
@@ -390,24 +443,24 @@ static inline size_t terminal_queue_capacity(void)
 }
 
 /// <summary>
-/// Add character to terminal input queue
+/// Add character to terminal input queue (without echo suppression)
 /// </summary>
 /// <param name="character">Character to enqueue</param>
 void enqueue_terminal_input_character(char character)
 {
     pthread_mutex_lock(&terminal_input_queue.mutex);
 
-    size_t tail = terminal_input_queue.tail;
-    size_t head = terminal_input_queue.head;
-
-    if (tail - head >= terminal_queue_capacity())
+    size_t capacity = terminal_queue_capacity();
+    if (terminal_input_queue.count >= capacity)
     {
         pthread_mutex_unlock(&terminal_input_queue.mutex);
         return; // drop character if buffer full
     }
 
-    terminal_input_queue.buffer[tail % terminal_queue_capacity()] = character;
-    terminal_input_queue.tail                                     = tail + 1;
+    terminal_input_queue.buffer[terminal_input_queue.tail] = character;
+    terminal_input_queue.tail = (terminal_input_queue.tail + 1) % capacity;
+    terminal_input_queue.count++;
+    // Note: No echo suppression for single character enqueue
 
     pthread_mutex_unlock(&terminal_input_queue.mutex);
 }
@@ -422,13 +475,19 @@ char dequeue_terminal_input_character(void)
 
     pthread_mutex_lock(&terminal_input_queue.mutex);
 
-    size_t head = terminal_input_queue.head;
-    size_t tail = terminal_input_queue.tail;
+    size_t capacity = terminal_queue_capacity();
 
-    if (head != tail)
+    if (terminal_input_queue.count > 0)
     {
-        c                         = terminal_input_queue.buffer[head % terminal_queue_capacity()];
-        terminal_input_queue.head = head + 1;
+        c                             = terminal_input_queue.buffer[terminal_input_queue.head];
+        terminal_input_queue.head      = (terminal_input_queue.head + 1) % capacity;
+        terminal_input_queue.count--;
+
+        if (terminal_input_queue.count == 0)
+        {
+            terminal_input_queue.head = 0;
+            terminal_input_queue.tail = 0;
+        }
     }
 
     pthread_mutex_unlock(&terminal_input_queue.mutex);
@@ -443,7 +502,150 @@ void clear_terminal_input_queue(void)
     pthread_mutex_lock(&terminal_input_queue.mutex);
     terminal_input_queue.head = 0;
     terminal_input_queue.tail = 0;
+    terminal_input_queue.count = 0;
+    terminal_input_queue.suppress_remaining = 0;
     pthread_mutex_unlock(&terminal_input_queue.mutex);
+}
+
+/// <summary>
+/// Determine if the next output character should be suppressed
+/// </summary>
+/// <returns>true when output should be suppressed</returns>
+bool terminal_should_suppress_output_character(void)
+{
+    bool should_suppress = false;
+
+    pthread_mutex_lock(&terminal_input_queue.mutex);
+
+    if (terminal_input_queue.suppress_remaining > 0)
+    {
+        should_suppress = true;
+        terminal_input_queue.suppress_remaining--;
+    }
+
+    pthread_mutex_unlock(&terminal_input_queue.mutex);
+
+    return should_suppress;
+}
+
+/// <summary>
+/// Enqueue characters for the CPU while configuring matching output suppression
+/// </summary>
+/// <param name="characters">Characters to queue</param>
+/// <param name="length">Number of characters</param>
+/// <returns>true when all characters were queued</returns>
+bool terminal_enqueue_input_command(const char *characters, size_t length)
+{
+    if (characters == NULL || length == 0)
+    {
+        return false;
+    }
+
+    pthread_mutex_lock(&terminal_input_queue.mutex);
+
+    size_t capacity = terminal_queue_capacity();
+    size_t available_space = capacity - terminal_input_queue.count;
+    size_t to_enqueue = (length <= available_space) ? length : available_space;
+    
+    // Enqueue the characters
+    for (size_t i = 0; i < to_enqueue; i++)
+    {
+        terminal_input_queue.buffer[terminal_input_queue.tail] = characters[i];
+        terminal_input_queue.tail = (terminal_input_queue.tail + 1) % capacity;
+    }
+    terminal_input_queue.count += to_enqueue;
+
+    // Update suppression counter to match enqueued characters
+    terminal_input_queue.suppress_remaining += to_enqueue;
+
+    pthread_mutex_unlock(&terminal_input_queue.mutex);
+
+    return to_enqueue == length;
+}
+
+// =============================================================================
+// Terminal Input Processing Functions (consolidated from main.c)
+// =============================================================================
+
+/// <summary>
+/// Handle enter key press in terminal
+/// </summary>
+/// <param name="data">Input data buffer</param>
+/// <param name="cpu_mode">Current CPU operating mode</param>
+/// <returns>true if handled and should cleanup, false to continue processing</returns>
+static bool handle_enter_key(char *data, CPU_OPERATING_MODE cpu_mode)
+{
+    switch (cpu_mode)
+    {
+        case CPU_RUNNING:
+            enqueue_terminal_input_character(0x0d);
+            break;
+        case CPU_STOPPED:
+            data[0] = 0x00;
+            process_virtual_input(data);
+            break;
+        default:
+            break;
+    }
+    return true;
+}
+
+/// <summary>
+/// Handle control character input
+/// </summary>
+/// <param name="data">Input character</param>
+/// <param name="application_message_size">Size of the message</param>
+/// <returns>true if handled and should cleanup, false to continue processing</returns>
+static bool handle_ctrl_character(char *data, size_t application_message_size)
+{
+    char c = data[0];
+
+    if (application_message_size == 1 && c > 0 && c < 29) // ASCII_CTRL_MAX
+    {
+        if (c == 28) // CTRL_M_MAPPED_VALUE - ctrl-m mapped to ASCII 28 to avoid /r
+        {
+            CPU_OPERATING_MODE new_mode = toggle_cpu_operating_mode();
+            if (new_mode == CPU_STOPPED)
+            {
+                extern uint16_t bus_switches;
+                extern intel8080_t cpu;
+                bus_switches = cpu.address_bus;
+                publish_message("\r\nCPU MONITOR> ", 15);
+                return true;
+            }
+            c = 0x0d;
+        }
+
+        enqueue_terminal_input_character(c);
+        return true;
+    }
+    return false;
+}
+
+/// <summary>
+/// Handle single character input
+/// </summary>
+/// <param name="data">Input character</param>
+/// <param name="application_message_size">Size of the message</param>
+/// <param name="cpu_mode">Current CPU operating mode</param>
+/// <returns>true if handled and should cleanup, false to continue processing</returns>
+static bool handle_single_character(char *data, size_t application_message_size, CPU_OPERATING_MODE cpu_mode)
+{
+    if (application_message_size == 1)
+    {
+        if (cpu_mode == CPU_RUNNING)
+        {
+            terminal_enqueue_input_command(data, 1);
+        }
+        else
+        {
+            data[0] = (char)toupper(data[0]);
+            data[1] = 0x00;
+            process_virtual_input(data);
+        }
+        return true;
+    }
+    return false;
 }
 
 // =============================================================================
@@ -467,11 +669,7 @@ void onopen(ws_cli_conn_t client)
     atomic_store(&current_client, (uintptr_t)client);
 
     // Clear the output buffer for new client
-    pthread_mutex_lock(&output_buffer.mutex);
-    output_buffer.head  = 0;
-    output_buffer.tail  = 0;
-    output_buffer.count = 0;
-    pthread_mutex_unlock(&output_buffer.mutex);
+    reset_output_buffer();
 
     if (cleanup_required)
     {
@@ -513,11 +711,7 @@ void onclose(ws_cli_conn_t client)
     atomic_store(&current_client, 0);
 
     // Clear the output buffer
-    pthread_mutex_lock(&output_buffer.mutex);
-    output_buffer.head  = 0;
-    output_buffer.tail  = 0;
-    output_buffer.count = 0;
-    pthread_mutex_unlock(&output_buffer.mutex);
+    reset_output_buffer();
 
     if (cleanup_required)
     {
@@ -532,6 +726,69 @@ void onclose(ws_cli_conn_t client)
 /// <param name="msg">Message data received</param>
 /// <param name="size">Size of the message</param>
 /// <param name="type">Message type</param>
+/// <summary>
+/// Terminal input handler (consolidated from main.c)
+/// </summary>
+/// <param name="data">Input data buffer</param>
+/// <param name="application_message_size">Size of the message</param>
+void terminal_handler(char *data, size_t application_message_size)
+{
+    #define TERMINAL_COMMAND_BUFFER_SIZE 30
+    char command[TERMINAL_COMMAND_BUFFER_SIZE];
+    memset(command, 0x00, sizeof(command));
+
+    if (data == NULL || application_message_size == 0 || application_message_size >= 1024)
+    {
+        return;
+    }
+
+    // Handle control characters
+    if (handle_ctrl_character(data, application_message_size))
+    {
+        return;
+    }
+
+    CPU_OPERATING_MODE cpu_mode = get_cpu_operating_mode_fast();
+
+    // Was just enter pressed
+    if (data[0] == '\r')
+    {
+        if (handle_enter_key(data, cpu_mode))
+        {
+            return;
+        }
+    }
+
+    // Handle single character input
+    if (handle_single_character(data, application_message_size, cpu_mode))
+    {
+        return;
+    }
+
+    // Prepare upper-case copy for virtual command processing when CPU is stopped
+    size_t copy_len = (sizeof(command) - 1 < application_message_size) ? sizeof(command) - 1 : application_message_size;
+    for (size_t i = 0; i < copy_len; i++)
+    {
+        command[i] = (char)toupper((unsigned char)data[i]);
+    }
+    command[copy_len] = '\0';
+
+    switch (cpu_mode)
+    {
+        case CPU_RUNNING:
+            if (application_message_size > 0)
+            {
+                terminal_enqueue_input_command(data, application_message_size);
+            }
+            break;
+        case CPU_STOPPED:
+            process_virtual_input(command);
+            break;
+        default:
+            break;
+    }
+}
+
 void onmessage(ws_cli_conn_t client, const unsigned char *msg, uint64_t size, int type)
 {
     (void)client;

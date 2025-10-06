@@ -45,7 +45,7 @@ extern DX_MQTT_CONFIG mqtt_config;
 #include "io_ports.h"
 #include "memory.h"
 
-const char ALTAIR_EMULATOR_VERSION[] = "5.0.6";
+extern const char ALTAIR_EMULATOR_VERSION[];
 #define Log_Debug(f_, ...) dx_Log_Debug((f_), ##__VA_ARGS__)
 #define DX_LOGGING_ENABLED FALSE
 
@@ -54,73 +54,48 @@ const char ALTAIR_EMULATOR_VERSION[] = "5.0.6";
 
 #define APP_SAMPLES_DIRECTORY "AppSamples"
 
-enum PANEL_MODE_T panel_mode     = PANEL_BUS_MODE;
-char msgBuffer[MSG_BUFFER_BYTES] = {0};
-const char *network_interface    = NULL;
+extern enum PANEL_MODE_T panel_mode;
+extern char msgBuffer[MSG_BUFFER_BYTES];
+extern const char *network_interface;
 
-ALTAIR_CONFIG_T altair_config;
-ENVIRONMENT_TELEMETRY environment;
+extern ALTAIR_CONFIG_T altair_config;
+extern ENVIRONMENT_TELEMETRY environment;
 
-intel8080_t cpu;
-uint8_t memory[64 * 1024]; // Altair system memory.
+extern intel8080_t cpu;
+extern uint8_t memory[64 * 1024]; // Altair system memory.
 
-ALTAIR_COMMAND cmd_switches;
-uint16_t bus_switches = 0x00;
-
-
-
-static bool haveTerminalOutputMessage = false;
-static int altairOutputBufReadIndex   = 0;
-static int terminalOutputMessageLen   = 0;
-
-static bool stop_cpu = false;
-
-static char Log_Debug_Time_buffer[128];
+extern ALTAIR_COMMAND cmd_switches;
+extern uint16_t bus_switches;
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
 static DX_DECLARE_TIMER_HANDLER(update_environment_handler);
 static void *altair_thread(void *arg);
 
-const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
+extern const uint8_t reverse_lut[16];
 
 // clang-format off
 // Common Timers
 
-DX_TIMER_BINDING tmr_timer_seconds_expired = {.name = "tmr_timer_seconds_expired", .handler = timer_seconds_expired_handler};
-DX_TIMER_BINDING tmr_timer_millisecond_expired = {.name = "tmr_timer_millisecond_expired", .handler = timer_millisecond_expired_handler};
-DX_TIMER_BINDING tmr_ws_ping_pong = {.repeat = &(struct timespec){10, 0}, .name = "tmr_partial_message", .handler = ws_ping_pong_handler};
+extern DX_TIMER_BINDING tmr_timer_seconds_expired;
+extern DX_TIMER_BINDING tmr_timer_millisecond_expired;
+extern DX_TIMER_BINDING tmr_ws_ping_pong;
 
-static DX_TIMER_BINDING tmr_heart_beat = {.repeat = &(struct timespec){30, 0}, .name = "tmr_heart_beat", .handler = heart_beat_handler};
-static DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){20, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
-static DX_TIMER_BINDING tmr_tick_count = {.repeat = &(struct timespec){1, 0}, .name = "tmr_tick_count", .handler = tick_count_handler};
-static DX_TIMER_BINDING tmr_update_environment = {.repeat = &(struct timespec){20, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
+extern DX_TIMER_BINDING tmr_heart_beat;
+extern DX_TIMER_BINDING tmr_report_memory_usage;
+extern DX_TIMER_BINDING tmr_tick_count;
+extern DX_TIMER_BINDING tmr_update_environment;
 
-DX_ASYNC_BINDING async_copyx_request = {.name = "async_copyx_request", .handler = async_copyx_request_handler};
-DX_ASYNC_BINDING async_expire_session = { .name = "async_expire_session", .handler = async_expire_session_handler};
-DX_ASYNC_BINDING async_publish_json = {.name = "async_publish_json", .handler = async_publish_json_handler};
-DX_ASYNC_BINDING async_publish_weather = {.name = "async_publish_weather", .handler = async_publish_weather_handler};
-DX_ASYNC_BINDING async_set_millisecond_timer = {.name = "async_set_millisecond_timer", .handler = async_set_timer_millisecond_handler};
-DX_ASYNC_BINDING async_set_seconds_timer = {.name = "async_set_seconds_timer", .handler = async_set_timer_seconds_handler};
+extern DX_ASYNC_BINDING async_copyx_request;
+extern DX_ASYNC_BINDING async_expire_session;
+extern DX_ASYNC_BINDING async_publish_json;
+extern DX_ASYNC_BINDING async_publish_weather;
+extern DX_ASYNC_BINDING async_set_millisecond_timer;
+extern DX_ASYNC_BINDING async_set_seconds_timer;
 
 // clang-format on
 
-static DX_ASYNC_BINDING *async_bindings[] = {
-    &async_copyx_request,
-    &async_expire_session,
-    &async_publish_json,
-    &async_publish_weather,
-    &async_set_millisecond_timer,
-    &async_set_seconds_timer,
-};
+extern DX_ASYNC_BINDING *async_bindings[];
 
 // initialize bindings
-static DX_TIMER_BINDING *timer_bindings[] = {
-    &tmr_heart_beat,
-    &tmr_report_memory_usage,
-    &tmr_tick_count,
-    &tmr_timer_millisecond_expired,
-    &tmr_timer_seconds_expired,
-    &tmr_update_environment,
-    &tmr_ws_ping_pong,
-};
+extern DX_TIMER_BINDING *timer_bindings[];

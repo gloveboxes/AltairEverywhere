@@ -4,7 +4,6 @@
 #pragma once
 
 #include "88dcdd.h"
-#include "cpu_monitor.h"
 #include "dx_async.h"
 #include "dx_timer.h"
 #include "dx_utilities.h"
@@ -46,6 +45,8 @@ void publish_message(const void *application_message, size_t application_message
 void enqueue_terminal_input_character(char character);
 char dequeue_terminal_input_character(void);
 void clear_terminal_input_queue(void);
+bool terminal_should_suppress_output_character(void);
+bool terminal_enqueue_input_command(const char *characters, size_t length);
 
 // =============================================================================
 // Utility Functions
@@ -53,5 +54,3 @@ void clear_terminal_input_queue(void);
 
 void print_console_banner(void);
 void terminal_handler(char *data, size_t length);
-
-

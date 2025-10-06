@@ -23,6 +23,60 @@ static pthread_cond_t altair_start_cond   = PTHREAD_COND_INITIALIZER;
 // Atomic CPU state for high-performance read access
 static _Atomic(CPU_OPERATING_MODE) atomic_cpu_operating_mode = CPU_STOPPED;
 
+ALTAIR_CONFIG_T altair_config;
+ENVIRONMENT_TELEMETRY environment;
+
+intel8080_t cpu;
+uint8_t memory[64 * 1024];
+
+ALTAIR_COMMAND cmd_switches;
+uint16_t bus_switches = 0x00;
+
+const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
+
+const char ALTAIR_EMULATOR_VERSION[] = "5.0.7";
+enum PANEL_MODE_T panel_mode          = PANEL_BUS_MODE;
+char msgBuffer[MSG_BUFFER_BYTES]     = {0};
+const char *network_interface        = NULL;
+
+static bool stop_cpu                 = false;
+static char Log_Debug_Time_buffer[128];
+
+DX_TIMER_BINDING tmr_timer_seconds_expired     = {.name = "tmr_timer_seconds_expired", .handler = timer_seconds_expired_handler};
+DX_TIMER_BINDING tmr_timer_millisecond_expired = {.name = "tmr_timer_millisecond_expired", .handler = timer_millisecond_expired_handler};
+DX_TIMER_BINDING tmr_ws_ping_pong              = {.repeat = &(struct timespec){10, 0}, .name = "tmr_partial_message", .handler = ws_ping_pong_handler};
+
+DX_TIMER_BINDING tmr_heart_beat          = {.repeat = &(struct timespec){30, 0}, .name = "tmr_heart_beat", .handler = heart_beat_handler};
+DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){20, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
+DX_TIMER_BINDING tmr_tick_count          = {.repeat = &(struct timespec){1, 0}, .name = "tmr_tick_count", .handler = tick_count_handler};
+DX_TIMER_BINDING tmr_update_environment  = {.repeat = &(struct timespec){20, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
+
+DX_ASYNC_BINDING async_copyx_request         = {.name = "async_copyx_request", .handler = async_copyx_request_handler};
+DX_ASYNC_BINDING async_expire_session        = {.name = "async_expire_session", .handler = async_expire_session_handler};
+DX_ASYNC_BINDING async_publish_json          = {.name = "async_publish_json", .handler = async_publish_json_handler};
+DX_ASYNC_BINDING async_publish_weather       = {.name = "async_publish_weather", .handler = async_publish_weather_handler};
+DX_ASYNC_BINDING async_set_millisecond_timer = {.name = "async_set_millisecond_timer", .handler = async_set_timer_millisecond_handler};
+DX_ASYNC_BINDING async_set_seconds_timer     = {.name = "async_set_seconds_timer", .handler = async_set_timer_seconds_handler};
+
+DX_ASYNC_BINDING *async_bindings[] = {
+    &async_copyx_request,
+    &async_expire_session,
+    &async_publish_json,
+    &async_publish_weather,
+    &async_set_millisecond_timer,
+    &async_set_seconds_timer,
+};
+
+DX_TIMER_BINDING *timer_bindings[] = {
+    &tmr_heart_beat,
+    &tmr_report_memory_usage,
+    &tmr_tick_count,
+    &tmr_timer_millisecond_expired,
+    &tmr_timer_seconds_expired,
+    &tmr_update_environment,
+    &tmr_ws_ping_pong,
+};
+
 // High-performance CPU operating mode getter for emulation loop
 // Uses atomic load with relaxed ordering for maximum performance
 inline CPU_OPERATING_MODE get_cpu_operating_mode_fast(void)
@@ -31,9 +85,6 @@ inline CPU_OPERATING_MODE get_cpu_operating_mode_fast(void)
 }
 
 // Constants to replace magic numbers
-#define TERMINAL_COMMAND_BUFFER_SIZE 30
-#define CTRL_M_MAPPED_VALUE          28
-#define ASCII_CTRL_MAX               29
 #define ASCII_MASK_7BIT              0x7F
 #define MEMORY_SIZE_64K              (64 * 1024)
 #define ROM_LOADER_ADDRESS           0xFF00
@@ -130,158 +181,7 @@ static DX_TIMER_HANDLER(heart_beat_handler)
 
 DX_TIMER_HANDLER_END
 
-/// <summary>
-/// Handle enter key press in terminal
-/// </summary>
-/// <param name="data">Input data buffer</param>
-/// <returns>true if handled and should cleanup, false to continue processing</returns>
-static bool handle_enter_key(char *data, CPU_OPERATING_MODE cpu_mode)
-{
-    switch (cpu_mode)
-    {
-        case CPU_RUNNING:
-            enqueue_terminal_input_character(0x0d);
-            break;
-        case CPU_STOPPED:
-            data[0] = 0x00;
-            process_virtual_input(data);
-            break;
-        default:
-            break;
-    }
-    return true;
-}
 
-/// <summary>
-/// Handle control character input
-/// </summary>
-/// <param name="data">Input character</param>
-/// <param name="application_message_size">Size of the message</param>
-/// <returns>true if handled and should cleanup, false to continue processing</returns>
-static bool handle_ctrl_character(char *data, size_t application_message_size)
-{
-    char c = data[0];
-
-    if (application_message_size == 1 && c > 0 && c < ASCII_CTRL_MAX)
-    {
-        if (c == CTRL_M_MAPPED_VALUE) // ctrl-m mapped to ASCII 28 to avoid /r
-        {
-            CPU_OPERATING_MODE new_mode = toggle_cpu_operating_mode();
-            if (new_mode == CPU_STOPPED)
-            {
-                bus_switches = cpu.address_bus;
-                publish_message("\r\nCPU MONITOR> ", 15);
-                return true;
-            }
-            c = 0x0d;
-        }
-
-        enqueue_terminal_input_character(c);
-        return true;
-    }
-    return false;
-}
-
-/// <summary>
-/// Handle single character input
-/// </summary>
-/// <param name="data">Input character</param>
-/// <param name="application_message_size">Size of the message</param>
-/// <returns>true if handled and should cleanup, false to continue processing</returns>
-static bool handle_single_character(char *data, size_t application_message_size, CPU_OPERATING_MODE cpu_mode)
-{
-    if (application_message_size == 1)
-    {
-        if (cpu_mode == CPU_RUNNING)
-        {
-            altairOutputBufReadIndex  = 0;
-            terminalOutputMessageLen  = 0;
-            haveTerminalOutputMessage = true;
-            enqueue_terminal_input_character(data[0]);
-        }
-        else
-        {
-            data[0] = (char)toupper(data[0]);
-            data[1] = 0x00;
-            process_virtual_input(data);
-        }
-        return true;
-    }
-    return false;
-}
-
-/// <summary>
-/// Terminal input handler
-/// </summary>
-/// <param name="command">Command buffer</param>
-/// <param name="application_message_size">Size of the message</param>
-/// <returns>true if handled and should cleanup, false to continue processing</returns>
-/// <summary>
-/// Handler called to process inbound message
-/// </summary>
-void terminal_handler(char *data, size_t application_message_size)
-{
-    char command[TERMINAL_COMMAND_BUFFER_SIZE];
-    memset(command, 0x00, sizeof(command));
-
-    if (data == NULL || application_message_size == 0 || application_message_size >= 1024)
-    {
-        return;
-    }
-
-    // Handle control characters
-    if (handle_ctrl_character(data, application_message_size))
-    {
-        return;
-    }
-
-    CPU_OPERATING_MODE cpu_mode = get_cpu_operating_mode_fast();
-
-    // Was just enter pressed
-    if (data[0] == '\r')
-    {
-        if (handle_enter_key(data, cpu_mode))
-        {
-            return;
-        }
-    }
-
-    // Handle single character input
-    if (handle_single_character(data, application_message_size, cpu_mode))
-    {
-        return;
-    }
-
-    // Prepare upper-case copy for virtual command processing when CPU is stopped
-    size_t copy_len = (sizeof(command) - 1 < application_message_size) ? sizeof(command) - 1 : application_message_size;
-    for (size_t i = 0; i < copy_len; i++)
-    {
-        command[i] = (char)toupper((unsigned char)data[i]);
-    }
-    command[copy_len] = '\0';
-
-    switch (cpu_mode)
-    {
-        case CPU_RUNNING:
-            if (application_message_size > 0)
-            {
-                altairOutputBufReadIndex  = 0;
-                terminalOutputMessageLen  = (int)application_message_size - 1;
-                haveTerminalOutputMessage = true;
-
-                for (size_t i = 0; i < application_message_size; ++i)
-                {
-                    enqueue_terminal_input_character(data[i]);
-                }
-            }
-            break;
-        case CPU_STOPPED:
-            process_virtual_input(command);
-            break;
-        default:
-            break;
-    }
-}
 
 /// <summary>
 /// Client connected successfully
@@ -309,16 +209,7 @@ static void terminal_write(uint8_t c)
     c &= ASCII_MASK_7BIT; // take first 7 bits (127 ascii chars) only and discard 8th bit.
 
     // This logic is to surpress echoing of characters that were typed on the web console
-    if (haveTerminalOutputMessage)
-    {
-        altairOutputBufReadIndex++;
-
-        if (altairOutputBufReadIndex > terminalOutputMessageLen)
-        {
-            haveTerminalOutputMessage = false;
-        }
-    }
-    else
+    if (!terminal_should_suppress_output_character())
     {
         publish_message(&c, 1);
     }
