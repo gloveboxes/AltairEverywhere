@@ -1,74 +1,122 @@
-## Developer Workflow
+# Editing Files: Developer Workflow
 
-There are two approaches to editing files for the Altair CP/M filesystem:
+You can work with files for the Altair CP/M system in two primary ways:
 
-1. **Using External Tools (Preferred)**: You can edit files on your host machine using modern text editors or IDEs, and then transfer the files to the Altair CP/M filesystem. This approach allows for a more comfortable editing experience and better tooling support.
-2. **Using the Altair Emulator**: Alternatively, you can use the built-in text editor in the Altair emulator to edit files directly on the CP/M filesystem. This method is straightforward but may be less efficient for larger changes.
+1. **External editor on your host (Recommended)** – Edit locally with a modern editor such as Visual Studio Code. This gives you syntax highlighting, search, Copilot / LLM assistance, version control, etc.
+2. **On‑emulator editing (Word-Master)** – Edit inside the emulated CP/M environment using the bundled Word-Master editor. Authentic, but slower and less ergonomic for substantial changes.
 
-## Editing Files with External Tools (Preferred)
+## Editing Files with External Tools (Recommended)
 
-The recommended approach is to use a modern text editor or IDE on your host machine to edit files, and then transfer them to the Altair CP/M filesystem. Here’s how you can do this:
+Follow this fast loop for most development:
 
-1. **Choose a Text Editor or IDE**: Select a text editor or IDE that you are comfortable with. We'll be using [Visual Studio Code](https://code.visualstudio.com/){:target=_blank} in this example.
-2. **Edit Your Files**: Make the necessary changes to your files using the chosen editor and optionally with Copilot and a Large Language Model (LLM) like OpenAI Codex or Claude Sonnet.
-3. **Share your source files with a web server**: Use the [Visual Code Live Server (Five Server) extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer){:target=_blank} to share your source files over HTTP. or alternatively, use any web server to share your files.
+1. **Pick an editor** – Example: [Visual Studio Code](https://code.visualstudio.com/){:target=_blank} (with optional Copilot / LLM assistance).
+2. Create a folder on your host computer to hold your source files.
+3. **Create or modify your source** – Edit as normal on your host (BASIC, C, ASM, etc.).
+4. **Expose the directory over HTTP** – Either:
+    * Use the VS Code Use the [Visual Code Live Server (Five Server) extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer){:target=_blank} extension, or
+    * Use a simple built‑in Python server:
 
-    ```shell
-    python -m http.server 5500
+      ```bash
+      python -m http.server 5500
+      ```
+
+5. **Tell the Altair side where to fetch files** – In the Altair web terminal, set the HTTP endpoint (only needed once per session):
+
+    Change to the `B:` drive first if not already there.
+
+    ```cpm
+    gf -e <your_ip_address>:5500
     ```
 
-4. Switch the Altair web terminal and set the http endpoint to the web server address. For example, if your web server is running on port 5500, set the endpoint to `http://<your_ip_address>:5500` using the `gf -e <your_ip_address>:5500` command.
-5. Transfer your file to the Altair CP/M filesystem using the `gf -f <your_file>` command. For example, to transfer a file named `HELLO.BAS`, use the following command in the Altair CP/M command prompt:
+    This corresponds to `http://<your_ip_address>:5500`.
+
+    Note, the endpoint is stored in a file on the emulated disk called `gf.txt` so it persists across emulator restarts.
+
+6. **Transfer a file into CP/M** – From the CP/M prompt:
 
     ```cpm
     gf -f hello.bas
     ```
 
-6. Run the file on the Altair CP/M filesystem. For example, to run a BASIC program named `HELLO.BAS`, use the following command:
+    (File names are case‑insensitive; CP/M convention is uppercase.)
 
-    ```cpm
-    mbasic hello
+7. **Run or build** – Examples:
+    * BASIC: `mbasic hello`
+
+Repeat steps 2, 5, and 6 as you refine your program.
+
+### Automating Transfers & Builds with CP/M SUBMIT
+
+The Submit command automates file transfer and build steps and is a a time-saver.
+
+Prerequisite: Ensure the endpoint is already set (`gf -e <your_ip_address>:5500`).
+
+On the `B:` drive there are two helper submit files: `C.SUB` and `ASM.SUB`.
+
+They perform (a) fetch via `gf -f`, then (b) compile / assemble, then (c) link.
+
+Examples:
+
+#### Transfer, compile, and link a C source file
+
+```cpm
+submit c hello.c
+```
+
+!!! info
+
+    The `c.sub` file fetches the source file, compiles it with BDS C, then links it to create `hello.com`.
+
+    ```plaintext
+    gf -f $1.c
+    cc $1   
+    clink $1 dxweb dxtimer
     ```
 
-### Using the CP/M SUBMIT Command to automate File Transfers
+#### Transfer, assemble, and link an assembly source file
 
-1. Set the `gf -e <your_ip_address>:5500` command to set the HTTP endpoint.
-2. There are two submit files included on the `B:` drive in the Altair CP/M disk image: `asm.sub` and `c.sub`. You can use these submit files to automate the file transfer process.
-3. To transfer a `c` source file, use the following command:
+Change to the `B:` drive first if not already there.
 
-    ```cpm
-    submit c <your_file.c>
+```cpm
+submit asm demo.asm
+```
+
+!!! info
+
+    The `asm.sub` file fetches the source file, assembles it with ASM80, then links it to create `demo.com`.
+
+    ```plaintext
+    gf -f $1.asm
+    d:asm $1
+    d:load $1
+    era $1.prn
+    era $1.hex
     ```
-
-    This will transfer the specified C source file to the Altair CP/M filesystem and then compile and link it using the BDS C compiler.
-
-4. To transfer an assembly source file, use the following command:
-
-    ```cpm
-    submit asm <your_file.asm>
-    ```
-
-    This will transfer the specified assembly source file to the Altair CP/M filesystem and then assemble and link it using the ASM80 assembler.
 
 ## Editing Files with the Word-Master Text Editor
 
-The Altair emulator includes the [MicroPro Word-Master](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf){:target=_blank} text editor for editing documents and source code. Word-Master was advanced for its day, but by today's standards, not the most user-friendly.
+The emulator bundles [MicroPro Word-Master](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf){:target=_blank}. Historically powerful, but spartan compared with modern editors.
 
-### Ten-minute video introduction to editing files
+### Ten‑minute video introduction
 
-The easiest way to edit files is with Visul Studio Code and then copy the file to the Altair CP/M filesystem.  Watch the video to learn more.
+Fastest workflow: edit with Visual Studio Code, then copy using `gf`. Watch the video for an overview:
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/3C_5WcSWqro" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[▶ Video: Editing Files Workflow (YouTube)](https://www.youtube.com/watch?v=3C_5WcSWqro){:target=_blank}
 
-### Editing files with Word-Master
+If embedding is required later, update the markdown linter configuration to allow `iframe` (rule MD033) and restore the embed.
 
-It is recommended to use Visual Studio Code and the CP/M **gf** program to edit files and then copy them to the Altair filesystem. But for real retrocomputing diehards, the CP/M disk image includes the Word-Master text editor. To use Word-Master, you must switch the web terminal to character input mode.
+### Editing inside Word-Master
 
-To switch between line input mode and character input mode, select **Ctrl+L**. When you're finished with Word-Master, switch back to line input mode. Line input mode is a more efficient way for the web terminal to communicate with the Altair emulator.
+Preferred path remains: local edit + `gf` transfer. But if you want the authentic experience:
+
+1. Toggle the web terminal to character mode (`Ctrl+L`).
+2. Launch Word-Master (e.g., `wm filename.asm`).
+3. Use the control key commands below for navigation / editing.
+4. When finished, exit Word-Master, then toggle back to line mode (`Ctrl+L`) for faster terminal interaction.
 
 ![Screenshot of Altair running the Word-Master text editor.](img/word-master-character-mode.png)
 
-For more information, view the [Word-Master user's guide](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf?azure-portal=true){:target=_blank}.
+For full details see the [Word-Master user guide](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf?azure-portal=true){:target=_blank}.
 
 The following table lists the Ctrl characters that Word-Master uses. This list is sourced from the [Experiencing the Altair 8800](https://glasstty.com/?p=1235){:target=_blank} blog.
 
@@ -92,7 +140,7 @@ VIDEO MODE SUMMARY
 
 ```
 
-In character input mode, the following keyboard mappings will improve your editing experience:
+In character input mode, these host key mappings help mirror Word-Master's control sequences:
 
 ```text
 Keyboard key            Word-Master Ctrl Sequence
