@@ -1,95 +1,87 @@
-This page describes how to build the Altair Docker images and is provided for reference only. You don't need to build the Docker images to use the Altair emulator.
+## Building Multi-Architecture Docker Images for Altair Everywhere
 
-## Altair on ARM64 and AMD64
+This guide shows how to build Docker images that work on both x64 (AMD64) and ARM64 architectures using Docker Buildx.
 
-1. Change to the Docker folder
+## Prerequisites
 
-    ```bash
-    cd Docker
-    ```
+- Docker Desktop installed with Buildx support
+- Docker Hub account (or another container registry)
+- Access to the Altair Everywhere repository
 
-1. Switch Docker driver
+## Step-by-Step Instructions
 
-    ```bash
-    docker buildx create --use
-    ```
+### 1. Clone the Repository
 
-1. Clear the Docker Buildx cache
+If you haven't already, clone the Altair Everywhere repository:
 
-    ```bash
-    docker buildx prune -a
-    ```
+```bash
+git clone https://github.com/gloveboxes/Altair-8800-Emulator
+```
 
-1. Build the Docker image
+### 2. Navigate to the Docker Directory
 
-    ```bash
-    docker buildx build . --platform linux/arm64,linux/amd64 --tag YOUR_DOCKER_ID/altair8800:latest --push
-    ```
+```bash
+cd Altair-8800-Emulator/Docker
+```
 
-## Altair on Raspberry Pi OS 64 bit (ARM64) with Pi Sense HAT
+### 3. Create and Configure Multi-Architecture Builder
 
-1. Change to the Docker folder
+Create a new buildx builder instance that supports multi-platform builds:
 
-    ```bash
-    cd Docker
-    ```
+```bash
+docker buildx create --name multiarch --use
+```
 
-1. Edit and uncomment the following line in the dockerfile to enable PI Sense HAT image build.
+Bootstrap the builder to ensure it's ready:
 
-    ```text
-    #<REMOVE_THIS_COMMENT_TO_ENABLE_PI_SENSE_HAT>RUN cd /Altair8800/AltairHL_emulator && sed -i 's/# set(ALTAIR_FRONT_PI_SENSE_HAT/set(ALTAIR_FRONT_PI_SENSE_HAT/g' CMakeLists.txt
-    ```
+```bash
+docker buildx inspect --bootstrap
+```
 
-1. Clear the Docker Buildx cache
+⚠️ **Warning**: This will remove all build cache and may slow down subsequent builds.
 
-    ```bash
-    docker buildx prune -a
-    ```
+### 4. Login to Docker Registry
 
-1. Build the Docker image
+Make sure you're authenticated with your container registry:
 
-    ```bash
-    docker buildx build . --platform linux/arm64 --tag YOUR_DOCKER_ID/altair8800-pisense:latest --push
-    ```
+```bash
+docker login
+```
 
-## Altair as a shared service
+### 5. Build Multi-Architecture Image
 
-1. Change to the Docker folder
+Replace `YOUR_DOCKER_ID` with your actual Docker Hub username:
 
-    ```bash
-    cd Docker
-    ```
+```bash
+docker buildx build . --platform linux/arm64,linux/amd64 --tag YOUR_DOCKER_ID/altair8800:latest --push --no-cache
+```
 
-1. Edit and uncomment the following line in the dockerfile to enable cloud image build.
+This command will:
 
-    ```text
-    #<REMOVE_THIS_COMMENT_TO_ENABLE_CLOUD>RUN cd /Altair8800/AltairHL_emulator && sed -i 's/# set(ALTAIR_CLOUD/set(ALTAIR_CLOUD/g' CMakeLists.txt
-    ```
+- Build for both ARM64 and AMD64 architectures
+- Tag the image as `latest`
+- Push directly to Docker Hub
 
-1. Clear the Docker Buildx cache
+### 6. Switch to Default Builder
 
-    ```bash
-    docker buildx prune -a
-    ```
+```bash
+docker context use default
+```
 
-1. Build the Docker image
+### Option 2: Remove Custom Builder
 
-    ```bash
-    docker buildx build . --platform linux/arm64,linux/amd64 --tag YOUR_DOCKER_ID/altair8800-cloud:latest --push
-    ```
+```bash
+docker buildx rm multiarch
+```
 
-## Clean up
+This automatically switches back to the default builder.
 
-After building the Docker images:
+### Verify Current Builder
 
-1. Clear the Docker Buildx cache
+Check which builder is currently active:
 
-    ```bash
-    docker buildx prune -a
-    ```
+```bash
+docker buildx ls
+```
 
-1. Switch back to the default Docker context.
-
-   ```bash
-   docker buildx use default && docker context use default 
-   ```
+The active builder is marked with an asterisk (*).
