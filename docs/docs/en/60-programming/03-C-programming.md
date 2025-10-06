@@ -90,24 +90,6 @@ Follow these steps to list, compile, link, and run the *HW.C* file:
 
 1. Stop the *hw* application by selecting **Ctrl+C**.
 
-## Editing hw.c with Word-Master
+## Editing files
 
-In the following steps use the [Word-Master text editor](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf){:target=_blank} to edit a file. It's highly recommended to [edit files with Visual Studio Code](01-Editing-files.md) and then copy the file to the Altair filesystem using the CP/M gf command.
-
-1. Edit the *hw.c* file with Word-Master:
-
-    ```cpm
-    wm hw.c
-    ```
-
-1. Switch the web terminal to character input mode by selecting **Ctrl+L**.
-
-1. Make your changes to the *hw.c* file.
-
-1. Save your updates to the *hw.c* file:
-
-    1. Select the **Esc** key.
-    1. Select **E** to exit. Your file changes are saved to disk.
-
-1. Switch the web terminal to line input mode by selecting **Ctrl+L**.
-1. Then compile, link, and run the updated hw.c application.
+See [Editing Files](01-Editing-files.md){:target=_blank} for details about transferring, editing, compiling, and running C source files.
