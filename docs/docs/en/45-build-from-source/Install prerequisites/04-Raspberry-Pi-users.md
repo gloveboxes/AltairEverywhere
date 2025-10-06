@@ -4,7 +4,7 @@
 
 The easiest way to install Raspberry Pi OS is to use the latest version of the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
-!!! warning 
+!!! warning
 
     - You must use Raspberry Pi OS Debian 13 `Trixie` or later to build and run the Altair emulator as the emulator source expects libgpiod v2.0 or later.
     - As of October 2025, the latest version of Raspberry Pi OS is Debian 13 `Trixie`.
