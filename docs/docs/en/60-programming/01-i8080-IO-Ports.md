@@ -16,7 +16,7 @@ The Altair emulator uses Intel 8080 IO ports to provide time services, random nu
 
 The following tables show output port numbers and port data values. Typically, calling an output port will load data to be read via an input port.
 
-#### Utility ports
+#### Utility output ports
 
 | Port | Port data  | Loads |
 |------|-------|:---------|
@@ -33,6 +33,26 @@ The following tables show output port numbers and port data values. Typically, c
 | 112   | 0 | Select getfile (gf) endpoint to use |
 | 113   | 0 | Load getfile (gf) selected endpoint |
 | 114   | ASCII | Set web request file name and call on NULL |
+
+### Input ports
+
+Typically, input ports will read data loaded by an output port.
+
+| Port | Description |
+|------|-------------|
+| 29   | Query milliseconds timer status. Enabled or expired (true or false) |
+| 30   | Query seconds timer status. Enabled or expired (true or false) |
+| 31   | Query publish JSON pending status. Enabled or expired (true or false) |
+| 32   | Query publish weather pending status. Enabled or expired (true or false) |
+| 68  | devget eof |
+| 69  | Is network ready |
+| 200  | Read loaded byte stream |
+| 201  | Read webget file stream |
+| 202  | Read devget file stream |
+| 123  | Read OpenAi ChatGPT stream |
+| 120  | Read OpenAI streaming status |
+| 121  | Read OpenAI message |
+| 122  | Read OpenAI finished status |
 
 #### Weather ports
 
@@ -87,39 +107,6 @@ The following tables show output port numbers and port data values. Typically, c
 | 39   | 7    | Particulate matter 2.5 level (Note 1) |
 | 39   | 8    | Particulate matter 1.0 level (Note 1) |
 
-#### Publish to Azure IoT ports
-
-| Port | Port data  | Loads |
-|------|-------|:---------|
-| 31   | ASCII | Publish JSON to IoT Hub/Central (Max 256 characters) (Note 3) |
-| 32   | 0 | Publish weather and pollution data to IoT Hub/Central (Note 3) |
-
-#### Azure Sphere specific ports
-
-| Port | Port data  | Loads |
-|------|-------|:---------|
-| 60   | 1 or 0 | Turn Red LED on or off |
-| 61   | 1 or 0 | Turn Green LED on or off |
-| 62   | 1 or 0 | Turn Blue LED on or off |
-| 63   | 0      | Loads onboard temperature |
-| 63   | 1      | Loads onboard pressure |
-| 63   | 2      | Loads onboard light sensor |
-| 64   | 0      | Loads accelerometer X axis |
-| 64   | 1      | Loads accelerometer Y axis |
-| 64   | 2      | Loads accelerometer Z axis |
-| 64   | 3      | Start the accelerometer timer|
-| 64   | 4      | Stop the accelerometer timer |
-| 64   | 5      | One-off accelerometer reading |
-| 64   | 6      | Calibrate accelerometer for angular rate|
-| 64   | 7      | Load accelerometer for angular rate |
-| 64   | 8      | Get latest movement inference result |
-| 66   | 0      | Power management disable |
-| 66   | 1      | Power management enable |
-| 66   | 2      | Power management sleep |
-| 67   | 1..255 | Power management wake from sleep (seconds) |
-| 71   | 0      | Get Azure Sphere OS version number |
-| 72   | 0      | Get first 8 characters of Azure Sphere device ID |
-
 #### 8x8 LED Panels
 
 - Pi Sense HAT
@@ -169,25 +156,38 @@ The following tables show output port numbers and port data values. Typically, c
 | 123   | 0 | Clear all messages |
 | 124   | 0 | Load ChatGPT stream |
 
-### Input ports
+#### Publish to Azure IoT ports
 
-Typically, input ports will read data loaded by an output port.
+| Port | Port data  | Loads |
+|------|-------|:---------|
+| 31   | ASCII | Publish JSON to IoT Hub/Central (Max 256 characters) (Note 3) |
+| 32   | 0 | Publish weather and pollution data to IoT Hub/Central (Note 3) |
 
-| Port | Description |
-|------|-------------|
-| 29   | Query milliseconds timer status. Enabled or expired (true or false) |
-| 30   | Query seconds timer status. Enabled or expired (true or false) |
-| 31   | Query publish JSON pending status. Enabled or expired (true or false) |
-| 32   | Query publish weather pending status. Enabled or expired (true or false) |
-| 68  | devget eof |
-| 69  | Is network ready |
-| 200  | Read loaded byte stream |
-| 201  | Read webget file stream |
-| 202  | Read devget file stream |
-| 123  | Read OpenAi ChatGPT stream |
-| 120  | Read OpenAI streaming status |
-| 121  | Read OpenAI message |
-| 122  | Read OpenAI finished status |
+#### Azure Sphere specific ports
+
+| Port | Port data  | Loads |
+|------|-------|:---------|
+| 60   | 1 or 0 | Turn Red LED on or off |
+| 61   | 1 or 0 | Turn Green LED on or off |
+| 62   | 1 or 0 | Turn Blue LED on or off |
+| 63   | 0      | Loads onboard temperature |
+| 63   | 1      | Loads onboard pressure |
+| 63   | 2      | Loads onboard light sensor |
+| 64   | 0      | Loads accelerometer X axis |
+| 64   | 1      | Loads accelerometer Y axis |
+| 64   | 2      | Loads accelerometer Z axis |
+| 64   | 3      | Start the accelerometer timer|
+| 64   | 4      | Stop the accelerometer timer |
+| 64   | 5      | One-off accelerometer reading |
+| 64   | 6      | Calibrate accelerometer for angular rate|
+| 64   | 7      | Load accelerometer for angular rate |
+| 64   | 8      | Get latest movement inference result |
+| 66   | 0      | Power management disable |
+| 66   | 1      | Power management enable |
+| 66   | 2      | Power management sleep |
+| 67   | 1..255 | Power management wake from sleep (seconds) |
+| 71   | 0      | Get Azure Sphere OS version number |
+| 72   | 0      | Get first 8 characters of Azure Sphere device ID |
 
 **Notes.**
 
