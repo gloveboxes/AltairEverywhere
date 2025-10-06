@@ -1,8 +1,8 @@
-There are two classes of docker images you can use to run the Altair emulator.
+You can start the Altair 8800 emulator Docker container with the `docker run` command. There are several options you can use to configure the Altair emulator.
 
 ## Altair 8800 Standard Mode
 
-1. The first is for general use on 64-bit [Linux, macOS, Windows, and Raspberry Pi operating systems](#general-linux-macos-windows-and-raspberry-pi-users).
+1. This option is recommended for most users and works on 64-bit versions of [Linux, macOS, Windows, and Raspberry Pi](#general-linux-macos-windows-and-raspberry-pi-users).
 
     ```shell
     docker run --user root -p 8082:8082 -p 80:80 --name altair8800 --rm glovebox/altair8800:latest
@@ -10,7 +10,7 @@ There are two classes of docker images you can use to run the Altair emulator.
 
 ## Altair 8800 Advanced Modes
 
-The Altair 8800 emulator can also run in advanced mode, you can:
+The Altair 8800 emulator also has several advanced modes that you can enable to customize the Altair emulator. These include:
 
 1. Set the time zone.
 1. Connect to an MQTT broker to publish the Altair address and data bus information.
@@ -39,11 +39,19 @@ You can connect to an MQTT broker to publish the Altair address and data bus inf
 * MQTT_PORT=`YOUR_MQTT_PORT` (default is 1883)
 * MQTT_CLIENT_ID=`YOUR_MQTT_CLIENT_ID` (must be unique for each client connected to the MQTT broker)
 
+#### ThingsBoard
+
+The Altair emulator publishes telemetry data in the `ThingsBoard` format.
+
+1. Telemetry data is sent to the MQTT topic `v1/devices/me/telemetry`.
+2. You can install the free ThingsBoard Community Edition locally, including on devices like a Raspberry Pi. See the [ThingsBoard installation guide](https://thingsboard.io/docs/user-guide/install/installation-options/){:target="_blank"}.
+3. In ThingsBoard, create an MQTT device to represent your Altair emulator. Make sure to use the same `MQTT_CLIENT_ID` when connecting from the Altair emulator.
+
 ### Open Weather Map
 
 You can connect to the Open Weather Map service to get the current weather information for your location. You need to set the following environment variable.
 
-* OPEN_WEATHER_MAP_API_KEY=`YOUR_OPEN_WEATHER_MAP_API_KEY` (you can get a free API key by signing up at [Open Weather Map](https://openweathermap.org/api))
+* OPEN_WEATHER_MAP_API_KEY=`YOUR_OPEN_WEATHER_MAP_API_KEY` (you can get a free API key by signing up at [Open Weather Map](https://openweathermap.org/api){:target="_blank"})
 
 ### Raspberry Pi with Pi Sense HAT
 
