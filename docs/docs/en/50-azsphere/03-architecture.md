@@ -15,3 +15,4 @@ Starting from the bottom left and moving up and then to the right.
 - **Altair BASIC:** By default the Altair emulator boots CP/M, but it is easy to boot the original Altair BASIC program.
 - **Altair Web Terminal:** Provides a web-browser-hosted Altair terminal. The web terminal is built using the Xterm library. Xterm.js provides a web browser-hosted terminal, a WebSocket integrates Xterm with the Altair emulator.
 - **Open Weather Map**: Open Weather Map provides planet-scale weather and pollution data services. Open Weather Map provides free access to weather and pollution data by geographic location.
+- **ThingsBoard:** ThingsBoard is an open-source IoT platform for data collection, processing, visualization, and device management. ThingsBoard supports industry-standard IoT protocols: MQTT, CoAP, and HTTP. The Altair emulator uses the MQTT protocol to connect to ThingsBoard.
