@@ -60,7 +60,7 @@ Examples:
 #### Transfer, compile, and link a C source file
 
 ```cpm
-submit c hello.c
+submit c hello
 ```
 
 !!! info
@@ -73,12 +73,18 @@ submit c hello.c
     clink $1 dxweb dxtimer
     ```
 
+Now you can run the program:
+
+```cpm
+hello
+```
+
 #### Transfer, assemble, and link an assembly source file
 
 Change to the `B:` drive first if not already there.
 
 ```cpm
-submit asm demo.asm
+submit asm vibe
 ```
 
 !!! info
@@ -92,6 +98,12 @@ submit asm demo.asm
     era $1.prn
     era $1.hex
     ```
+
+Now you can run the program:
+
+```cpm
+vibe
+```
 
 ## Editing Files with the Word-Master Text Editor
 

@@ -12,7 +12,7 @@ TMRHI   EQU     28              ; Timer high-byte port (decimal)
 TMRLO   EQU     29              ; Timer low-byte port (starts timer countdown)
 
 START:                          ; Program entry point (CP/M jumps here)
-        LXI     H,1000          ; Initialize remaining loop counter (1000 passes)
+        LXI     H,10000          ; Initialize remaining loop counter (10000 passes)
         SHLD    LOPCNT
         LXI     H,1             ; Start with loop number 1
         SHLD    LOPNUM
@@ -66,12 +66,13 @@ PRCHR:                          ; A holds character to output (BDOS fn 2)
         RET
 
 PRDEC:                          ; HL holds value (1-1000) to print in decimal
-        MVI     D,0             ; Track if we've printed a non-zero digit
+        PUSH    B              ; Save BC since BDOS corrupts it
+        MVI     D,0            ; Track if we've printed a non-zero digit
         LXI     B,1000
         CALL    GETDG
-        PUSH    H              ; Preserve remainder across BDOS call
-        CALL    OUTDIG
-        POP     H
+        PUSH    H              ; Preserve remainder
+        CALL    OUTDIG         ; D may be set to 1 here
+        POP     H              ; Restore remainder (D keeps its new value)
         LXI     B,100
         CALL    GETDG
         PUSH    H
@@ -85,6 +86,7 @@ PRDEC:                          ; HL holds value (1-1000) to print in decimal
         MOV     A,L            ; Ones place (always printed)
         ADI     '0'
         CALL    PRCHR
+        POP     B              ; Restore BC
         RET
 
 OUTDIG:                         ; Print digit in A if needed (skips leading zeros)
@@ -124,7 +126,7 @@ GDDNE:
         RET
 
 WAIT5:
-        MVI     A,50            ; 50 chunks * 100ms ~= 5000ms
+        MVI     A,1             ; 1 chunk * 50ms = 50ms
         STA     CHCNT
 W5LOOP:
         CALL    W0100           ; Wait for ~100ms to elapse
@@ -144,9 +146,9 @@ W5ESC:
         RET
 
 W0100:
-        MVI     A,0             ; High byte for ~100ms duration
+        MVI     A,0             ; High byte for ~50ms duration
         OUT     TMRHI
-        MVI     A,64H           ; Low byte (starts timer countdown)
+        MVI     A,32H           ; Low byte (starts timer countdown) - 50 decimal
         OUT     TMRLO
 W1STR:
         IN      TMRLO           ; Wait for timer to start counting down
