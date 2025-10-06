@@ -39,6 +39,25 @@ static void uint8_to_uint16_t(uint8_t bitmap, uint16_t *buffer, uint16_t color)
     }
 }
 
+// Helper function to rotate the panel buffer 180 degrees
+static void rotate_panel_180(uint16_t *buffer)
+{
+    uint16_t temp;
+    // Swap rows and reverse pixels within each row
+    for (int row = 0; row < 4; row++)
+    {
+        int opposite_row = 7 - row;
+        for (int col = 0; col < 8; col++)
+        {
+            int opposite_col = 7 - col;
+            // Swap pixel at (row, col) with pixel at (opposite_row, opposite_col)
+            temp = buffer[row * 8 + col];
+            buffer[row * 8 + col] = buffer[opposite_row * 8 + opposite_col];
+            buffer[opposite_row * 8 + opposite_col] = temp;
+        }
+    }
+}
+
 bool sense_hat_front_panel_init(void)
 {
     if (sense_hat_initialized)
@@ -125,6 +144,9 @@ void sense_hat_front_panel_io(uint8_t status, uint8_t data, uint16_t bus, void (
     // Bus low byte in green (row 7)
     uint8_to_uint16_t((uint8_t)(bus), panel_buffer + (7 * 8), COLOR_GREEN);
 
+    // Rotate the panel 180 degrees
+    rotate_panel_180(panel_buffer);
+
     // Send the complete frame buffer in a single I2C transaction
     pi_sense_8x8_panel_update(panel_buffer, PI_SENSE_8x8_BUFFER_SIZE);
 }
@@ -136,6 +158,10 @@ static void panel_draw_bitmap(void)
     gfx_reverse_panel(bitmap_rows);
     gfx_rotate_counterclockwise(bitmap_rows, 1, 1, bitmap_rows);
     gfx_bitmap_to_rgb(bitmap_rows, panel_8x8_buffer, sizeof(panel_8x8_buffer));
+    
+    // Rotate the panel 180 degrees
+    rotate_panel_180(panel_8x8_buffer);
+    
     pi_sense_8x8_panel_update(panel_8x8_buffer, sizeof(panel_8x8_buffer));
 }
 
@@ -179,6 +205,10 @@ bool sense_hat_handle_led_matrix_output(int port_number, uint8_t data, char *buf
             gfx_reverse_panel(bitmap_rows);
             gfx_rotate_counterclockwise(bitmap_rows, 1, 1, bitmap_rows);
             gfx_bitmap_to_rgb(bitmap_rows, panel_8x8_buffer, sizeof(panel_8x8_buffer));
+            
+            // Rotate the panel 180 degrees
+            rotate_panel_180(panel_8x8_buffer);
+            
             pi_sense_8x8_panel_update(panel_8x8_buffer, sizeof(panel_8x8_buffer));
             handled = true;
             break;
