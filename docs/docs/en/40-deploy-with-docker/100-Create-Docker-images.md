@@ -7,7 +7,7 @@ This page describes how to build the Altair Docker images and is provided for re
     ```bash
     cd Docker
     ```
-    
+
 1. Switch Docker driver
 
     ```bash

@@ -12,10 +12,11 @@ Head to [Get started](/start/Deploy) to learn how to deploy and run the Altair 8
 
 The Altair project can be viewed through three lenses:
 
-1. Learn how to develop multithreaded event-driven IoT C applications that scale from [microcontrollers](https://en.wikipedia.org/wiki/Microcontroller), to [Raspberry Pis](https://en.wikipedia.org/wiki/Raspberry_Pi), to desktop-class computers.
-1. A fantastic safe way to explore machine-level programming, Intel 8080 Assembly programming, along with C and BASIC development.
-1. You are interested in retro gaming, and you want to chill playing retro games from yesteryear.
-2. Optionally, the project integrates free weather and pollution cloud services from [Open Weather Map](http://openweathermap.org), along with [ThingsBoard](https://thingsboard.io/) for telemetry and control.
+1. [Vibe code](https://en.wikipedia.org/wiki/Vibe_coding){:target=_blank} Altair 8800 applications using Intel 8080 Assembly, BDS C, and Microsoft BASIC, assisted by Large Language Models (LLMs) like Claude Sonnet or OpenAI Codex using VS Code and GitHub Copilot.
+2. Learn how to develop multithreaded event-driven IoT C applications that scale from [microcontrollers](https://en.wikipedia.org/wiki/Microcontroller), to [Raspberry Pis](https://en.wikipedia.org/wiki/Raspberry_Pi), to desktop-class computers.
+3. A fantastic safe way to explore machine-level programming, Intel 8080 Assembly programming, along with C and BASIC development.
+4. You are interested in retro gaming, and you want to chill playing retro games from yesteryear.
+5. Optionally, the project integrates free weather and pollution cloud services from [Open Weather Map](http://openweathermap.org), along with [ThingsBoard](https://thingsboard.io/) for telemetry and control.
 
 ## Supported operating systems
 

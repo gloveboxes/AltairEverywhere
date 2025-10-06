@@ -25,8 +25,6 @@ nav:
     - Introduction: "40-deploy-with-docker/10-introduction.md"
     - Install Prerequisites: "40-deploy-with-docker/15-install-prerequisites.md"
     - Start the Emulator: "40-deploy-with-docker/17-start-container.md"
-    - Cloud Services: "40-deploy-with-docker/20-Start-cloud-connected-Altair.md"
-    - Build Docker Images: "40-deploy-with-docker/100-Create-Docker-images.md" 
   - Build from source:
     - Introduction: "45-build-from-source/01-Introduction.md"
     - Install Prerequisites:
@@ -50,6 +48,8 @@ nav:
     - Intel 8080 Assembler: "60-programming/04-Assembly-programming.md"
     - Altair BASIC Programming: "60-programming/05-Altair-BASIC-programming.md"
     - Front Panel Programming: "60-programming/06-Front-panel-programming.md"
+  - Docker Images:
+      - Build Docker Images: "40-deploy-with-docker/100-Create-Docker-images.md" 
   - Run on Azure Sphere:
     - Introduction: "50-azsphere/01-Introduction.md"
     - Architecture: "50-azsphere/03-architecture.md"
