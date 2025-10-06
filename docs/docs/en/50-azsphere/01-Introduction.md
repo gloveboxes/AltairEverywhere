@@ -1,4 +1,4 @@
-This is version 2 of the Azure Sphere Altair Emulator and shares the same code base as the [Altair 8800 docker](https://github.com/gloveboxes/Altair_8800_docker){:target=_blank} project that runs on Windows, Linux, macOS, and Raspberry Pi.
+This is version 5 of the Azure Sphere Altair Emulator and shares the same code base as the [Altair 8800 docker](https://github.com/gloveboxes/Altair_8800_docker){:target=_blank} project that runs on Windows, Linux, macOS, and Raspberry Pi.
 
 ## Source code
 
