@@ -8,7 +8,7 @@ The following manuals are grouped by topic to help you quickly find what you nee
 ## C Programming
 
 - [BDS C Compiler Reference Manual](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/BDS_C_Compiler.pdf){:target=_blank}
-- [The Complete BD Software C Compiler](https://msxhub.com/BDSC){:target=_blank})
+- [The Complete BD Software C Compiler](https://msxhub.com/BDSC){:target=_blank}
 
 ## 8080 / Assembly Language Development
 
