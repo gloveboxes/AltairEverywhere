@@ -1,75 +1,66 @@
+## Developer Workflow
+
+There are two approaches to editing files for the Altair CP/M filesystem:
+
+1. **Using External Tools (Preferred)**: You can edit files on your host machine using modern text editors or IDEs, and then transfer the files to the Altair CP/M filesystem. This approach allows for a more comfortable editing experience and better tooling support.
+2. **Using the Altair Emulator**: Alternatively, you can use the built-in text editor in the Altair emulator to edit files directly on the CP/M filesystem. This method is straightforward but may be less efficient for larger changes.
+
+## Editing Files with External Tools (Preferred)
+
+The recommended approach is to use a modern text editor or IDE on your host machine to edit files, and then transfer them to the Altair CP/M filesystem. Here’s how you can do this:
+
+1. **Choose a Text Editor or IDE**: Select a text editor or IDE that you are comfortable with. We'll be using [Visual Studio Code](https://code.visualstudio.com/){:target=_blank} in this example.
+2. **Edit Your Files**: Make the necessary changes to your files using the chosen editor and optionally with Copilot and a Large Language Model (LLM) like OpenAI Codex or Claude Sonnet.
+3. **Share your source files with a web server**: Use the [Visual Code Live Server (Five Server) extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer){:target=_blank} to share your source files over HTTP. or alternatively, use any web server to share your files.
+
+    ```shell
+    python -m http.server 5500
+    ```
+
+4. Switch the Altair web terminal and set the http endpoint to the web server address. For example, if your web server is running on port 5500, set the endpoint to `http://<your_ip_address>:5500` using the `gf -e <your_ip_address>:5500` command.
+5. Transfer your file to the Altair CP/M filesystem using the `gf -f <your_file>` command. For example, to transfer a file named `HELLO.BAS`, use the following command in the Altair CP/M command prompt:
+
+    ```cpm
+    gf -f hello.bas
+    ```
+
+6. Run the file on the Altair CP/M filesystem. For example, to run a BASIC program named `HELLO.BAS`, use the following command:
+
+    ```cpm
+    mbasic hello
+    ```
+
+### Using the CP/M SUBMIT Command to automate File Transfers
+
+1. Set the `gf -e <your_ip_address>:5500` command to set the HTTP endpoint.
+2. There are two submit files included on the `B:` drive in the Altair CP/M disk image: `asm.sub` and `c.sub`. You can use these submit files to automate the file transfer process.
+3. To transfer a `c` source file, use the following command:
+
+    ```cpm
+    submit c <your_file.c>
+    ```
+
+    This will transfer the specified C source file to the Altair CP/M filesystem and then compile and link it using the BDS C compiler.
+
+4. To transfer an assembly source file, use the following command:
+
+    ```cpm
+    submit asm <your_file.asm>
+    ```
+
+    This will transfer the specified assembly source file to the Altair CP/M filesystem and then assemble and link it using the ASM80 assembler.
+
+## Editing Files with the Word-Master Text Editor
+
 The Altair emulator includes the [MicroPro Word-Master](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/Word-Master_Manual.pdf){:target=_blank} text editor for editing documents and source code. Word-Master was advanced for its day, but by today's standards, not the most user-friendly.
 
-## Ten-minute video introduction to editing files
+### Ten-minute video introduction to editing files
 
 The easiest way to edit files is with Visul Studio Code and then copy the file to the Altair CP/M filesystem.  Watch the video to learn more.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/3C_5WcSWqro" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-<!-- ## Copying files to the Altair emulator
-
-You can copy files to the Altair filesystem from a web server. The easiest way to serve files is with Visual Studio Code and the [Visual Code Live Server (Five Server) extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer). The beauty of using Visual Studio Code is you can both edit files and web share the files with the Altair emulator.
-
-Follow these steps to copy files to the Altair filesystem.
-
-1. Install [Visual Studio Code](https://code.visualstudio.com/).
-1. Install the [Visual Code Live Server (Five Server) extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer).
-1. Create a folder to be shared on your computer. This folder will contain the files to be copied to the Altair emulator filesystem.
-1. Open the folder with Visual Studio Code
-1. From Visual Studio Code, create a file named **HELLO.BAS** in the folder.
-    > The CP/M filesystem limits filenames to eight characters, followed by a three-character extension, for example, FILENAME.TXT.
-1. Copy the following code (including the ending blank line) to HELLO.BAS. Note that BASIC applications need to end with a blank line.
-
-    ```basic
-    10 print "Hello, world!"
-    ```
-
-1. Save the **HELLO.BAS** file.
-1. Start the Live Server extension. Select **Go Live** from the Visual Studio taskbar.
-
-    ![The image shows where the Live Share option in on the VS Code taskbar](img/select-live-share.png)
-
-    The HTTP server starts and lists the local and network addresses for the web server. The following is an example of the addresses listed when you start Live Share.
-
-    ```text
-    Five Server running at:
-    > Local:    http://localhost:5555
-    > Network:  http://192.168.1.209:5555
-    > Network:  http://10.211.55.2:5555
-    > Network:  http://10.37.129.2:5555
-    ```
-
-    Use the **Network** address that corresponds to your network subnet. Your network subnet will likely start with **192.168.1**. -->
-
-<!-- ## Copy a file from the Retro Games repo
-
-1. Review the [Retro Games](https://github.com/AzureSphereCloudEnabledAltair8800/RetroGames) repo.
-1. From the Altair web terminal CP/M command prompt, run the **Get File** command:
-
-    ```cpm
-    gf
-    ```
-
-1. Select endpoint 1 (GitHub)
-1. Type the name of the file to be transferred. For example **LOVE.BAS**. Note, that the filenames are case sensitive.
-1. Press <kbd>Enter</kbd> to start the transfer.
-1. From the CP/M command line, start the game. For example
-
-    ```cpm
-    mbasic love
-    ```
-
-Note, a lot of the retro games in the repo expect to find **MENU.BAS** in the CP/M filesystem. So be sure to transfer MENU.BAS as well. -->
-
-<!-- ## Editing files with VS Code
-
-It's easier to edit files including Assembly, C, and BASIC code on your computer using [Visual Studio Code](https://code.visualstudio.com/){:target=_blank}, and then copy the file to the Altair filesystem using the CP/M GetFile program. -->
-
-<!-- ### GetFile Configuration
-
-GetFile enables you to copy files from a HTTP server to the Altair emulator filesystem. You can copy files from the retro games repo or serve files from VS Code. -->
-
-## Editing files with Word-Master
+### Editing files with Word-Master
 
 It is recommended to use Visual Studio Code and the CP/M **gf** program to edit files and then copy them to the Altair filesystem. But for real retrocomputing diehards, the CP/M disk image includes the Word-Master text editor. To use Word-Master, you must switch the web terminal to character input mode.
 
@@ -113,7 +104,3 @@ Cursor Right            ^D   CURSOR RIGHT CHAR
 Cursor Up               ^E   CURSOR UP LINE
 Cursor Down             ^X   CURSOR DOWN LINE
 ```
-
-## The Get File (gf) application
-
-The gf.c application was initially written using the Word-Master text editor. Once it was working sufficiently well, the application was further refined using Visual Studio Code. The Get File (gf) application uses Intel 8080 IO Port instructions to transfer the file over HTTP to the CP/M filesystem.

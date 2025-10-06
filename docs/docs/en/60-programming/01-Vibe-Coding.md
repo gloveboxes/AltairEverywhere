@@ -20,7 +20,6 @@ The Altair 8800 is a vintage microcomputer that has a unique architecture and pr
 
 ## Example Prompts for Vibe-Coding
 
-- "Generate a simple program in assembly language for the Altair 8800 that blinks an LED."
 - "Write a BASIC program for the Altair 8800 that calculates the factorial of a number."
 - "Explain how to set up I/O ports on the Altair 8800."
 

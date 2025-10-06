@@ -36,7 +36,6 @@ nav:
     - Build from Visual Studio Code: "45-build-from-source/03-Build-from-vs-code.md"
     - Build from the Command Line: "45-build-from-source/04-Compile-from-CLI.md"
     - Start the Emulator: "45-build-from-source/05-Run-the-emulator.md"
-    - Autostart the Altair Services: "45-build-from-source/30-auto-start.md"
   - Program the Altair:
     - Introduction: "60-programming/00-Introduction.md"
     - Manuals: "60-programming/00-Manuals.md"

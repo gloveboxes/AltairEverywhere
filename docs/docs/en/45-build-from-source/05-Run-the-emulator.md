@@ -1,26 +1,37 @@
 1. From a terminal window, change to the **Altair-8800-Emulator/src** folder that you cloned to your computer.
-2. You can run the Altair emultaor in standalone mode.
+2. You can run the Altair emulator in standalone mode.
 
     ```bash
     ./build/Altair_emulator
     ```
 
-3. Alternatively, you start the emulator in cloud connected mode, you need the following information.
+## Command Line Arguments
 
-    1. ID_SCOPE: Azure IoT Central ID Scope
-    2. DEVICE_ID: Azure IoT Central Device ID
-    3. DERIVED_KEY: Azure IoT Central Device Derived Key
-    4. OPEN_WEATHER_MAP_API_KEY: Open Weather Map API Key
-    5. NETWORK_INTERFACE: Network interface name. eg wlan0, eth0
+The Altair emulator accepts the following command line arguments:
 
-4. To start the emulator in cloud connected mode, run the following command.
+- `-m`, `--MqttHost <host>`: MQTT broker hostname (required for MQTT)
+- `-p`, `--MqttPort <port>`: MQTT broker port (default: 1883)
+- `-c`, `--MqttClientId <client_id>`: MQTT client ID (default: AltairEmulator_<timestamp>)
+- `-U`, `--MqttUsername <username>`: MQTT username (default: none)
+- `-P`, `--MqttPassword <password>`: MQTT password (default: none)
+- `-n`, `--NetworkInterface <iface>`: Network interface to use
+- `-f`, `--FrontPanel <mode>`: Front panel selection: sensehat, kit, none (default: none)
+- `-o`, `--OpenWeatherMapKey <key>`: OpenWeatherMap API key
+- `-a`, `--OpenAIKey <key>`: OpenAI API key
+- `-h`, `--help`: Show help message
 
-    ```bash
-    ./build/Altair_emulator -s ID_SCOPE -d DEVICE_ID -k DERIVED_KEY -o OPEN_WEATHER_MAP_API_KEY -n NETWORK_INTERFACE
-    ```
+### Example usage
 
-    To run the emulator as a background task.
+Run the emulator with MQTT and weather integration:
 
-    ```bash
-    nohup ./build/Altair_emulator -s ID_SCOPE -d DEVICE_ID -k DERIVED_KEY -o OPEN_WEATHER_MAP_API_KEY -n NETWORK_INTERFACE &
-    ```
+```bash
+./build/Altair_emulator --MqttHost mqtt_host --MqttPort 1883 --MqttClientId MyAltair --OpenWeatherMapKey <your_api_key> --NetworkInterface wlan0 --FrontPanel sensehat
+```
+
+### Example usage (short argument names)
+
+Run the emulator with MQTT and weather integration using short argument names:
+
+```bash
+./build/Altair_emulator -m mqtt_host -p 1883 -c MyAltair -o <your_api_key> -n wlan0 -f sensehat
+```
