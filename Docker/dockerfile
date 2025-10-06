@@ -21,10 +21,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Clone source code with better caching
 ARG REPO_URL=https://github.com/gloveboxes/Altair-8800-Emulator.git
-RUN git clone --depth 1 --recurse-submodules ${REPO_URL} /AltairEverywhere
+RUN git clone --depth 1 --recurse-submodules ${REPO_URL} /Altair-8800-Emulator
 
 # Build application
-WORKDIR /AltairEverywhere/src
+WORKDIR /Altair-8800-Emulator/src
 RUN mkdir -p build \
     && cmake -B build -DCMAKE_BUILD_TYPE=Release \
     && cmake --build build --config Release --target all -j$(nproc)
@@ -54,10 +54,10 @@ RUN groupadd -r altair \
     || useradd -r -g altair altair
 
 # Copy built application and required files
-COPY --from=builder /AltairEverywhere/src/build/Altair_emulator /usr/local/bin/
-COPY --from=builder /AltairEverywhere/Terminal /app/Terminal
-COPY --from=builder /AltairEverywhere/src/Disks /app/Disks
-COPY --from=builder /AltairEverywhere/src/AppSamples /app/AppSamples
+COPY --from=builder /Altair-8800-Emulator/src/build/Altair_emulator /usr/local/bin/
+COPY --from=builder /Altair-8800-Emulator/Terminal /app/Terminal
+COPY --from=builder /Altair-8800-Emulator/src/Disks /app/Disks
+COPY --from=builder /Altair-8800-Emulator/src/AppSamples /app/AppSamples
 
 # Copy startup script
 COPY altair.sh /app/altair.sh

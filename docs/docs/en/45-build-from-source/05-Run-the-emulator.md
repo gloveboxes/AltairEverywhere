@@ -1,4 +1,4 @@
-1. From a terminal window, change to the **AltairEverywhere/AltairHL_emulator** folder that you cloned to your computer.
+1. From a terminal window, change to the **Altair-8800-Emulator/AltairHL_emulator** folder that you cloned to your computer.
 2. You can run the Altair emultaor in standalone mode.
 
     ```bash

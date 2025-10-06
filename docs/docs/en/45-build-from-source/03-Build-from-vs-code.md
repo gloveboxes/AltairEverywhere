@@ -6,7 +6,7 @@ You need to pass the IoT Central and derived device key to your application.
 
 1. Open a Terminal command prompt.
     If you are using Windows Subsystem for Linux then open a WSL command prompt.
-1. Go to the **AltairEverywhere/AltairHL_emulator** folder
+1. Go to the **Altair-8800-Emulator/AltairHL_emulator** folder
 1. Run the following command to open the folder with VS Code.
 
     ```bash

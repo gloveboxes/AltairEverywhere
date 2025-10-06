@@ -26,7 +26,7 @@ You can enable advanced features by setting environment variables. These options
 
 ### Docker Environment Variables
 
-The Altair emulator supports several Docker environment variables. The easiest way to set these is with the env file `--env-file` option. You'll find a sample `altair.env` file in the root folder of this project. Create a copy of this file, modify it as needed and save it somewhere convenient and safe
+The Altair emulator supports several Docker environment variables. The easiest way to set these is with the env file `--env-file` option. You'll find a sample `altair.env` file in the [root folder](https://github.com/gloveboxes/Altair-8800-Emulator/blob/main/altair.env){:target=_blank} of this project. Create a copy of this file, modify it as needed and save it somewhere convenient and safe especially if it contains sensitive information like API keys.
 
 Open the `altair.env` file in a text editor and set the environment variables you want to use. Then, start the Altair emulator Docker container with the `--env-file` option.
 
