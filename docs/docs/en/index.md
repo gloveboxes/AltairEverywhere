@@ -30,7 +30,7 @@ The Altair emulator can also be compiled to run on [POSIX](https://en.wikipedia.
 The more **interesting** way to run the Altair emulator is on a device, the Altair emulator has been tested on the following devices:
 
 1. [Raspberry Pi](https://www.raspberrypi.org/){:target=_blank}, models, 2, 2B, 3B, 3B, and 4 capable of running 64-bit Raspberry Pi OS.
-2. [Azure Sphere Avnet and Seeed Developer Kits](https://azure.microsoft.com/services/azure-sphere/){:target=_blank} running embedded Linux.
+2. [Azure Sphere Avnet and Seeed Developer Kits](./50-azsphere/01-Introduction.md) running embedded Linux.
 
 ### Raspberry Pi with the optional Pi Sense HAT
 
@@ -39,14 +39,6 @@ If you pair a Raspberry Pi with a [Pi Sense HAT](https://www.raspberrypi.com/pro
 | Raspberry Pi with Pi Sense HAT  | Raspberry Pi Sense HAT |
 |--|--|
 | ![The image shows the address and data bus LEDs](./img/raspberry_pi_sense_hat_map.png) | ![The gif shows the address and data bus LEDs in action](./img/raspberry_pi_sense_hat.gif) |
-
-### Azure Sphere with optional Altair front panel kit
-
-The Altair emulator is supported on Azure Sphere devices from Avnet and Seeed Studio. If an Azure Sphere device is paired with the [Altair front panel kit](https://github.com/AzureSphereCloudEnabledAltair8800/AzureSphereAltair8800.Hardware){:target=_blank} or the [Mikroe Altair Retro Click](https://www.mikroe.com/blog/8800-retro-click){:target=_blank}, the Altair address and data bus activity is displayed.
-
-| Azure Sphere with the Altair front panel kit | MikroE Retro Click |
-|--|--|
-| ![The gif shows the Altair on Azure Sphere with the Altair front panel](./img/altair_on_sphere.gif) | ![The gif shows the address and data bus LEDs in action](./img/avnet_retro_click.gif) |
 
 ## Altair history
 
