@@ -10,6 +10,12 @@ static uint16_t panel_buffer[NUM_OF_LEDS];
 static int rgb_color = 19 << 1;
 static bool sense_hat_initialized;
 
+// Define colors for status (red), data (blue), and bus (green) in RGB565 format
+// Adjusted for better visibility and balanced brightness
+#define COLOR_RED   0x4000    // Red for status (a bit brighter)
+#define COLOR_BLUE  0x002C    // Blue for data (slightly dimmer than before)
+#define COLOR_GREEN 0x0180    // Green for bus (medium brightness)
+
 typedef union
 {
     uint8_t bitmap[8];
@@ -21,14 +27,14 @@ static PIXEL_MAP pixel_map;
 static uint16_t panel_8x8_buffer[NUM_OF_LEDS];
 static uint8_t bitmap_rows[8];
 
-static void uint8_to_uint16_t(uint8_t bitmap, uint16_t *buffer)
+static void uint8_to_uint16_t(uint8_t bitmap, uint16_t *buffer, uint16_t color)
 {
     uint16_t mask = 1;
     uint8_t pixel_number = 0;
 
     while (pixel_number < 8)
     {
-        buffer[pixel_number++] = (bitmap & mask) ? rgb_color : 0x0000;
+        buffer[pixel_number++] = (bitmap & mask) ? color : 0x0000;
         mask                   = (uint16_t)(mask << 1);
     }
 }
@@ -96,12 +102,30 @@ void sense_hat_front_panel_io(uint8_t status, uint8_t data, uint16_t bus, void (
         return;
     }
 
-    uint8_to_uint16_t(status, panel_buffer);
-    uint8_to_uint16_t(data, panel_buffer + (3 * 8));
+    // Build complete frame buffer with different colors:
+    // Row 0: status (red)
+    // Rows 3-5: data (blue) 
+    // Rows 6-7: bus (green)
+    
+    // Status in red (row 0)
+    uint8_to_uint16_t(status, panel_buffer, COLOR_RED);
+    
+    // Clear rows 1-2
+    memset(panel_buffer + (1 * 8), 0, 2 * 8 * sizeof(uint16_t));
+    
+    // Data in blue (row 3)
+    uint8_to_uint16_t(data, panel_buffer + (3 * 8), COLOR_BLUE);
+    
+    // Clear rows 4-5
+    memset(panel_buffer + (4 * 8), 0, 2 * 8 * sizeof(uint16_t));
+    
+    // Bus high byte in green (row 6)
+    uint8_to_uint16_t((uint8_t)(bus >> 8), panel_buffer + (6 * 8), COLOR_GREEN);
+    
+    // Bus low byte in green (row 7)
+    uint8_to_uint16_t((uint8_t)(bus), panel_buffer + (7 * 8), COLOR_GREEN);
 
-    uint8_to_uint16_t((uint8_t)(bus >> 8), panel_buffer + (6 * 8));
-    uint8_to_uint16_t((uint8_t)(bus), panel_buffer + (7 * 8));
-
+    // Send the complete frame buffer in a single I2C transaction
     pi_sense_8x8_panel_update(panel_buffer, PI_SENSE_8x8_BUFFER_SIZE);
 }
 
