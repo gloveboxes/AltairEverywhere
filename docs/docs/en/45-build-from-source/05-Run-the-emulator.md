@@ -11,7 +11,7 @@ The Altair emulator accepts the following command line arguments:
 
 - `-m`, `--MqttHost <host>`: MQTT broker hostname (required for MQTT)
 - `-p`, `--MqttPort <port>`: MQTT broker port (default: 1883)
-- `-c`, `--MqttClientId <client_id>`: MQTT client ID (default: AltairEmulator_<timestamp>)
+- `-c`, `--MqttClientId <client_id>`: MQTT client ID (default: `AltairEmulator_<timestamp>`)
 - `-U`, `--MqttUsername <username>`: MQTT username (default: none)
 - `-P`, `--MqttPassword <password>`: MQTT password (default: none)
 - `-n`, `--NetworkInterface <iface>`: Network interface to use
