@@ -2,13 +2,13 @@
    Licensed under the MIT License. */
 
 #include "web_console.h"
-#include "cpu_monitor.h"   // For CPU_OPERATING_MODE, process_virtual_input, mode accessors, and intel8080_t
+#include "cpu_monitor.h" // For CPU_OPERATING_MODE, process_virtual_input, mode accessors, and intel8080_t
 
+#include <ctype.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include <ctype.h>
 
 // External function declarations (defined in main.c)
 extern CPU_OPERATING_MODE toggle_cpu_operating_mode(void);
@@ -64,11 +64,11 @@ static output_buffer_t output_buffer = {
 
 // Terminal input queue
 static terminal_input_queue_t terminal_input_queue = {
-    .buffer = {0},
-    .head   = 0,
-    .tail   = 0,
-    .count  = 0,
-    .mutex  = PTHREAD_MUTEX_INITIALIZER,
+    .buffer             = {0},
+    .head               = 0,
+    .tail               = 0,
+    .count              = 0,
+    .mutex              = PTHREAD_MUTEX_INITIALIZER,
     .suppress_remaining = 0,
 };
 
@@ -244,10 +244,10 @@ static bool output_buffer_write(const void *data, size_t length, size_t *resulti
         return false;
     }
 
-    const size_t capacity   = OUTPUT_BUFFER_SIZE;
-    const char *bytes       = (const char *)data;
-    size_t head             = output_buffer.head;
-    size_t first_chunk      = length;
+    const size_t capacity = OUTPUT_BUFFER_SIZE;
+    const char *bytes     = (const char *)data;
+    size_t head           = output_buffer.head;
+    size_t first_chunk    = length;
 
     if (head + first_chunk > capacity)
     {
@@ -262,7 +262,7 @@ static bool output_buffer_write(const void *data, size_t length, size_t *resulti
         memcpy(&output_buffer.buffer[0], bytes + first_chunk, remaining);
     }
 
-    output_buffer.head  = (head + length) % capacity;
+    output_buffer.head = (head + length) % capacity;
     output_buffer.count += length;
 
     if (resulting_count != NULL)
@@ -368,16 +368,16 @@ void publish_message(const void *message, size_t message_length)
 
     // Try to add data to buffer
     size_t current_count = 0;
-    bool added = output_buffer_write(message, message_length, &current_count);
+    bool added           = output_buffer_write(message, message_length, &current_count);
 
     if (!added)
     {
         // Buffer is full, flush it first then add the message
         flush_output_buffer();
-        
+
         // Try adding again (should succeed now since buffer was flushed)
-    added = output_buffer_write(message, message_length, &current_count);
-        
+        added = output_buffer_write(message, message_length, &current_count);
+
         if (!added)
         {
             // This shouldn't happen since we just flushed, but handle it
@@ -458,7 +458,7 @@ void enqueue_terminal_input_character(char character)
     }
 
     terminal_input_queue.buffer[terminal_input_queue.tail] = character;
-    terminal_input_queue.tail = (terminal_input_queue.tail + 1) % capacity;
+    terminal_input_queue.tail                              = (terminal_input_queue.tail + 1) % capacity;
     terminal_input_queue.count++;
     // Note: No echo suppression for single character enqueue
 
@@ -479,8 +479,8 @@ char dequeue_terminal_input_character(void)
 
     if (terminal_input_queue.count > 0)
     {
-        c                             = terminal_input_queue.buffer[terminal_input_queue.head];
-        terminal_input_queue.head      = (terminal_input_queue.head + 1) % capacity;
+        c                         = terminal_input_queue.buffer[terminal_input_queue.head];
+        terminal_input_queue.head = (terminal_input_queue.head + 1) % capacity;
         terminal_input_queue.count--;
 
         if (terminal_input_queue.count == 0)
@@ -500,9 +500,9 @@ char dequeue_terminal_input_character(void)
 void clear_terminal_input_queue(void)
 {
     pthread_mutex_lock(&terminal_input_queue.mutex);
-    terminal_input_queue.head = 0;
-    terminal_input_queue.tail = 0;
-    terminal_input_queue.count = 0;
+    terminal_input_queue.head               = 0;
+    terminal_input_queue.tail               = 0;
+    terminal_input_queue.count              = 0;
     terminal_input_queue.suppress_remaining = 0;
     pthread_mutex_unlock(&terminal_input_queue.mutex);
 }
@@ -543,15 +543,15 @@ bool terminal_enqueue_input_command(const char *characters, size_t length)
 
     pthread_mutex_lock(&terminal_input_queue.mutex);
 
-    size_t capacity = terminal_queue_capacity();
+    size_t capacity        = terminal_queue_capacity();
     size_t available_space = capacity - terminal_input_queue.count;
-    size_t to_enqueue = (length <= available_space) ? length : available_space;
-    
+    size_t to_enqueue      = (length <= available_space) ? length : available_space;
+
     // Enqueue the characters
     for (size_t i = 0; i < to_enqueue; i++)
     {
         terminal_input_queue.buffer[terminal_input_queue.tail] = characters[i];
-        terminal_input_queue.tail = (terminal_input_queue.tail + 1) % capacity;
+        terminal_input_queue.tail                              = (terminal_input_queue.tail + 1) % capacity;
     }
     terminal_input_queue.count += to_enqueue;
 
@@ -733,7 +733,7 @@ void onclose(ws_cli_conn_t client)
 /// <param name="application_message_size">Size of the message</param>
 void terminal_handler(char *data, size_t application_message_size)
 {
-    #define TERMINAL_COMMAND_BUFFER_SIZE 30
+#define TERMINAL_COMMAND_BUFFER_SIZE 30
     char command[TERMINAL_COMMAND_BUFFER_SIZE];
     memset(command, 0x00, sizeof(command));
 
