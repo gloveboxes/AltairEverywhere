@@ -14,7 +14,7 @@ The Altair emulator uses Intel 8080 IO ports to provide time services, random nu
 
 ### Altair Emulator IO Port SDK
 
-Sample code in the **AppSamples/sdk** folder demonstrates how to use the IO port features via a C language SDK. For details, see the [SDK samples](https://github.com/gloveboxes/Altair-8800-Emulator/tree/main/src/AppSamples/sdk){:target=_blank}. These examples are also helpful for LLM-assisted development and [Vibe-Coding](01-Vibe-Coding.md) or C, Microsoft Basic, and Assembly programming.
+Sample code in the **AppSamples/sdk** folder demonstrates how to use the IO port features via a C language SDK. For details, see the [SDK samples](https://github.com/gloveboxes/Altair-8800-Emulator/tree/main/src/AppSamples/sdk){:target=_blank}. These examples are also helpful for LLM-assisted development and [Vibe-Coding](01-Vibe-Coding.md) for C, Microsoft Basic, and Assembly programming.
 
 ### Output ports
 
