@@ -9,7 +9,7 @@ The Intel 8080 CPU can address up to 256 input ports and 256 output ports; allow
 The Altair emulator uses Intel 8080 IO ports to provide time services, random numbers, and access to cloud services.
 
 - You can access Intel 8080 IO ports from BASIC, C, and Assembly programming languages, and directly using Intel 8080 opcodes. See [Using Intel 8080 Input Output ports](#using-intel-8080-input-output-ports).
-- The Intel 8080 software-enabled IO ports are implemented in the [io_ports.c](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/blob/main/AltairHL_emulator/io_ports.c){:target=_blank} file.
+- The Intel 8080 software-enabled IO ports are implemented in the [io_ports.c](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/blob/main/src/io_ports.c){:target=_blank} file.
 - You can extend the Altair 8800 by adding additional IO port functions, for example, integrating machine learning capabilities.
 
 ### Output ports
@@ -258,7 +258,7 @@ The following BASIC code demonstrates the use of Intel 8080 output port 35 to lo
 
 #### Font support
 
-The following example shows how to use the Intel 8080 IO ports to display characters on the Pi Sense HAT or Retro Click 8x8 LED panels. To understand IO ports, refer to the [io_ports.c](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/blob/main/AltairHL_emulator/io_ports.c){:target=_blank} source code. This example is included on drive A: in a file named **FONT.BAS**.
+The following example shows how to use the Intel 8080 IO ports to display characters on the Pi Sense HAT or Retro Click 8x8 LED panels. To understand IO ports, refer to the [io_ports.c](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/blob/main/src/io_ports.c){:target=_blank} source code. This example is included on drive A: in a file named **FONT.BAS**.
 
 ```basic
 100 REM 8x8 LED Panel Demo
@@ -276,7 +276,7 @@ The following example shows how to use the Intel 8080 IO ports to display charac
 
 #### Azure Sphere Blinky
 
-The following example shows how to use the Intel 8080 IO ports to blink LEDs on an Azure Sphere. To understand how IO ports are implemented, refer to the [io_ports.c](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/blob/main/AltairHL_emulator/io_ports.c){:target=_blank} source code.
+The following example shows how to use the Intel 8080 IO ports to blink LEDs on an Azure Sphere. To understand how IO ports are implemented, refer to the [io_ports.c](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/blob/main/src/io_ports.c){:target=_blank} source code.
 
 ```basic
 5 OUT 80, 1 : REM switch display to font mode

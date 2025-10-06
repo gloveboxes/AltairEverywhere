@@ -299,7 +299,7 @@ The anomaly app publishes weather data sourced from Open Weather Map to Azure Io
 
 ## Font support
 
-The following example shows how to use the Intel 8080 IO ports to display characters on the Pi Sense HAT or Retro Click 8x8 LED panels. To understand IO ports, refer to the [io_ports.c](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/blob/main/AltairHL_emulator/io_ports.c) source code.
+The following example shows how to use the Intel 8080 IO ports to display characters on the Pi Sense HAT or Retro Click 8x8 LED panels. To understand IO ports, refer to the [io_ports.c](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/blob/main/src/io_ports.c) source code.
 
 ```basic
 100 REM 8x8 LED Panel Demo
