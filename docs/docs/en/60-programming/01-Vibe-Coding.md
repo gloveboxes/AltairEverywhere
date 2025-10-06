@@ -18,6 +18,23 @@ The Altair 8800 is a vintage microcomputer that has a unique architecture and pr
 4. **Craft Prompts**: Write clear and specific prompts to guide the LLM in generating relevant code snippets.
 5. **Iterate and Refine**: Use the generated code as a starting point, test it on the Altair, and refine it as needed.
 
+## Altair Emulator IO Port SDK
+
+Sample code in the **AppSamples/sdk** folder demonstrates how to use the IO port features via a C language SDK. For details, see the [SDK samples](https://github.com/gloveboxes/Altair-8800-Emulator/tree/main/src/AppSamples/sdk){:target=_blank}. These examples are also helpful for LLM-assisted development and [Vibe-Coding](01-Vibe-Coding.md) for C, Microsoft Basic, and Assembly programming.
+
+## Leverage existing code samples
+
+Point the LLM to existing code samples in the [AppSamples](https://github.com/gloveboxes/Altair-8800-Emulator/tree/main/src/AppSamples){:target=_blank} folder. These samples can provide valuable context and inspiration for your prompts.
+
+- sdk/dxtimer.c
+- breakout.c
+- tetris.c
+- onboard.c
+
+Are great examples how to use the IO ports and other features such as timers and VT100 terminal control characters of the Altair 8800 for Vibe-Coding.
+
+When crafting prompts for the LLM, consider including references to existing documentation and manuals for the Altair 8800. This can help the model generate more accurate and contextually relevant code. Useful resources include:
+
 ## Example Prompts for Vibe-Coding
 
 - "Write a BASIC program for the Altair 8800 that calculates the factorial of a number."
