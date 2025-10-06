@@ -7,7 +7,7 @@ Below you'll find instructions for standard and advanced deployment modes, envir
 
 ## Altair 8800 Standard Mode
 
-This option is recommended for most users and works on 64-bit versions of [Linux, macOS, Windows, and Raspberry Pi](#general-linux-macos-windows-and-raspberry-pi-users).
+This option is recommended for most users and works on 64-bit versions of Linux, macOS, Windows, and Raspberry Pi.
 
 ```shell
 docker run --user root -p 8082:8082 -p 80:80 --name altair8800 --rm glovebox/altair8800:latest

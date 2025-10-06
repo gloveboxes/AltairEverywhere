@@ -1,6 +1,6 @@
 ## What is Vibe-Coding with an LLM?
 
-Vibe-Coding is a programming approach that leverages Large Language Models (LLMs) to assist in writing code. It involves using AI tools to generate, complete, or suggest code snippets based on natural language prompts or partial code inputs. This method can significantly speed up the coding process, help overcome writer's block, and provide creative solutions to programming challenges.
+[Vibe coding](https://en.wikipedia.org/wiki/Vibe_coding){:target=_blank} is a programming approach that leverages Large Language Models (LLMs) to assist in writing code. It involves using AI tools to generate, complete, or suggest code snippets based on natural language prompts or partial code inputs. This method can significantly speed up the coding process, help overcome writer's block, and provide creative solutions to programming challenges.
 
 ## Why Use Vibe-Coding for the Altair 8800?
 
