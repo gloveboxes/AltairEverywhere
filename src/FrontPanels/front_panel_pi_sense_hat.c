@@ -12,7 +12,7 @@ static bool sense_hat_initialized;
 
 // Define colors for status (red), data (blue), and bus (green) in RGB565 format
 // Adjusted for better visibility and balanced brightness
-#define COLOR_RED   0x4000    // Red for status (a bit brighter)
+#define COLOR_RED   0x5000    // Red for status (brighter)
 #define COLOR_BLUE  0x002C    // Blue for data (slightly dimmer than before)
 #define COLOR_GREEN 0x0180    // Green for bus (medium brightness)
 
