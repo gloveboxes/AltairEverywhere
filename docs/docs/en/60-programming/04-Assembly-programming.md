@@ -4,12 +4,18 @@ The following text is an exert from the [Assembly language](https://en.wikipedia
 
 ## Intel 8080 Assembly Language Programming Manual
 
-For more information, refer to:
+Refer to the [Intel 8080 Assembly Language Programming Manual](00-Manuals.md#8080--assembly-language-development) for more about the language and its implementation.
 
-- [Intel 8080 Assembly Language Programming Manual](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/8080asm.pdf)
-- [CP/M Assembler](http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch3.htm)
-- [CP/M Dynamic Debugging Tool](http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch4.htm)
-- [CP/M 2 System Interface](http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm)
+!!! warning "Intel 8080 Assembly Language Symbol Length Limitation"
+
+    The biggest **gotcha** is that all identifiers/symbols are unique to 6 characters. For example, the following two variables are treated as the same symbol:
+
+    ```asm
+    VARIAB1: DB 0
+    VARIAB2: DB 0  
+    ``` 
+    
+    **Both are treated as `VARIAB`. So, be careful when naming variables, functions, and other symbols as you get no assembler warnings or errors and your application will behave unexpectedly.**
 
 ## Assemble assembly applications
 

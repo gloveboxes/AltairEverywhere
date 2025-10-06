@@ -13,6 +13,10 @@ Programming the Altair emulator with the virtual front panel is best experienced
 
 ## Virtual front panel
 
+!!! warning "The Altair Web Terminal Must Be in Line Mode"
+
+    To access the virtual front panel, the Altair web terminal must be in Line mode. To toggle between Line mode and Character mode, select **Ctrl+L** or click the **Toggle Line/Character Mode** button in the web terminal toolbar.
+
 To access the virtual front panel, you must be connected to the Altair emulator via the web terminal.
 
 > In the following procedure, you're directly setting memory addresses. You might overwrite something important and crash the Altair emulator. If this happens, just [reboot the Altair](../20-fundamentals/40-Rebooting-the-Altair.md){:target=_blank} and experiment again.

@@ -6,6 +6,37 @@ The BD Software C compiler is included on drive A: or drive B: if you have the C
 
 Refer to the [BDS C User's Guide](https://github.com/AzureSphereCloudEnabledAltair8800/Altair8800.manuals/blob/master/BDS_C_Compiler.pdf){:target=_blank} for more about the language and its implementation.
 
+!!! warning "BDS C Symbol Length Limitations"
+
+    BDS C is an early implementation of the C programming language. The biggest **gotcha** is that all identifiers/symbols are unique to 7 characters. For example, the following two variables are treated as the same symbol:
+
+    ```c
+    int variable1;
+    int variable2;
+    ``` 
+
+    **Both are treated as `variabl`. So, be careful when naming variables, functions, and other symbols as you get no compiler warnings or errors and your application will behave unexpectedly.**
+
+!!! warning "BDS C Creating and Initializing Variables"
+
+    BDS C does not support creating and initializing global variables in one step. For example, the following code will not compile:
+
+    ```c
+    int count = 0; // This will not compile
+    ```
+
+    Instead, you must create and initialize global variables in two steps:
+
+    ```c
+    int count; // Create the variable
+
+    main()
+    {
+        count = 0; // Initialize the variable
+        ...
+    }
+    ```
+
 ## Compile C applications
 
 The CP/M disk image includes a simple *HW.C* (Hello, world) application. BDS C language has support for Intel 8080 CPU input and output port instructions. The *HW.C* application displays the system tick count, UTC, and local date and time, and then sleeps for 1 second. For more information about Intel 8080 IO port mappings, refer to [Intel 8080 input and output ports](https://github.com/gloveboxes/Altair8800.Emulator.UN-X/wiki#intel-8080-input-and-output-ports){:target=_blank}.
