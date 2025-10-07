@@ -35,11 +35,11 @@ uint16_t bus_switches = 0x00;
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
 const char ALTAIR_EMULATOR_VERSION[] = "5.0.7";
-enum PANEL_MODE_T panel_mode          = PANEL_BUS_MODE;
+enum PANEL_MODE_T panel_mode         = PANEL_BUS_MODE;
 char msgBuffer[MSG_BUFFER_BYTES]     = {0};
 const char *network_interface        = NULL;
 
-static bool stop_cpu                 = false;
+static bool stop_cpu = false;
 static char Log_Debug_Time_buffer[128];
 
 DX_TIMER_BINDING tmr_timer_seconds_expired     = {.name = "tmr_timer_seconds_expired", .handler = timer_seconds_expired_handler};
@@ -85,9 +85,9 @@ inline CPU_OPERATING_MODE get_cpu_operating_mode_fast(void)
 }
 
 // Constants to replace magic numbers
-#define ASCII_MASK_7BIT              0x7F
-#define MEMORY_SIZE_64K              (64 * 1024)
-#define ROM_LOADER_ADDRESS           0xFF00
+#define ASCII_MASK_7BIT    0x7F
+#define MEMORY_SIZE_64K    (64 * 1024)
+#define ROM_LOADER_ADDRESS 0xFF00
 
 // MQTT Configuration - will be initialized after command line parsing
 DX_MQTT_CONFIG mqtt_config;
@@ -181,8 +181,6 @@ static DX_TIMER_HANDLER(heart_beat_handler)
 
 DX_TIMER_HANDLER_END
 
-
-
 /// <summary>
 /// Client connected successfully
 /// </summary>
@@ -250,7 +248,7 @@ void print_console_banner(void)
 static void *panel_refresh_thread(void *arg)
 {
     dx_Log_Debug("Panel refresh thread started\n");
-    
+
     // Set low priority like altair_thread to avoid interfering with main threads
     // Runtime detection: use QoS on Apple Silicon, nice() elsewhere
     if (is_apple_silicon())
@@ -267,11 +265,11 @@ static void *panel_refresh_thread(void *arg)
         nice(19);
         dx_Log_Debug("Panel refresh thread: Set nice priority to 19\n");
     }
-    
+
     uint8_t last_status = 0;
     uint8_t last_data   = 0;
     uint16_t last_bus   = 0;
-    
+
     while (true)
     {
         if (panel_mode == PANEL_BUS_MODE)
@@ -294,7 +292,7 @@ static void *panel_refresh_thread(void *arg)
 
                 front_panel_manager_io(status, data, bus, process_control_panel_commands);
             }
-            
+
             nanosleep(&(struct timespec){0, 5 * ONE_MS}, NULL);
         }
         else
@@ -397,7 +395,7 @@ static void init_altair(void)
 
     Log_Debug("Setting CPU to examine ROM_LOADER_ADDRESS\n");
     i8080_examine(&cpu, ROM_LOADER_ADDRESS); // ROM_LOADER_ADDRESS loads from disk, 0x0000 loads basic
-    
+
     Log_Debug("Altair initialization completed successfully\n");
 }
 
@@ -430,14 +428,13 @@ static void cleanup_altair_disks(void)
 
 /// <summary>
 
-
 /// <summary>
 /// Thread to run the i8080 cpu emulator on
 /// </summary>
 static void *altair_thread(void *arg)
 {
     dx_Log_Debug("Altair thread: Starting\n");
-    
+
     // Signal that thread is starting BEFORE changing priority
     // This prevents deadlocks on single-core systems
     dx_Log_Debug("Altair thread: Signaling main thread\n");
@@ -446,7 +443,7 @@ static void *altair_thread(void *arg)
     pthread_mutex_unlock(&altair_start_mutex);
 
     dx_Log_Debug("Altair thread: Signal sent, setting thread priority\n");
-    
+
     // Now set priority - this won't affect the signaling above
     // Runtime detection: use QoS on Apple Silicon, nice() elsewhere
     if (is_apple_silicon())
@@ -580,10 +577,10 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     // Initialize Altair and start CPU thread BEFORE accepting WebSocket connections
     init_altair();
-    
+
     // Lock mutex BEFORE starting thread to prevent race condition
     pthread_mutex_lock(&altair_start_mutex);
-    
+
     dx_Log_Debug("Starting altair thread\n");
     start_altair_thread(altair_thread, NULL, "altair_thread", 1);
 

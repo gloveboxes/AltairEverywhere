@@ -1,8 +1,9 @@
 // Declaration for nice() to avoid implicit declaration warning in main.c
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-extern int nice(int);
+    extern int nice(int);
 #ifdef __cplusplus
 }
 #endif
