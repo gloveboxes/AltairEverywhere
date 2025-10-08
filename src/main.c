@@ -157,7 +157,7 @@ static DX_TIMER_HANDLER(report_memory_usage)
 #endif
 
     if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 3, DX_JSON_STRING, "device", mqtt_config.client_id, DX_JSON_STRING, "timestamp", current_utc,
-            DX_JSON_INT, "memory_usage_kb", memory_usage_kb))
+            DX_JSON_INT, "memory_usage_kb", (int)memory_usage_kb))
     {
         DX_MQTT_MESSAGE mqtt_msg = {.topic = "v1/devices/me/telemetry", .payload = msgBuffer, .payload_length = strlen(msgBuffer), .qos = 0, .retain = false};
         dx_mqttPublish(&mqtt_msg);
