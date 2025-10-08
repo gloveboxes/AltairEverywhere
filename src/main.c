@@ -34,7 +34,7 @@ uint16_t bus_switches = 0x00;
 
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
-const char ALTAIR_EMULATOR_VERSION[] = "5.0.9";
+const char ALTAIR_EMULATOR_VERSION[] = "5.0.10";
 enum PANEL_MODE_T panel_mode         = PANEL_BUS_MODE;
 char msgBuffer[MSG_BUFFER_BYTES]     = {0};
 const char *network_interface        = NULL;
@@ -91,6 +91,36 @@ inline CPU_OPERATING_MODE get_cpu_operating_mode_fast(void)
 DX_MQTT_CONFIG mqtt_config;
 
 // Forward declarations
+
+/// <summary>
+/// Safely publish an MQTT message with automatic reconnection
+/// </summary>
+/// <param name="mqtt_msg">MQTT message to publish</param>
+/// <param name="message_type">Description of the message type for logging (e.g., "heartbeat", "memory usage")</param>
+/// <returns>true if published successfully, false otherwise</returns>
+static bool safe_mqtt_publish(const DX_MQTT_MESSAGE *mqtt_msg, const char *message_type)
+{
+    if (!dx_isMqttConnected())
+    {
+        if (!dx_mqttConnect(&mqtt_config, NULL, NULL))
+        {
+            dx_Log_Debug("Failed to reconnect to MQTT broker: %s\n", dx_mqttGetLastError());
+            return false;
+        }
+    }
+
+    if (dx_isMqttConnected())
+    {
+        if (!dx_mqttPublish(mqtt_msg))
+        {
+            dx_Log_Debug("Failed to publish %s: %s\n", message_type, dx_mqttGetLastError());
+            return false;
+        }
+        return true;
+    }
+
+    return false;
+}
 
 /// <summary>
 /// Detect if running on Apple Silicon at runtime
@@ -160,7 +190,7 @@ static DX_TIMER_HANDLER(report_memory_usage)
             DX_JSON_LONG, "memory_usage_kb", memory_usage_kb))
     {
         DX_MQTT_MESSAGE mqtt_msg = {.topic = "v1/devices/me/telemetry", .payload = msgBuffer, .payload_length = strlen(msgBuffer), .qos = 0, .retain = false};
-        dx_mqttPublish(&mqtt_msg);
+        safe_mqtt_publish(&mqtt_msg, "memory usage");
     }
 }
 DX_TIMER_HANDLER_END
@@ -176,7 +206,7 @@ static DX_TIMER_HANDLER(heart_beat_handler)
     if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 2, DX_JSON_STRING, "device", mqtt_config.client_id, DX_JSON_STRING, "heartbeat_utc", current_utc))
     {
         DX_MQTT_MESSAGE mqtt_msg = {.topic = "v1/devices/me/telemetry", .payload = msgBuffer, .payload_length = strlen(msgBuffer), .qos = 0, .retain = false};
-        dx_mqttPublish(&mqtt_msg);
+        safe_mqtt_publish(&mqtt_msg, "heartbeat");
     }
 }
 
