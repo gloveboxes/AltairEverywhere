@@ -31,7 +31,7 @@ Starting from the bottom left and moving up and then to the right.
 
 ## Raspberry Pi with a Pi Sense HAT
 
-There is specific support for the Altair emulator running on a Raspberry Pi with a Pi Sense HAT. The Altair emulator has been tested on the following [Raspberry Pi](https://www.raspberrypi.org/){:target=_blank} models: Zero 2W, 2B, 3A, 3B, 4B, 5B running Raspberry Pi OS 64-bit.
+There is specific support for the Altair emulator running on a Raspberry Pi with a Pi Sense HAT. The Altair emulator has been tested on the following [Raspberry Pi](https://www.raspberrypi.org/){:target=_blank}  [Raspberry Pi](https://www.raspberrypi.org/){:target=_blank} models Zero, 2, 2B, Zero 2, 3B, 3B, 4, 5 capable of running 32-bit or 64-bit (preferred) Raspberry Pi OS.
 
 The Raspberry Pi paired with a [Pi Sense HAT](https://www.raspberrypi.com/products/sense-hat/){:target=_blank} displays the Altair address and data bus activity on the 8x8 LED panel.
 

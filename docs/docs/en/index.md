@@ -2,13 +2,12 @@ The goal of the cloud-connected Altair project is to provide a unique blend of [
 
 The [Altair 8800](https://en.wikipedia.org/wiki/Altair_8800?azure-portal=true){:target=_blank} kick-started the personal computer revolution. Microsoft's first product was [Altair BASIC](https://en.wikipedia.org/wiki/Altair_BASIC?azure-portal=true){:target=_blank} written for the Altair 8800 by Bill Gates and Paul Allen. At the time, Altair BASIC was a huge step forward as it allowed people to write programs using a high-level programming language.
 
+![pop art of Bill Gates and Paul Allen](../img/banner.png)
+
 <!-- ## Get started docs
 
 Head to [Get started](/start/Deploy){:target=_blank} to learn how to deploy and run the Altair 8800 emulator. -->
 
-## Retro computing with Dave Glover and the Altair 8800
-
-<iframe width="100%" height="420" src="https://www.youtube.com/embed/fSz5lTaXS0E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 The Altair project provides a fun way to learn:
 
@@ -18,6 +17,10 @@ The Altair project provides a fun way to learn:
 4. Enjoy retro gaming and play classic games from the past.
 5. Optionally, integrate free weather and pollution cloud services from [Open Weather Map](http://openweathermap.org){:target=_blank} and [ThingsBoard](https://thingsboard.io/){:target=_blank} for telemetry and control.
 6. Optionally, stream telemetry data to the `ThingsBoard` MQTT Broker or a standalone Mosquitto MQTT Broker.
+
+## Retro computing with Dave Glover and the Altair 8800
+
+<iframe width="100%" height="420" src="https://www.youtube.com/embed/fSz5lTaXS0E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Supported operating systems
 
@@ -29,7 +32,7 @@ The Altair emulator can also be compiled to run on [POSIX](https://en.wikipedia.
 
 The more **interesting** way to run the Altair emulator is on a device, the Altair emulator has been tested on the following devices:
 
-1. [Raspberry Pi](https://www.raspberrypi.org/){:target=_blank}, models, 2, 2B, 3B, 3B, and 4 capable of running 64-bit Raspberry Pi OS.
+1. [Raspberry Pi](https://www.raspberrypi.org/){:target=_blank} models Zero, 2, 2B, Zero 2, 3B, 3B, 4, 5 capable of running 32-bit or 64-bit (preferred) Raspberry Pi OS.
 2. [Azure Sphere Avnet and Seeed Developer Kits](./50-azsphere/01-Introduction.md) running embedded Linux.
 
 ### Raspberry Pi with the optional Pi Sense HAT
