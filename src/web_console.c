@@ -249,15 +249,25 @@ static bool output_buffer_write(const void *data, size_t length, size_t *resulti
     size_t head           = output_buffer.head;
     size_t first_chunk    = length;
 
+    // Ensure we don't write beyond buffer bounds
+    if (head >= capacity) {
+        head = head % capacity;  // Normalize head position
+        output_buffer.head = head;
+    }
+
     if (head + first_chunk > capacity)
     {
         first_chunk = capacity - head;
     }
 
-    memcpy(&output_buffer.buffer[head], bytes, first_chunk);
+    // Additional safety check to prevent overflow
+    if (first_chunk > 0 && head + first_chunk <= capacity)
+    {
+        memcpy(&output_buffer.buffer[head], bytes, first_chunk);
+    }
 
     size_t remaining = length - first_chunk;
-    if (remaining > 0)
+    if (remaining > 0 && remaining <= capacity)
     {
         memcpy(&output_buffer.buffer[0], bytes + first_chunk, remaining);
     }

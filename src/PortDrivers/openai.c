@@ -420,7 +420,7 @@ static int stream_openai(struct curl_slist *headers, const char *postData, long 
 
         // A long parameter set to 1 tells the library to fail the request if the HTTP code returned is equal to
         // or larger than 400
-        curl_easy_setopt(curl_handle, CURLOPT_FAILONERROR, true);
+        curl_easy_setopt(curl_handle, CURLOPT_FAILONERROR, 1L);
 
         openai.status = OPENAI_WAITING;
 
