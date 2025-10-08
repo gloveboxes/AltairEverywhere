@@ -68,8 +68,6 @@ DX_ASYNC_BINDING *async_bindings[] = {
 };
 
 DX_TIMER_BINDING *timer_bindings[] = {
-    &tmr_heart_beat,
-    &tmr_report_memory_usage,
     &tmr_tick_count,
     &tmr_timer_millisecond_expired,
     &tmr_timer_seconds_expired,
@@ -145,7 +143,10 @@ DX_TIMER_HANDLER_END
 /// </summary>
 static DX_TIMER_HANDLER(report_memory_usage)
 {
+    char current_utc[64];
     struct rusage r_usage;
+
+    dx_getCurrentUtc(current_utc, sizeof(current_utc));
     getrusage(RUSAGE_SELF, &r_usage);
 
     // macOS has ru_maxrss in bytes, Linux has it in kilobytes
@@ -155,8 +156,8 @@ static DX_TIMER_HANDLER(report_memory_usage)
     long memory_usage_kb = r_usage.ru_maxrss; // Already in KB on Linux
 #endif
 
-    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 3, DX_JSON_STRING, "device", mqtt_config.client_id, DX_JSON_INT, "timestamp", time(NULL), DX_JSON_INT,
-            "memory_usage_kb", memory_usage_kb))
+    if (dx_jsonSerialize(msgBuffer, sizeof(msgBuffer), 3, DX_JSON_STRING, "device", mqtt_config.client_id, DX_JSON_STRING, "timestamp", current_utc,
+            DX_JSON_INT, "memory_usage_kb", memory_usage_kb))
     {
         DX_MQTT_MESSAGE mqtt_msg = {.topic = "v1/devices/me/telemetry", .payload = msgBuffer, .payload_length = strlen(msgBuffer), .qos = 0, .retain = false};
         dx_mqttPublish(&mqtt_msg);
@@ -564,6 +565,9 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
         if (dx_mqttConnect(&mqtt_config, NULL, NULL))
         {
             dx_Log_Debug("Successfully connected to MQTT broker at %s\n", mqtt_config.hostname);
+            dx_Log_Debug("Starting MQTT-related timers\n");
+            dx_timerStart(&tmr_heart_beat);
+            dx_timerStart(&tmr_report_memory_usage);
         }
         else
         {
@@ -616,6 +620,9 @@ static void ClosePeripheralAndHandlers(void)
     {
         dx_mqttDisconnect();
         dx_Log_Debug("Disconnected from MQTT broker\n");
+        dx_Log_Debug("Stopping MQTT-related timers\n");
+        dx_timerStop(&tmr_heart_beat);
+        dx_timerStop(&tmr_report_memory_usage);
     }
 
     dx_timerEventLoopStop();
