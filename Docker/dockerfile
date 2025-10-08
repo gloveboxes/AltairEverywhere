@@ -1,9 +1,15 @@
-# Multi-stage build for smaller final image
-FROM debian:trixie-slim AS builder
+# syntax=docker/dockerfile:1.7
 
+# Allow per-platform override (optional)
+ARG BASE_IMAGE=debian:trixie-slim
+
+# =========================
+# 1) Build stage
+# =========================
+FROM ${BASE_IMAGE} AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install build dependencies in one layer
+# Build dependencies (development headers, compilers, tools)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libuv1-dev \
     cmake \
@@ -16,44 +22,43 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     libi2c-dev \
     libgpiod-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+ && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-# Clone source code with better caching
+# Clone source code with caching
 ARG REPO_URL=https://github.com/gloveboxes/Altair-8800-Emulator.git
 RUN git clone --depth 1 --recurse-submodules ${REPO_URL} /Altair-8800-Emulator
 
 # Build application
 WORKDIR /Altair-8800-Emulator/src
 RUN mkdir -p build \
-    && cmake -B build -DCMAKE_BUILD_TYPE=Release \
-    && cmake --build build --config Release --target all -j$(nproc)
+ && cmake -B build -DCMAKE_BUILD_TYPE=Release \
+ && cmake --build build --config Release --target all -j"$(nproc)"
 
-# Production stage - much smaller final image
-FROM debian:trixie-slim AS runtime
-
+# =========================
+# 2) Runtime stage
+# =========================
+FROM ${BASE_IMAGE} AS runtime
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install only runtime dependencies
+# Runtime dependencies (Trixie uses *t64 packages)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libuv1 \
-    libcurl4 \
-    libssl3 \
+    libuv1t64 \
+    libcurl4t64 \
+    libssl3t64 \
     libuuid1 \
     ca-certificates \
     libgpiod3 \
     gpiod \
     python3 \
     i2c-tools \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    curl \
+ && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-# Create non-root user for security with hardware access groups
+# Create non-root user with GPIO/I2C group access
 RUN groupadd -r altair \
-    && useradd -r -g altair -G i2c,spi,gpio altair \
-    || useradd -r -g altair altair
+ && useradd -r -g altair -G i2c,spi,gpio altair || useradd -r -g altair altair
 
-# Copy built application and required files
+# Copy built artifacts
 COPY --from=builder /Altair-8800-Emulator/src/build/Altair_emulator /usr/local/bin/
 COPY --from=builder /Altair-8800-Emulator/Terminal /app/Terminal
 COPY --from=builder /Altair-8800-Emulator/src/Disks /app/Disks
@@ -63,19 +68,14 @@ COPY --from=builder /Altair-8800-Emulator/src/AppSamples /app/AppSamples
 COPY altair.sh /app/altair.sh
 RUN chmod +x /app/altair.sh
 
-# Set working directory and ownership
+# Configure runtime
 WORKDIR /app
 RUN chown -R altair:altair /app
-
-# Switch to non-root user
 USER altair
 
-# Expose ports
 EXPOSE 8082 80
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:80/ || exit 1
+  CMD curl -f http://localhost:80/ || exit 1
 
-# Use exec form and run as non-root
 CMD ["./altair.sh"]

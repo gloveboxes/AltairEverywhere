@@ -11,6 +11,16 @@ Install Docker on your computer.
      curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
     ```
 
+    !!! note "Docker installation notes"
+
+        On arm/v6 (Raspberry Pi Zero and 1), install Docker using:
+
+        ```bash
+        sudo apt update
+        sudo apt install -y docker.io
+        sudo usermod -aG docker $USER
+        ```
+
     Review the [Manage Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user) document.
 
     1. Grant the current user Docker rights

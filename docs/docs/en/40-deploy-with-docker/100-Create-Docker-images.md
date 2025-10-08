@@ -53,12 +53,12 @@ docker login
 Replace `YOUR_DOCKER_ID` with your actual Docker Hub username:
 
 ```bash
-docker buildx build . --platform linux/arm64,linux/amd64 --tag YOUR_DOCKER_ID/altair8800:latest --push --no-cache
+docker buildx build . --platform linux/arm64,linux/arm/v7,linux/arm/v6,linux/amd64 --tag YOUR_DOCKER_ID/altair8800:latest --push --no-cache
 ```
 
 This command will:
 
-- Build for both ARM64 and AMD64 architectures
+- Build for both ARM64, ARMv7, ARMv6, and AMD64 architectures
 - Tag the image as `latest`
 - Push directly to Docker Hub
 
