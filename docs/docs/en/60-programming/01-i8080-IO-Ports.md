@@ -24,7 +24,12 @@ The following tables show output port numbers and port data values. Typically, c
 
 | Port | Port data  | Loads |
 |------|-------|:---------|
-| 29   | 0-255 | Set timer period in milliseconds |
+| 24   | 0-255 | Set timer 0 period high byte (milliseconds) |
+| 25   | 0-255 | Set timer 0 period low byte (milliseconds) and start timer |
+| 26   | 0-255 | Set timer 1 period high byte (milliseconds) |
+| 27   | 0-255 | Set timer 1 period low byte (milliseconds) and start timer |
+| 28   | 0-255 | Set timer 2 period high byte (milliseconds) |
+| 29   | 0-255 | Set timer 2 period low byte (milliseconds) and start timer |
 | 30   | 0-255 | Set timer period in seconds |
 | 41   | 0     | System tick count |
 | 42   | 0     | Current [UTC](https://en.wikipedia.org/wiki/Coordinated_Universal_Time){:target=_blank} date and time |
@@ -44,7 +49,12 @@ Typically, input ports will read data loaded by an output port.
 
 | Port | Description |
 |------|-------------|
-| 29   | Query milliseconds timer status. Enabled or expired (true or false) |
+| 24   | Query timer 0 milliseconds status. Enabled or expired (true or false) |
+| 25   | Query timer 0 milliseconds status. Enabled or expired (true or false) |
+| 26   | Query timer 1 milliseconds status. Enabled or expired (true or false) |
+| 27   | Query timer 1 milliseconds status. Enabled or expired (true or false) |
+| 28   | Query timer 2 milliseconds status. Enabled or expired (true or false) |
+| 29   | Query timer 2 milliseconds status. Enabled or expired (true or false) |
 | 30   | Query seconds timer status. Enabled or expired (true or false) |
 | 31   | Query publish JSON pending status. Enabled or expired (true or false) |
 | 32   | Query publish weather pending status. Enabled or expired (true or false) |
