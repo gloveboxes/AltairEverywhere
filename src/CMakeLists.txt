@@ -125,6 +125,25 @@ target_link_libraries(${PROJECT_NAME} "edge_mqtt_devx")
 # target_compile_definitions(${PROJECT_NAME} PUBLIC AZURE_IOT_HUB_CONFIGURED)
 target_link_libraries(${PROJECT_NAME} c curl)
 
+# Check if atomic library is needed (required on some ARM architectures for 64-bit atomics)
+include(CheckCSourceCompiles)
+check_c_source_compiles("
+    #include <stdatomic.h>
+    #include <stdint.h>
+    int main() {
+        atomic_uint_fast64_t test = 0;
+        atomic_load(&test);
+        atomic_store(&test, 1);
+        atomic_fetch_add(&test, 1);
+        return 0;
+    }
+" ATOMIC_OPERATIONS_BUILTIN)
+
+if(NOT ATOMIC_OPERATIONS_BUILTIN)
+    target_link_libraries(${PROJECT_NAME} atomic)
+    message(STATUS "Linking with libatomic for atomic operations support")
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
 target_link_options(${PROJECT_NAME} PUBLIC "-L/usr/local/lib")
 target_include_directories(${PROJECT_NAME} PUBLIC AzureSphereDevX/include )
