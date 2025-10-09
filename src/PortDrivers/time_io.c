@@ -5,7 +5,6 @@
 
 #include "dx_utilities.h"
 #include "main.h" // For get_millisecond_tick_count()
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,11 +16,11 @@
 #define NUM_MS_TIMERS 3
 
 // Array-based millisecond timers for improved scalability
-static atomic_uint_fast64_t ms_timer_targets[NUM_MS_TIMERS] = {0, 0, 0};
-static unsigned int ms_timer_delays[NUM_MS_TIMERS]          = {0, 0, 0};
+static uint64_t ms_timer_targets[NUM_MS_TIMERS]    = {0, 0, 0};
+static unsigned int ms_timer_delays[NUM_MS_TIMERS] = {0, 0, 0};
 
 // Thread-safe seconds timer using permanent timer approach
-static atomic_uint_fast64_t seconds_timer_target = 0;
+static uint64_t seconds_timer_target = 0;
 
 /// <summary>
 /// Get timer index based on port number
@@ -69,12 +68,12 @@ size_t time_output(int port, uint8_t data, char *buffer, size_t buffer_length)
                 ms_timer_delays[timer_idx] = (ms_timer_delays[timer_idx] & 0xFF00) | data;
 
                 // Calculate target time using permanent millisecond timer
-                uint64_t current_time = get_millisecond_tick_count();
-                atomic_store(&ms_timer_targets[timer_idx], current_time + ms_timer_delays[timer_idx]);
+                uint64_t current_time       = get_millisecond_tick_count();
+                ms_timer_targets[timer_idx] = current_time + ms_timer_delays[timer_idx];
             }
             break;
         case 30: // set seconds timer
-            atomic_store(&seconds_timer_target, get_second_tick_count() + data);
+            seconds_timer_target = get_second_tick_count() + data;
             break;
         case 41: // System tick count
             len = (size_t)snprintf(buffer, buffer_length, "%u", (uint32_t)get_second_tick_count());
@@ -98,9 +97,8 @@ size_t time_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 
 uint8_t time_input(uint8_t port)
 {
-    uint8_t retVal        = 0;
-    uint64_t current_time = get_millisecond_tick_count();
-    int timer_idx         = get_timer_index(port);
+    uint8_t retVal = 0;
+    int timer_idx  = get_timer_index(port);
 
     switch (port)
     {
@@ -113,15 +111,15 @@ uint8_t time_input(uint8_t port)
         {
             if (timer_idx >= 0)
             {
-                uint64_t target_time = atomic_load(&ms_timer_targets[timer_idx]);
+                uint64_t target_time = ms_timer_targets[timer_idx];
 
                 // Check if timer is active (target > 0) and has expired
-                if (target_time > 0 && current_time >= target_time)
+                if (target_time > 0 && get_millisecond_tick_count() >= target_time)
                 {
-                    // Timer has expired, clear it atomically
-                    atomic_store(&ms_timer_targets[timer_idx], 0);
-                    ms_timer_delays[timer_idx] = 0;
-                    retVal                     = 0; // Timer expired (returns 0)
+                    // Timer has expired, clear it
+                    ms_timer_targets[timer_idx] = 0;
+                    ms_timer_delays[timer_idx]  = 0;
+                    retVal                      = 0; // Timer expired (returns 0)
                 }
                 else if (target_time > 0)
                 {
@@ -136,15 +134,14 @@ uint8_t time_input(uint8_t port)
         break;
         case 30: // Has seconds timer expired
         {
-            uint64_t current_seconds = get_second_tick_count();
-            uint64_t target_time     = atomic_load(&seconds_timer_target);
+            uint64_t target_time = seconds_timer_target;
 
             // Check if timer is active (target > 0) and has expired
-            if (target_time > 0 && current_seconds >= target_time)
+            if (target_time > 0 && get_second_tick_count() >= target_time)
             {
-                // Timer has expired, clear it atomically
-                atomic_store(&seconds_timer_target, 0);
-                retVal = 0; // Timer expired (returns 0)
+                // Timer has expired, clear it
+                seconds_timer_target = 0;
+                retVal               = 0; // Timer expired (returns 0)
             }
             else if (target_time > 0)
             {
