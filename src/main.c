@@ -34,7 +34,7 @@ uint16_t bus_switches = 0x00;
 
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
-const char ALTAIR_EMULATOR_VERSION[] = "5.1.1";
+const char ALTAIR_EMULATOR_VERSION[] = "5.1.2";
 enum PANEL_MODE_T panel_mode         = PANEL_BUS_MODE;
 char msgBuffer[MSG_BUFFER_BYTES]     = {0};
 const char *network_interface        = NULL;
@@ -43,17 +43,14 @@ static bool stop_cpu = false;
 static char Log_Debug_Time_buffer[128];
 
 // Atomic millisecond timer for high-precision timing
+// Seconds are derived by dividing by 1000 for efficiency
 static atomic_uint_fast64_t millisecond_tick_count = 0;
-
-// Atomic seconds timer for reliable seconds timing  
-static atomic_uint_fast64_t second_tick_count = 0;
 
 DX_TIMER_BINDING tmr_ws_ping_pong              = {.repeat = &(struct timespec){10, 0}, .name = "tmr_partial_message", .handler = ws_ping_pong_handler};
 
 DX_TIMER_BINDING tmr_heart_beat          = {.repeat = &(struct timespec){30, 0}, .name = "tmr_heart_beat", .handler = heart_beat_handler};
 DX_TIMER_BINDING tmr_millisecond_tick    = {.repeat = &(struct timespec){0, ONE_MS}, .name = "tmr_millisecond_tick", .handler = millisecond_tick_handler};
 DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){20, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
-DX_TIMER_BINDING tmr_second_tick          = {.repeat = &(struct timespec){1, 0}, .name = "tmr_second_tick", .handler = second_tick_handler};
 DX_TIMER_BINDING tmr_update_environment  = {.repeat = &(struct timespec){20, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
 
 DX_ASYNC_BINDING async_copyx_request         = {.name = "async_copyx_request", .handler = async_copyx_request_handler};
@@ -70,7 +67,6 @@ DX_ASYNC_BINDING *async_bindings[] = {
 
 DX_TIMER_BINDING *timer_bindings[] = {
     &tmr_millisecond_tick,
-    &tmr_second_tick,
     &tmr_update_environment,
     &tmr_ws_ping_pong,
 };
@@ -90,10 +86,10 @@ uint64_t get_millisecond_tick_count(void)
 }
 
 // High-performance seconds tick count getter
-// Uses atomic load with relaxed ordering for maximum performance
+// Derives seconds from milliseconds for efficiency (avoids second timer)
 uint64_t get_second_tick_count(void)
 {
-    return atomic_load_explicit(&second_tick_count, memory_order_relaxed);
+    return atomic_load_explicit(&millisecond_tick_count, memory_order_relaxed) / 1000;
 }
 
 // Constants to replace magic numbers
@@ -236,15 +232,7 @@ static DX_TIMER_HANDLER(millisecond_tick_handler)
 }
 DX_TIMER_HANDLER_END
 
-/// <summary>
-/// Seconds timer handler for reliable seconds timing
-/// Uses atomic operations for thread-safe access
-/// </summary>
-static DX_TIMER_HANDLER(second_tick_handler)
-{
-    atomic_fetch_add_explicit(&second_tick_count, 1, memory_order_relaxed);
-}
-DX_TIMER_HANDLER_END
+
 
 /// <summary>
 /// Client connected successfully

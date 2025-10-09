@@ -25,8 +25,6 @@ static unsigned int ms_timer_delays[NUM_MS_TIMERS]         = {0, 0, 0};
 static atomic_bool seconds_timer_enabled = false;
 static atomic_uint_fast64_t seconds_timer_target = 0;
 static int timer_delay                   = 0;
-// set tick_count to 1 as the tick count timer doesn't kick in until 1 second after startup
-static uint32_t tick_count = 1;
 
 /// <summary>
 /// Get timer index based on port number
@@ -91,7 +89,7 @@ size_t time_output(int port, uint8_t data, char *buffer, size_t buffer_length)
             }
             break;
         case 41: // System tick count
-            len = (size_t)snprintf(buffer, buffer_length, "%u", tick_count);
+            len = (size_t)snprintf(buffer, buffer_length, "%u", (uint32_t)get_second_tick_count());
             break;
         case 42: // get utc date and time
             dx_getCurrentUtc(buffer, buffer_length);

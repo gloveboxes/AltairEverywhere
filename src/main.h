@@ -71,7 +71,6 @@ extern uint16_t bus_switches;
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
 static DX_DECLARE_TIMER_HANDLER(millisecond_tick_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
-static DX_DECLARE_TIMER_HANDLER(second_tick_handler);
 static DX_DECLARE_TIMER_HANDLER(update_environment_handler);
 static void *altair_thread(void *arg);
 
@@ -86,7 +85,6 @@ extern DX_TIMER_BINDING tmr_ws_ping_pong;
 extern DX_TIMER_BINDING tmr_heart_beat;
 extern DX_TIMER_BINDING tmr_millisecond_tick;
 extern DX_TIMER_BINDING tmr_report_memory_usage;
-extern DX_TIMER_BINDING tmr_second_tick;
 extern DX_TIMER_BINDING tmr_update_environment;
 
 extern DX_ASYNC_BINDING async_copyx_request;
