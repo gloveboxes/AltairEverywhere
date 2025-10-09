@@ -3,7 +3,7 @@
  * Moves an 'X' onint draw_instructions()
 {
     cursor_move(1, 1);
-    cputs("VT100/xterm.js Ball and Paddle Game v1.6\r\n");
+    cputs("VT100/xterm.js Ball and Paddle Game v1.7\r\n");
     cputs("LEFT/RIGHT cursor keys move ---- (paddle). Keep the ball from going out!\r\n");
     cputs("Press Q to quit.\r\n");
 
@@ -24,6 +24,10 @@
 #define MAX_ROW 30
 #define MIN_COL 5
 #define MAX_COL 60
+
+/* Timer configuration */
+#define TIMER_ID 1      /* Use timer 1 */
+#define DELAY_MS 50     /* 50ms game loop delay */
 
 /* Paddle characteristics */
 #define PADWID 6
@@ -188,7 +192,7 @@ int draw_walls()
 int draw_instructions()
 {
     cursor_move(1, 1);
-    cputs("VT100/xterm.js Ball and Paddle Game v1.6\r\n");
+    cputs("VT100/xterm.js Ball and Paddle Game v1.7\r\n");
     cputs("LEFT/RIGHT keys move ---- (paddle). Keep the ball from going out!\r\n");
     cputs("Press ESC to quit.\r\n");
     return 0;
@@ -685,9 +689,9 @@ int main()
             }
         }
 
-        /* Use timer loop like onboard - start 50ms timer and check for input while waiting */
-        x_tmrset(50);
-        while (x_tmrexp() && running)
+        /* Use timer loop like onboard - start timer and check for input while waiting */
+        x_tmrset(TIMER_ID, DELAY_MS);
+        while (x_tmrexp(TIMER_ID) && running)
         {
             /* Check for keyboard input during timer wait - like onboard pattern */
             if (check_key_ready())

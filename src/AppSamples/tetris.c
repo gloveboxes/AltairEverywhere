@@ -25,6 +25,10 @@ int x_tmrexp();
 #define KEY_RIGHT  4
 #define KEY_SPACE 32
 
+/* Timer configuration */
+#define TIMER_ID 2      /* Use timer 2 */
+#define DELAY_MS 255    /* 255ms game loop delay */
+
 /* --- Board & UI layout --- */
 #define BD_W      10
 #define BD_H      20
@@ -248,7 +252,7 @@ int piece;
 int drw_ins()
 {
     cur_mov(1,1);
-    cputs("TETRIS for Altair 8800 (Enable Character Mode: Ctrl+L)");
+    cputs("TETRIS for Altair 8800 V1.5 (Enable Character Mode: Ctrl+L)");
     cur_mov(2,1);
     cputs("LEFT/RIGHT: Move  UP: Rotate  DOWN: Soft Drop  SPACE: Hard Drop  ESC x2: Quit");
     cur_mov(3,1);
@@ -667,7 +671,7 @@ int main()
 
     nxt_pcs = rnd_pcs(); if (!spn_new()) { /* immediate game over */ }
 
-    x_tmrset(255);
+    x_tmrset(TIMER_ID, DELAY_MS);
 
     while (game_st==GAME_PLAYING) {
         if (key_rdy())
@@ -675,9 +679,9 @@ int main()
             hnd_inp();
         }
 
-        if (!x_tmrexp())
+        if (!x_tmrexp(TIMER_ID))
         {
-            x_tmrset(255);
+            x_tmrset(TIMER_ID, DELAY_MS);
 
             drop_sp = soft_dr ? 2 : fall_sp;
             fall_tm++;

@@ -24,6 +24,10 @@
 #define KEY_ESC 27
 #define KEY_CTRL_C 3
 
+/* Timer configuration */
+#define TIMER_ID 0      /* Use timer 0 */
+#define DELAY_MS 5000   /* 5 second delay */
+
 /* Function prototypes */
 int main();
 int read_string_from_port();
@@ -92,8 +96,8 @@ int main()
         cputs("Status: Monitoring continuously... (5 sec delay)");
         
         /* Sleep using timer library with keyboard checking */
-        x_tmrset(5000);                 /* Start 5 second timer (5000 ms) */
-        while (x_tmrexp() && !quit_requested) {
+        x_tmrset(TIMER_ID, DELAY_MS);   /* Start timer with configured delay */
+        while (x_tmrexp(TIMER_ID) && !quit_requested) {
             /* Check for keypress during sleep */
             if (check_key_ready()) {
                 key_pressed = get_key();
