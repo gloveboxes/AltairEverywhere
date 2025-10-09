@@ -2,10 +2,9 @@
 <html>
 
 <head>
-  <script src="https://unpkg.com/xterm@4.19.0/lib/xterm.js"></script>
   <script src="Javascript/xterm.js"></script>
 
-  <link rel="stylesheet" href="https://unpkg.com/xterm@4.18.0/css/xterm.css" />
+  <link rel="stylesheet" href="css/xterm.css" />
   <link rel="stylesheet" href="css/modern.css">
 
   <script>
@@ -243,12 +242,29 @@
             throw new Error("xterm.js library not loaded");
           }
 
+          // Get initial theme before creating terminal
+          const initialTheme = localStorage.getItem(CONFIG.STORAGE_THEME_KEY) || CONFIG.DEFAULT_THEME;
+          const themeColors = initialTheme === "light" 
+            ? {
+                background: '#ffffff',
+                foreground: "#000000",
+                cursor: "#000000",
+                selectionBackground: "rgba(188,214,141, 0.4)"
+              }
+            : {
+                background: '#000000',
+                foreground: "#ffffff",
+                cursor: "#ffffff",
+                selectionBackground: "rgba(188,214,141, 0.4)"
+              };
+
           state.term = new Terminal({
             cursorBlink: true,
             fontFamily: CONFIG.XTERM_FONT,
             fontSize: CONFIG.XTERM_FONT_SIZE,
             rows: CONFIG.XTERM_ROWS,
-            cols: CONFIG.XTERM_COLS
+            cols: CONFIG.XTERM_COLS,
+            theme: themeColors
           });
 
           if (!elements.terminal) {
@@ -256,7 +272,7 @@
           }
 
           state.term.open(elements.terminal);
-          setTheme();
+          updateThemeButton(initialTheme === "light" ? "Dark" : "Light");
           // state.term.write('WELCOME TO ALTAIR TERMINAL');
 
           // Set up terminal prompt function
@@ -292,7 +308,7 @@
         cleanupTerminalEventHandlers();
 
         // Store handler references for cleanup
-        state.pasteHandler = (data) => {
+        state.pasteHandler = state.term.onData((data) => {
           if (state.characterMode) return;
 
           if (typeof data === 'string' && data.length < CONFIG.MAX_PASTE_LENGTH) {
@@ -308,35 +324,31 @@
           } else {
             console.warn("Paste data too long or invalid, ignoring");
           }
-        };
+        });
 
-        state.keyHandler = (key, ev) => {
+        state.keyHandler = state.term.onKey(({key, domEvent}) => {
           try {
-            handleKeyPress(key, ev);
+            handleKeyPress(key, domEvent);
           } catch (error) {
             console.error("Error handling key press:", error);
           }
-        };
-
-        // Attach handlers
-        state.term.on("paste", state.pasteHandler);
-        state.term.on("key", state.keyHandler);
+        });
       }
 
       /**
        * Clean up terminal event handlers
        */
       function cleanupTerminalEventHandlers() {
-        if (state.term && state.pasteHandler) {
+        if (state.pasteHandler) {
           try {
-            state.term.off("paste", state.pasteHandler);
+            state.pasteHandler.dispose();
           } catch (error) {
             console.error("Error removing paste handler:", error);
           }
         }
-        if (state.term && state.keyHandler) {
+        if (state.keyHandler) {
           try {
-            state.term.off("key", state.keyHandler);
+            state.keyHandler.dispose();
           } catch (error) {
             console.error("Error removing key handler:", error);
           }
@@ -615,38 +627,18 @@
       }
 
       /**
-       * Theme management with error handling
-       */
-      function setTheme(themeName = null) {
-        if (!state.term) return;
-
-        try {
-          const currentTheme = themeName || localStorage.getItem(CONFIG.STORAGE_THEME_KEY) || CONFIG.DEFAULT_THEME;
-          
-          if (currentTheme === "light") {
-            setLightTheme();
-          } else {
-            setDarkTheme();
-          }
-        } catch (error) {
-          console.error("Error setting theme:", error);
-          setDarkTheme(); // Fallback to dark theme
-        }
-      }
-
-      /**
        * Apply dark theme
        */
       function setDarkTheme() {
         try {
           localStorage.setItem(CONFIG.STORAGE_THEME_KEY, "dark");
-          if (state.term) {
-            state.term.setOption('theme', { 
+          if (state.term && state.term.options) {
+            state.term.options.theme = { 
               background: '#000000', 
               foreground: "#ffffff", 
               cursor: "#ffffff", 
-              selection: "rgba(188,214,141, 0.4)" 
-            });
+              selectionBackground: "rgba(188,214,141, 0.4)" 
+            };
           }
           updateThemeButton("Light");
         } catch (error) {
@@ -660,13 +652,13 @@
       function setLightTheme() {
         try {
           localStorage.setItem(CONFIG.STORAGE_THEME_KEY, "light");
-          if (state.term) {
-            state.term.setOption('theme', { 
+          if (state.term && state.term.options) {
+            state.term.options.theme = { 
               background: '#ffffff', 
               foreground: "#000000", 
               cursor: "#000000", 
-              selection: "rgba(188,214,141, 0.4)" 
-            });
+              selectionBackground: "rgba(188,214,141, 0.4)" 
+            };
           }
           updateThemeButton("Dark");
         } catch (error) {
