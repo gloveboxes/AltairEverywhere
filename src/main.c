@@ -34,7 +34,7 @@ uint16_t bus_switches = 0x00;
 
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
-const char ALTAIR_EMULATOR_VERSION[] = "5.1.4";
+const char ALTAIR_EMULATOR_VERSION[] = "5.1.5";
 enum PANEL_MODE_T panel_mode         = PANEL_BUS_MODE;
 char msgBuffer[MSG_BUFFER_BYTES]     = {0};
 const char *network_interface        = NULL;
@@ -44,7 +44,8 @@ static char Log_Debug_Time_buffer[128];
 
 // Atomic millisecond timer for high-precision timing
 // Seconds are derived by dividing by 1000 for efficiency
-static atomic_uint_fast64_t millisecond_tick_count = 0;
+// Accessed via inline functions in main.h for maximum performance
+atomic_uint_fast64_t millisecond_tick_count = 0;
 
 DX_TIMER_BINDING tmr_ws_ping_pong              = {.repeat = &(struct timespec){10, 0}, .name = "tmr_partial_message", .handler = ws_ping_pong_handler};
 
@@ -76,20 +77,6 @@ DX_TIMER_BINDING *timer_bindings[] = {
 inline CPU_OPERATING_MODE get_cpu_operating_mode_fast(void)
 {
     return atomic_load_explicit(&atomic_cpu_operating_mode, memory_order_relaxed);
-}
-
-// High-performance millisecond tick count getter
-// Uses atomic load with relaxed ordering for maximum performance
-uint64_t get_millisecond_tick_count(void)
-{
-    return atomic_load_explicit(&millisecond_tick_count, memory_order_relaxed);
-}
-
-// High-performance seconds tick count getter
-// Derives seconds from milliseconds for efficiency (avoids second timer)
-uint64_t get_second_tick_count(void)
-{
-    return atomic_load_explicit(&millisecond_tick_count, memory_order_relaxed) / 1000;
 }
 
 // Constants to replace magic numbers

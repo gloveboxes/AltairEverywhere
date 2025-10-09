@@ -99,6 +99,19 @@ extern DX_ASYNC_BINDING *async_bindings[];
 // initialize bindings
 extern DX_TIMER_BINDING *timer_bindings[];
 
-// Function declarations
-uint64_t get_millisecond_tick_count(void);
-uint64_t get_second_tick_count(void);
+// Atomic tick counter for high-performance timing
+extern atomic_uint_fast64_t millisecond_tick_count;
+
+// High-performance millisecond tick count getter (inline for maximum performance)
+// Uses atomic load with relaxed ordering for maximum performance
+static inline uint64_t get_millisecond_tick_count(void)
+{
+    return atomic_load_explicit(&millisecond_tick_count, memory_order_relaxed);
+}
+
+// High-performance seconds tick count getter (inline for maximum performance)
+// Derives seconds from milliseconds for efficiency (avoids second timer)
+static inline uint64_t get_second_tick_count(void)
+{
+    return atomic_load_explicit(&millisecond_tick_count, memory_order_relaxed) / 1000;
+}

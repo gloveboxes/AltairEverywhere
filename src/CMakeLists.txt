@@ -4,6 +4,9 @@
 cmake_minimum_required (VERSION 3.10)
 project (Altair_emulator C)
 
+# Set optimization flags for Release builds
+set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
+
 # SELECT FRONT PANEL CONFIG #######################################################################################
 #
 # Front panel selection is now done at runtime via command line argument (-f or --FrontPanel)
