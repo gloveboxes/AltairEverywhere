@@ -4,76 +4,90 @@
 #include "time_io.h"
 
 #include "dx_utilities.h"
+#include "main.h" // For get_millisecond_tick_count()
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
-static atomic_bool delay_milliseconds_enabled = false;
-static atomic_bool delay_seconds_enabled      = false;
-static unsigned int timer_milliseconds_delay  = 0;
-static int timer_delay                        = 0;
+// Define timer indices for array access
+#define TIMER_0 0  // Ports 24/25
+#define TIMER_1 1  // Ports 26/27  
+#define TIMER_2 2  // Ports 28/29
+#define NUM_MS_TIMERS 3
+
+// Array-based millisecond timers for improved scalability
+static atomic_bool ms_timer_enabled[NUM_MS_TIMERS]        = {false, false, false};
+static atomic_uint_fast64_t ms_timer_targets[NUM_MS_TIMERS] = {0, 0, 0};
+static unsigned int ms_timer_delays[NUM_MS_TIMERS]         = {0, 0, 0};
+
+// Thread-safe seconds timer using permanent timer approach
+static atomic_bool seconds_timer_enabled = false;
+static atomic_uint_fast64_t seconds_timer_target = 0;
+static int timer_delay                   = 0;
 // set tick_count to 1 as the tick count timer doesn't kick in until 1 second after startup
 static uint32_t tick_count = 1;
 
-DX_TIMER_HANDLER(tick_count_handler)
+/// <summary>
+/// Get timer index based on port number
+/// </summary>
+/// <param name="port">Port number</param>
+/// <returns>Timer index or -1 if invalid port</returns>
+static int get_timer_index(int port)
 {
-    tick_count++;
+    switch (port)
+    {
+        case 24:
+        case 25:
+            return TIMER_0;
+        case 26:
+        case 27:
+            return TIMER_1;
+        case 28:
+        case 29:
+            return TIMER_2;
+        default:
+            return -1;
+    }
 }
-DX_TIMER_HANDLER_END
-
-DX_TIMER_HANDLER(timer_seconds_expired_handler)
-{
-    atomic_store(&delay_seconds_enabled, false);
-}
-DX_TIMER_HANDLER_END
-
-DX_TIMER_HANDLER(timer_millisecond_expired_handler)
-{
-    atomic_store(&delay_milliseconds_enabled, false);
-    timer_milliseconds_delay = 0;
-}
-DX_TIMER_HANDLER_END
-
-DX_ASYNC_HANDLER(async_set_timer_seconds_handler, handle)
-{
-    int data = *((int *)handle->data);
-    dx_timerOneShotSet(&tmr_timer_seconds_expired, &(struct timespec){data, 0});
-}
-DX_ASYNC_HANDLER_END
-
-DX_ASYNC_HANDLER(async_set_timer_millisecond_handler, handle)
-{
-    int data         = *((int *)handle->data);
-    int seconds      = data / 1000;
-    int remaining_ms = data % 1000;
-    dx_timerOneShotSet(&tmr_timer_millisecond_expired, &(struct timespec){seconds, remaining_ms * ONE_MS});
-}
-DX_ASYNC_HANDLER_END
 
 size_t time_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 {
     size_t len = 0;
+    int timer_idx = get_timer_index(port);
 
     switch (port)
     {
-        case 28: // Set milliseconds timer high byte (bits 15-8)
-            timer_milliseconds_delay = (timer_milliseconds_delay & 0x00FF) | ((uint16_t)data << 8);
-            break;
-        case 29: // Set milliseconds timer low byte (bits 7-0) and start timer
-            if (!atomic_load(&delay_milliseconds_enabled))
+        case 24: // Timer 0 - Set milliseconds timer high byte (bits 15-8)
+        case 26: // Timer 1 - Set milliseconds timer high byte (bits 15-8) 
+        case 28: // Timer 2 - Set milliseconds timer high byte (bits 15-8)
+            if (timer_idx >= 0)
             {
-                timer_milliseconds_delay = (timer_milliseconds_delay & 0xFF00) | data;
-                atomic_store(&delay_milliseconds_enabled, true);
-                dx_asyncSend(&async_set_millisecond_timer, (void *)&timer_milliseconds_delay);
+                ms_timer_delays[timer_idx] = (ms_timer_delays[timer_idx] & 0x00FF) | ((uint16_t)data << 8);
+            }
+            break;
+        case 25: // Timer 0 - Set milliseconds timer low byte (bits 7-0) and start timer
+        case 27: // Timer 1 - Set milliseconds timer low byte (bits 7-0) and start timer
+        case 29: // Timer 2 - Set milliseconds timer low byte (bits 7-0) and start timer
+            if (timer_idx >= 0 && !atomic_load(&ms_timer_enabled[timer_idx]))
+            {
+                ms_timer_delays[timer_idx] = (ms_timer_delays[timer_idx] & 0xFF00) | data;
+                atomic_store(&ms_timer_enabled[timer_idx], true);
+
+                // Calculate target time using permanent millisecond timer
+                uint64_t current_time = get_millisecond_tick_count();
+                atomic_store(&ms_timer_targets[timer_idx], current_time + ms_timer_delays[timer_idx]);
             }
             break;
         case 30: // set seconds timer
-            if (!atomic_load(&delay_seconds_enabled))
+            if (!atomic_load(&seconds_timer_enabled))
             {
-                atomic_store(&delay_seconds_enabled, true);
+                atomic_store(&seconds_timer_enabled, true);
                 timer_delay = data;
-                dx_asyncSend(&async_set_seconds_timer, (void *)&timer_delay);
+                
+                // Calculate target time using permanent seconds timer
+                uint64_t current_seconds = get_second_tick_count();
+                atomic_store(&seconds_timer_target, current_seconds + timer_delay);
             }
             break;
         case 41: // System tick count
@@ -98,17 +112,70 @@ size_t time_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 
 uint8_t time_input(uint8_t port)
 {
-    uint8_t retVal = 0;
+    uint8_t retVal        = 0;
+    uint64_t current_time = get_millisecond_tick_count();
+    int timer_idx         = get_timer_index(port);
+
     switch (port)
     {
-        case 28: // Has milliseconds timer expired (same as case 29)
-            retVal = atomic_load(&delay_milliseconds_enabled);
-            break;
-        case 29: // Has milliseconds timer expired
-            retVal = atomic_load(&delay_milliseconds_enabled);
-            break;
+        case 24: // Timer 0 - Has milliseconds timer expired (same as case 25)
+        case 25: // Timer 0 - Has milliseconds timer expired
+        case 26: // Timer 1 - Has milliseconds timer expired (same as case 27)
+        case 27: // Timer 1 - Has milliseconds timer expired
+        case 28: // Timer 2 - Has milliseconds timer expired (same as case 29)
+        case 29: // Timer 2 - Has milliseconds timer expired
+        {
+            if (timer_idx >= 0)
+            {
+                // Check if timer is enabled and has expired using permanent timer
+                if (atomic_load(&ms_timer_enabled[timer_idx]))
+                {
+                    uint64_t target_time = atomic_load(&ms_timer_targets[timer_idx]);
+                    if (target_time > 0 && current_time >= target_time)
+                    {
+                        // Timer has expired, clear it atomically
+                        atomic_store(&ms_timer_enabled[timer_idx], false);
+                        atomic_store(&ms_timer_targets[timer_idx], 0);
+                        ms_timer_delays[timer_idx] = 0;
+                        retVal = 0; // Timer expired (returns 0)
+                    }
+                    else
+                    {
+                        retVal = 1; // Timer still running (returns 1)
+                    }
+                }
+                else
+                {
+                    retVal = 0; // Timer not enabled (returns 0)
+                }
+            }
+        }
+        break;
         case 30: // Has seconds timer expired
-            retVal = atomic_load(&delay_seconds_enabled);
+            {
+                // Check if timer is enabled and has expired using permanent timer
+                if (atomic_load(&seconds_timer_enabled))
+                {
+                    uint64_t current_seconds = get_second_tick_count();
+                    uint64_t target_time = atomic_load(&seconds_timer_target);
+                    if (target_time > 0 && current_seconds >= target_time)
+                    {
+                        // Timer has expired, clear it atomically
+                        atomic_store(&seconds_timer_enabled, false);
+                        atomic_store(&seconds_timer_target, 0);
+                        timer_delay = 0;
+                        retVal = 0; // Timer expired (returns 0)
+                    }
+                    else
+                    {
+                        retVal = 1; // Timer still running (returns 1)
+                    }
+                }
+                else
+                {
+                    retVal = 0; // Timer not enabled (returns 0)
+                }
+            }
             break;
     }
     return retVal;

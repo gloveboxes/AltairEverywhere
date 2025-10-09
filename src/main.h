@@ -69,7 +69,9 @@ extern ALTAIR_COMMAND cmd_switches;
 extern uint16_t bus_switches;
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
+static DX_DECLARE_TIMER_HANDLER(millisecond_tick_handler);
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
+static DX_DECLARE_TIMER_HANDLER(second_tick_handler);
 static DX_DECLARE_TIMER_HANDLER(update_environment_handler);
 static void *altair_thread(void *arg);
 
@@ -78,21 +80,19 @@ extern const uint8_t reverse_lut[16];
 // clang-format off
 // Common Timers
 
-extern DX_TIMER_BINDING tmr_timer_seconds_expired;
 extern DX_TIMER_BINDING tmr_timer_millisecond_expired;
 extern DX_TIMER_BINDING tmr_ws_ping_pong;
 
 extern DX_TIMER_BINDING tmr_heart_beat;
+extern DX_TIMER_BINDING tmr_millisecond_tick;
 extern DX_TIMER_BINDING tmr_report_memory_usage;
-extern DX_TIMER_BINDING tmr_tick_count;
+extern DX_TIMER_BINDING tmr_second_tick;
 extern DX_TIMER_BINDING tmr_update_environment;
 
 extern DX_ASYNC_BINDING async_copyx_request;
 extern DX_ASYNC_BINDING async_expire_session;
 extern DX_ASYNC_BINDING async_publish_json;
 extern DX_ASYNC_BINDING async_publish_weather;
-extern DX_ASYNC_BINDING async_set_millisecond_timer;
-extern DX_ASYNC_BINDING async_set_seconds_timer;
 
 // clang-format on
 
@@ -100,3 +100,7 @@ extern DX_ASYNC_BINDING *async_bindings[];
 
 // initialize bindings
 extern DX_TIMER_BINDING *timer_bindings[];
+
+// Function declarations
+uint64_t get_millisecond_tick_count(void);
+uint64_t get_second_tick_count(void);

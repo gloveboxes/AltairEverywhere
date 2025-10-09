@@ -24,10 +24,16 @@ void io_port_out(uint8_t port, uint8_t data)
 
     switch (port)
     {
-        // Time IO Ports
-        case 28: // Set milliseconds timer high byte (bits 15-8)
-        case 29: // Set milliseconds timer low byte (bits 7-0) and start timer
+        // Time IO Ports - Millisecond Timers (use permanent timer for reliability)
+        case 24: // Timer 0 - Set milliseconds timer high byte (bits 15-8)
+        case 25: // Timer 0 - Set milliseconds timer low byte (bits 7-0) and start timer
+        case 26: // Timer 1 - Set milliseconds timer high byte (bits 15-8)
+        case 27: // Timer 1 - Set milliseconds timer low byte (bits 7-0) and start timer
+        case 28: // Timer 2 - Set milliseconds timer high byte (bits 15-8)
+        case 29: // Timer 2 - Set milliseconds timer low byte (bits 7-0) and start timer
+        // Time IO Ports - Seconds Timer (uses one-shot timer)
         case 30: // Set seconds timer
+        // Time IO Ports - System Time
         case 41: // Load system tick count
         case 42: // Load UTC date and time
         case 43: // Load local date and time
@@ -134,8 +140,13 @@ uint8_t io_port_in(uint8_t port)
 
     switch (port)
     {
-        // Time IO Ports
-        case 29: // Has milliseconds timer expired
+        // Time IO Ports - Timer Status (returns 1=running, 0=expired/not started)
+        case 24: // Timer 0 - Has milliseconds timer expired (same as port 25)
+        case 25: // Timer 0 - Has milliseconds timer expired  
+        case 26: // Timer 1 - Has milliseconds timer expired (same as port 27)
+        case 27: // Timer 1 - Has milliseconds timer expired
+        case 28: // Timer 2 - Has milliseconds timer expired (same as port 29)
+        case 29: // Timer 2 - Has milliseconds timer expired
         case 30: // Has seconds timer expired
             retVal = time_input(port);
             break;
