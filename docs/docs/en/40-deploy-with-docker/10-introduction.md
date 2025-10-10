@@ -1,4 +1,16 @@
-The easiest way to run the Altair 8800 emulator is with Docker. You need to install Docker on your 64-bit version of Linux, macOS, Windows, ChromeOS (with developer mode enabled), or Raspberry Pi computer.
+The simplest way to run the Altair 8800 emulator is with Docker. First, install Docker on your system. Supported platforms and architectures include:
+
+- Linux
+- macOS
+- Windows
+- ChromeOS (with developer mode enabled)
+- Raspberry Pi
+- BeagleBone
+
+Supported CPU architectures:
+
+- 64-bit: arm64, amd64
+- 32-bit: arm/v6, arm/v7
 
 To deploy the Altair emulator with Docker, you need to follow these steps.
 

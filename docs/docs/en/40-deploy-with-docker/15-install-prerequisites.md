@@ -13,7 +13,7 @@ Install Docker on your computer.
 
     !!! note "Docker installation notes"
 
-        On arm/v6 (Raspberry Pi Zero and 1), install Docker using:
+        On arm/v6 (Raspberry Pi Zero and BeagleBone), install Docker using:
 
         ```bash
         sudo apt update
