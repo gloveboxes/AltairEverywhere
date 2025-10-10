@@ -1,30 +1,45 @@
 /*
  * Snake Game for Altair 8800 - VT100/xterm.js compatible
  * BDS C 1.6 on CP/M
- * 
+ *
  * Classic Snake game using arrow keys for movement.
  * Collect food (*) to grow longer and increase score.
  * Don't hit walls or yourself!
- * 
+ *
  * Controls:
  * - Arrow keys: Change direction
- * - Q: Quit game
- * 
+ * - ESC: Quit game
+ *
  * Based on breakout.c pattern for BDS C compatibility
  */
 
 /* BDS C library hooks */
-int bdos();
-int bios();
-int inp();
-int outp();
+int inp();    /* int inp(port); */
+int outp();   /* int outp(port, value); */
 
-/* Key Codes */
-#define KEY_ESC   27
-#define KEY_UP    5
-#define KEY_DOWN  24
-#define KEY_LEFT  19
-#define KEY_RIGHT 4
+/* Timer library functions */
+int x_tmrset(); /* int x_tmrset(timer, ms); */
+int x_tmrexp(); /* int x_tmrexp(timer); */
+
+/* Terminal library functions */
+int x_putch(); /* int x_putch(c); */
+int x_puts();  /* int x_puts(s); */
+int x_numpr(); /* int x_numpr(n); */
+int x_curmv(); /* int x_curmv(row, col); */
+int x_clrsc(); /* int x_clrsc(); */
+int x_hidcr(); /* int x_hidcr(); */
+int x_shwcr(); /* int x_shwcr(); */
+int x_keyck(); /* int x_keyck(); */
+int x_keygt(); /* int x_keygt(); */
+int x_isesc(); /* int x_isesc(code); */
+int x_isup();  /* int x_isup(code); */
+int x_isdn();  /* int x_isdn(code); */
+int x_islt();  /* int x_islt(code); */
+int x_isrt();  /* int x_isrt(code); */
+
+/* Timer configuration */
+#define TIMER_ID 2  /* Use timer 2 */
+#define TIMER_MS 25 /* 25ms game loop timer */
 
 /* Screen Boundaries */
 #define MIN_ROW 6
@@ -34,184 +49,109 @@ int outp();
 
 /* Snake Settings */
 #define MAX_SNAKE_LENGTH 200
-#define INITIAL_LENGTH 3
+#define INITIAL_LENGTH   3
 
 /* Game States */
 #define GAME_PLAYING 0
-#define GAME_OVER 1
-#define GAME_QUIT 2
+#define GAME_OVER    1
+#define GAME_QUIT    2
 
 /* Directions */
-#define DIR_NONE 0
-#define DIR_UP 1
-#define DIR_DOWN 2
-#define DIR_LEFT 3
+#define DIR_NONE  0
+#define DIR_UP    1
+#define DIR_DOWN  2
+#define DIR_LEFT  3
 #define DIR_RIGHT 4
 
 /* Snake body coordinates */
-int snake_row[MAX_SNAKE_LENGTH];
-int snake_col[MAX_SNAKE_LENGTH];
-int snake_length;
-int snake_direction;
-int next_direction;
+int sn_row[MAX_SNAKE_LENGTH];
+int sn_col[MAX_SNAKE_LENGTH];
+int sn_len;
+int sn_dir;
+int nxt_dir;
 
 /* Food position */
 int food_row, food_col;
 int food_exists;
 
 /* Game state */
-int game_state;
+int gm_st;
 int score;
-int speed_level;
+int sp_lvl;
 
 /* Timing */
-int game_counter;
-int input_counter;
-int status_counter;
-
-/* Input handling globals */
-int g_last_seq[4];
-int g_seq_len;
-int g_last_key_code;
-
-/* --- Console I/O --- */
-
-int chput(c)
-char c;
-{
-    return bios(4, c);
-}
-
-int cputs(s)
-char *s;
-{
-    while (*s) chput(*s++);
-    return 0;
-}
-
-int putnum(n)
-int n;
-{
-    char buf[6];
-    int i;
-    if (n == 0) {
-        chput('0');
-        return 0;
-    }
-    if (n < 0) {
-        chput('-');
-        n = -n;
-    }
-    i = 0;
-    while (n > 0 && i < 6) {
-        buf[i++] = (n % 10) + '0';
-        n /= 10;
-    }
-    while (i--) chput(buf[i]);
-    return 0;
-}
-
-/* --- VT100/xterm.js Screen Control --- */
-
-int cursor_move(row, col)
-int row;
-int col;
-{
-    chput(KEY_ESC);
-    cputs("[");
-    putnum(row);
-    cputs(";");
-    putnum(col);
-    cputs("H");
-    return 0;
-}
-
-int clear_screen()
-{
-    chput(KEY_ESC);
-    cputs("[2J");
-    chput(KEY_ESC);
-    cputs("[0m");
-    cursor_move(1, 1);
-    return 0;
-}
-
-int hide_cursor()
-{
-    chput(KEY_ESC);
-    cputs("[?25l");
-    return 0;
-}
-
-int show_cursor()
-{
-    chput(KEY_ESC);
-    cputs("[?25h");
-    return 0;
-}
+int gm_cnt;
+int in_cnt;
+int st_cnt;
 
 /* --- Game Display --- */
 
 int draw_walls()
 {
     int i;
-    
+
     /* Draw top wall */
-    cursor_move(MIN_ROW - 1, MIN_COL - 1);
-    for (i = MIN_COL - 1; i <= MAX_COL + 1; i++) {
-        chput('#');
+    x_curmv(MIN_ROW - 1, MIN_COL - 1);
+    for (i = MIN_COL - 1; i <= MAX_COL + 1; i++)
+    {
+        x_putch('#');
     }
-    
+
     /* Draw side walls */
-    for (i = MIN_ROW; i <= MAX_ROW; i++) {
-        cursor_move(i, MIN_COL - 1);
-        chput('#');
-        cursor_move(i, MAX_COL + 1);
-        chput('#');
+    for (i = MIN_ROW; i <= MAX_ROW; i++)
+    {
+        x_curmv(i, MIN_COL - 1);
+        x_putch('#');
+        x_curmv(i, MAX_COL + 1);
+        x_putch('#');
     }
-    
+
     /* Draw bottom wall */
-    cursor_move(MAX_ROW + 1, MIN_COL - 1);
-    for (i = MIN_COL - 1; i <= MAX_COL + 1; i++) {
-        chput('#');
+    x_curmv(MAX_ROW + 1, MIN_COL - 1);
+    for (i = MIN_COL - 1; i <= MAX_COL + 1; i++)
+    {
+        x_putch('#');
     }
-    
+
     return 0;
 }
 
 int draw_instructions()
 {
-    cursor_move(1, 1);
-    cputs("Snake Game for Altair 8800 (Enable Character Mode: Ctrl+L)");
-    cursor_move(2, 1);
-    cputs("Arrow keys to move, Q to quit. Don't hit walls or yourself!");
-    cursor_move(3, 1);
-    cputs("Eat food (*) to grow and increase score.");
-    cursor_move(4, 1);
-    cputs("------------------------------------------------------------------");
+    x_curmv(1, 1);
+    x_puts("Snake Game for Altair 8800 (Enable Character Mode: Ctrl+L)");
+    x_curmv(2, 1);
+    x_puts("Arrow keys to move, ESC to quit. Don't hit walls or yourself!");
+    x_curmv(3, 1);
+    x_puts("Eat food (*) to grow and increase score.");
+    x_curmv(4, 1);
+    x_puts("------------------------------------------------------------------");
     return 0;
 }
 
-int draw_snake_segment(row, col, is_head)
+int dr_seg(row, col, is_head)
 int row;
 int col;
 int is_head;
 {
-    cursor_move(row, col);
-    if (is_head) {
-        chput('O');  /* Head */
-    } else {
-        chput('o');  /* Body */
+    x_curmv(row, col);
+    if (is_head)
+    {
+        x_putch('O'); /* Head */
+    }
+    else
+    {
+        x_putch('o'); /* Body */
     }
     return 0;
 }
 
-int erase_position(row, col)
+int er_pos(row, col)
 int row;
 int col;
 {
-    cursor_move(row, col);
-    chput(' ');
+    x_curmv(row, col);
+    x_putch(' ');
     return 0;
 }
 
@@ -219,21 +159,21 @@ int draw_food(row, col)
 int row;
 int col;
 {
-    cursor_move(row, col);
-    chput('*');
+    x_curmv(row, col);
+    x_putch('*');
     return 0;
 }
 
-int update_status()
+int snake_update_status()
 {
-    cursor_move(5, 1);
-    cputs("Score: ");
-    putnum(score);
-    cputs("   Length: ");
-    putnum(snake_length);
-    cputs("   Speed: ");
-    putnum(speed_level);
-    cputs("                    ");
+    x_curmv(5, 1);
+    x_puts("Score: ");
+    x_numpr(score);
+    x_puts("   Length: ");
+    x_numpr(sn_len);
+    x_puts("   Speed: ");
+    x_numpr(sp_lvl);
+    x_puts("                    ");
     return 0;
 }
 
@@ -250,27 +190,32 @@ char *s;
 {
     int result;
     int sign;
-    
+
     result = 0;
-    sign = 1;
-    
+    sign   = 1;
+
     /* Skip leading spaces */
-    while (*s == ' ') s++;
-    
+    while (*s == ' ')
+        s++;
+
     /* Check for sign */
-    if (*s == '-') {
+    if (*s == '-')
+    {
         sign = -1;
         s++;
-    } else if (*s == '+') {
+    }
+    else if (*s == '+')
+    {
         s++;
     }
-    
+
     /* Convert digits */
-    while (*s >= '0' && *s <= '9') {
+    while (*s >= '0' && *s <= '9')
+    {
         result = result * 10 + (*s - '0');
         s++;
     }
-    
+
     return result * sign;
 }
 
@@ -280,20 +225,22 @@ int get_random()
     int i;
     int ch;
     int result;
-    
+
     /* Trigger hardware random number generation */
     outp(44, 1);
-    
+
     /* Read the random number string from port 200 */
     i = 0;
-    while (i < 15) {
+    while (i < 15)
+    {
         ch = inp(200);
-        if (ch == 0) break;
+        if (ch == 0)
+            break;
         random_str[i] = ch;
         i++;
     }
     random_str[i] = 0;
-    
+
     /* Convert string to integer and make it positive */
     result = string_to_int(random_str);
     return abs(result);
@@ -301,15 +248,17 @@ int get_random()
 
 /* --- Food Management --- */
 
-int is_position_occupied(row, col)
+int is_occ(row, col)
 int row;
 int col;
 {
     int i;
-    
+
     /* Check if position conflicts with snake body */
-    for (i = 0; i < snake_length; i++) {
-        if (snake_row[i] == row && snake_col[i] == col) {
+    for (i = 0; i < sn_len; i++)
+    {
+        if (sn_row[i] == row && sn_col[i] == col)
+        {
             return 1;
         }
     }
@@ -320,78 +269,63 @@ int place_food()
 {
     int attempts;
     int food_r, food_c;
-    
+
     attempts = 0;
-    while (attempts < 50) {  /* Try up to 50 times */
+    while (attempts < 50)
+    { /* Try up to 50 times */
         food_r = MIN_ROW + (get_random() % (MAX_ROW - MIN_ROW + 1));
         food_c = MIN_COL + (get_random() % (MAX_COL - MIN_COL + 1));
-        
-        if (!is_position_occupied(food_r, food_c)) {
-            food_row = food_r;
-            food_col = food_c;
+
+        if (!is_occ(food_r, food_c))
+        {
+            food_row    = food_r;
+            food_col    = food_c;
             food_exists = 1;
             draw_food(food_row, food_col);
             return 1;
         }
         attempts++;
     }
-    return 0;  /* Failed to place food */
+    return 0; /* Failed to place food */
 }
 
 /* --- Input Handling --- */
 
-int check_key_ready()
-{
-    return (bdos(11) & 0xFF);
-}
-
-int get_immediate_char()
-{
-    return (bdos(6, 0xFF) & 0xFF);
-}
-
-int read_input_key()
-{
-    int ch;
-    
-    g_seq_len = 0;
-    g_last_key_code = 0;
-    
-    if (!check_key_ready()) return 0;
-    
-    ch = get_immediate_char();
-    g_last_seq[0] = ch;
-    g_seq_len = 1;
-    g_last_key_code = ch;
-    
-    /* Return the key directly - Altair system provides decoded values */
-    return ch;
-}
-
-int handle_input()
+int snake_handle_input()
 {
     int key;
-    
-    if (!check_key_ready()) return 0;
-    
-    key = read_input_key();
-    
-    if (key == 'q' || key == 'Q') {
-        game_state = GAME_QUIT;
+
+    if (!x_keyck())
+        return 0;
+
+    key = x_keygt();
+    if (!key)
+        return 0;
+
+    if (x_isesc(key))
+    {
+        gm_st = GAME_QUIT;
         return 1;
     }
-    
+
     /* Handle direction changes - prevent reversing into self */
-    if (key == KEY_UP && snake_direction != DIR_DOWN) {
-        next_direction = DIR_UP;
-    } else if (key == KEY_DOWN && snake_direction != DIR_UP) {
-        next_direction = DIR_DOWN;
-    } else if (key == KEY_LEFT && snake_direction != DIR_RIGHT) {
-        next_direction = DIR_LEFT;
-    } else if (key == KEY_RIGHT && snake_direction != DIR_LEFT) {
-        next_direction = DIR_RIGHT;
+    if (x_isup(key) && sn_dir != DIR_DOWN)
+    {
+        nxt_dir = DIR_UP;
     }
-    
+    else if (x_isdn(key) && sn_dir != DIR_UP)
+    {
+        nxt_dir = DIR_DOWN;
+    }
+    else if (x_islt(key) && sn_dir != DIR_RIGHT)
+    {
+        nxt_dir = DIR_LEFT;
+    }
+    else if (x_isrt(key) && sn_dir != DIR_LEFT)
+    {
+        nxt_dir = DIR_RIGHT;
+    }
+
     return 0;
 }
 
@@ -400,22 +334,24 @@ int handle_input()
 int init_snake()
 {
     int i;
-    
-    snake_length = INITIAL_LENGTH;
-    snake_direction = DIR_RIGHT;
-    next_direction = DIR_RIGHT;
-    
+
+    sn_len  = INITIAL_LENGTH;
+    sn_dir  = DIR_RIGHT;
+    nxt_dir = DIR_RIGHT;
+
     /* Place snake in center, moving right */
-    for (i = 0; i < snake_length; i++) {
-        snake_row[i] = (MIN_ROW + MAX_ROW) / 2;
-        snake_col[i] = (MIN_COL + MAX_COL) / 2 - i;
+    for (i = 0; i < sn_len; i++)
+    {
+        sn_row[i] = (MIN_ROW + MAX_ROW) / 2;
+        sn_col[i] = (MIN_COL + MAX_COL) / 2 - i;
     }
-    
+
     /* Draw initial snake */
-    for (i = 0; i < snake_length; i++) {
-        draw_snake_segment(snake_row[i], snake_col[i], (i == 0));
+    for (i = 0; i < sn_len; i++)
+    {
+        dr_seg(sn_row[i], sn_col[i], (i == 0));
     }
-    
+
     return 0;
 }
 
@@ -424,125 +360,131 @@ int move_snake()
     int head_r, head_c;
     int i;
     int ate_food;
-    
+
     /* Update direction */
-    snake_direction = next_direction;
-    
+    sn_dir = nxt_dir;
+
     /* Calculate new head position */
-    head_r = snake_row[0];
-    head_c = snake_col[0];
-    
-    if (snake_direction == DIR_UP) {
+    head_r = sn_row[0];
+    head_c = sn_col[0];
+
+    if (sn_dir == DIR_UP)
+    {
         head_r--;
-    } else if (snake_direction == DIR_DOWN) {
+    }
+    else if (sn_dir == DIR_DOWN)
+    {
         head_r++;
-    } else if (snake_direction == DIR_LEFT) {
+    }
+    else if (sn_dir == DIR_LEFT)
+    {
         head_c--;
-    } else if (snake_direction == DIR_RIGHT) {
+    }
+    else if (sn_dir == DIR_RIGHT)
+    {
         head_c++;
     }
-    
+
     /* Check wall collision */
-    if (head_r < MIN_ROW || head_r > MAX_ROW ||
-        head_c < MIN_COL || head_c > MAX_COL) {
-        game_state = GAME_OVER;
+    if (head_r < MIN_ROW || head_r > MAX_ROW || head_c < MIN_COL || head_c > MAX_COL)
+    {
+        gm_st = GAME_OVER;
         return 0;
     }
-    
+
     /* Check self collision */
-    for (i = 0; i < snake_length; i++) {
-        if (snake_row[i] == head_r && snake_col[i] == head_c) {
-            game_state = GAME_OVER;
+    for (i = 0; i < sn_len; i++)
+    {
+        if (sn_row[i] == head_r && sn_col[i] == head_c)
+        {
+            gm_st = GAME_OVER;
             return 0;
         }
     }
-    
+
     /* Check food collision */
     ate_food = 0;
-    if (food_exists && head_r == food_row && head_c == food_col) {
-        ate_food = 1;
+    if (food_exists && head_r == food_row && head_c == food_col)
+    {
+        ate_food    = 1;
         food_exists = 0;
         score += 10;
-        
+
         /* Increase speed every 50 points */
-        if (score % 50 == 0 && speed_level < 10) {
-            speed_level++;
+        if (score % 50 == 0 && sp_lvl < 10)
+        {
+            sp_lvl++;
         }
     }
-    
+
     /* Move snake body */
-    if (!ate_food) {
+    if (!ate_food)
+    {
         /* Erase tail */
-        erase_position(snake_row[snake_length - 1], snake_col[snake_length - 1]);
-        
+        er_pos(sn_row[sn_len - 1], sn_col[sn_len - 1]);
+
         /* Shift body positions */
-        for (i = snake_length - 1; i > 0; i--) {
-            snake_row[i] = snake_row[i - 1];
-            snake_col[i] = snake_col[i - 1];
+        for (i = sn_len - 1; i > 0; i--)
+        {
+            sn_row[i] = sn_row[i - 1];
+            sn_col[i] = sn_col[i - 1];
         }
-    } else {
+    }
+    else
+    {
         /* Snake grows - shift body and increase length */
-        if (snake_length < MAX_SNAKE_LENGTH) {
-            for (i = snake_length; i > 0; i--) {
-                snake_row[i] = snake_row[i - 1];
-                snake_col[i] = snake_col[i - 1];
+        if (sn_len < MAX_SNAKE_LENGTH)
+        {
+            for (i = sn_len; i > 0; i--)
+            {
+                sn_row[i] = sn_row[i - 1];
+                sn_col[i] = sn_col[i - 1];
             }
-            snake_length++;
+            sn_len++;
         }
     }
-    
+
     /* Set new head position */
-    snake_row[0] = head_r;
-    snake_col[0] = head_c;
-    
+    sn_row[0] = head_r;
+    sn_col[0] = head_c;
+
     /* Redraw snake head and body */
-    draw_snake_segment(snake_row[0], snake_col[0], 1);  /* Head */
-    if (snake_length > 1) {
-        draw_snake_segment(snake_row[1], snake_col[1], 0);  /* Neck (was head) */
+    dr_seg(sn_row[0], sn_col[0], 1); /* Head */
+    if (sn_len > 1)
+    {
+        dr_seg(sn_row[1], sn_col[1], 0); /* Neck (was head) */
     }
-    
+
     return 1;
 }
 
-int get_game_speed()
+int gt_spd()
 {
     int base_cycles;
     int speed_cycles;
-    
-    /* Base speed: 8 cycles = 200ms, gets faster with speed_level */
-    base_cycles = 8;
-    speed_cycles = base_cycles - speed_level;
-    if (speed_cycles < 2) speed_cycles = 2;  /* Minimum: 50ms */
+
+    /* Base speed: 80 cycles = 2000ms (2 seconds), gets faster with level */
+    base_cycles  = 80;
+    speed_cycles = base_cycles - (sp_lvl * 5);
+    if (speed_cycles < 16)
+        speed_cycles = 16; /* Minimum: 400ms */
     return speed_cycles;
-}
-
-/* --- Timer Functions --- */
-
-int start_game_loop_timer()
-{
-    outp(29, 25);  /* 25ms timer */
-    return 0;
-}
-
-int is_game_loop_timer_expired()
-{
-    return (inp(29) == 0);
 }
 
 /* --- Game Over Display --- */
 
 int show_game_over()
 {
-    cursor_move(15, 30);
-    cputs("GAME OVER!");
-    cursor_move(16, 25);
-    cputs("Final Score: ");
-    putnum(score);
-    cursor_move(17, 25);
-    cputs("Final Length: ");
-    putnum(snake_length);
-    cursor_move(18, 25);
-    cputs("Press Q to quit");
+    x_curmv(15, 30);
+    x_puts("GAME OVER!");
+    x_curmv(16, 25);
+    x_puts("Final Score: ");
+    x_numpr(score);
+    x_curmv(17, 25);
+    x_puts("Final Length: ");
+    x_numpr(sn_len);
+    x_curmv(18, 25);
+    x_puts("Press ESC to quit");
     return 0;
 }
 
@@ -551,92 +493,104 @@ int show_game_over()
 int main()
 {
     int key;
-    
+
     /* Initialize game state */
-    game_state = GAME_PLAYING;
-    score = 0;
-    speed_level = 1;
+    gm_st       = GAME_PLAYING;
+    score       = 0;
+    sp_lvl      = 1;
     food_exists = 0;
-    
+
     /* Initialize timing counters */
-    game_counter = 0;
-    input_counter = 0;
-    status_counter = 0;
-    
+    gm_cnt = 0;
+    in_cnt = 0;
+    st_cnt = 0;
+
     /* Set up display */
-    clear_screen();
-    hide_cursor();
+    x_clrsc();
+    x_hidcr();
     draw_instructions();
     draw_walls();
-    
+
     /* Initialize snake */
     init_snake();
-    
+
     /* Place first food */
     place_food();
-    
+
     /* Initial status display */
-    update_status();
-    
+    snake_update_status();
+
     /* Main game loop */
-    while (game_state == GAME_PLAYING) {
+    while (gm_st == GAME_PLAYING)
+    {
         /* Start timer for this loop iteration */
-        start_game_loop_timer();
-        
+        x_tmrset(TIMER_ID, TIMER_MS);
+
         /* Handle input every cycle */
-        input_counter++;
-        if (input_counter >= 1) {  /* Check input every cycle */
-            handle_input();
-            input_counter = 0;
+        in_cnt++;
+        if (in_cnt >= 1)
+        { /* Check input every cycle */
+            snake_handle_input();
+            in_cnt = 0;
         }
-        
+
         /* Move snake based on speed */
-        game_counter++;
-        if (game_counter >= get_game_speed()) {
-            if (game_state == GAME_PLAYING) {
+        gm_cnt++;
+        if (gm_cnt >= gt_spd())
+        {
+            if (gm_st == GAME_PLAYING)
+            {
                 move_snake();
             }
-            game_counter = 0;
+            gm_cnt = 0;
         }
-        
+
         /* Place new food if needed */
-        if (!food_exists && game_state == GAME_PLAYING) {
+        if (!food_exists && gm_st == GAME_PLAYING)
+        {
             place_food();
         }
-        
+
         /* Update status display */
-        status_counter++;
-        if (status_counter >= 20) {  /* Update every 500ms */
-            update_status();
-            status_counter = 0;
+        st_cnt++;
+        if (st_cnt >= 20)
+        { /* Update every 500ms */
+            snake_update_status();
+            st_cnt = 0;
         }
-        
-        /* Wait for timer */
-        while (!is_game_loop_timer_expired() && game_state == GAME_PLAYING) {
+
+        /* Wait for timer to expire */
+        while (x_tmrexp(TIMER_ID) && gm_st == GAME_PLAYING)
+        {
             /* Check for quit during wait */
-            if (check_key_ready()) {
-                handle_input();
+            if (x_keyck())
+            {
+                snake_handle_input();
             }
         }
     }
-    
+
     /* Game over or quit */
-    if (game_state == GAME_OVER) {
+    if (gm_st == GAME_OVER)
+    {
         show_game_over();
-        
+
         /* Wait for quit key */
-        while (1) {
-            if (check_key_ready()) {
-                key = read_input_key();
-                if (key == 'q' || key == 'Q') break;
+        while (1)
+        {
+            if (x_keyck())
+            {
+                key = x_keygt();
+                if (x_isesc(key))
+                    break;
             }
         }
     }
-    
+
     /* Cleanup */
-    cursor_move(27, 1);
-    show_cursor();
-    cputs("Thanks for playing Snake!\r\n");
-    
+    x_curmv(27, 1);
+    x_shwcr();
+    x_puts("Thanks for playing Snake!\r\n");
+
     return 0;
 }

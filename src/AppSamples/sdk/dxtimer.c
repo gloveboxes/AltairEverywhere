@@ -25,7 +25,8 @@
  *    - Keep indentation simple (max 4 spaces)
  *    - No C99/C89 features (stick to 1980-era BDS C)
  *
- *
+ * 7. The app runs on CP/M single tasking OS, only one app runs at a time
+ * 
  * ============================================================
  */
 
