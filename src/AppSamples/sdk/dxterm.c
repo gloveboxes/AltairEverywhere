@@ -39,6 +39,19 @@ int bios();
 #define XK_DN  24
 #define XK_LT  19
 #define XK_RT  4
+#define XK_SPC 32
+
+/* Standard ANSI color codes for xterm.js */
+#define XC_BLK 30   /* Black */
+#define XC_RED 31   /* Red */
+#define XC_GRN 32   /* Green */
+#define XC_YEL 33   /* Yellow */
+#define XC_BLU 34   /* Blue */
+#define XC_MAG 35   /* Magenta */
+#define XC_CYN 36   /* Cyan */
+#define XC_WHT 37   /* White */
+#define XC_BYEL 93  /* Bright Yellow */
+#define XC_RST 0    /* Reset all attributes */
 
 /* x_putch(c) - Output single character via BIOS console. */
 int x_putch(c)
@@ -182,4 +195,38 @@ int x_isrt(code)
 int code;
 {
     return (code == XK_RT);
+}
+
+/* x_isspc(code) - Return non-zero if code is Space. */
+int x_isspc(code)
+int code;
+{
+    return (code == XK_SPC);
+}
+
+/* x_setcol(code) - Set foreground color using ANSI code. */
+int x_setcol(code)
+int code;
+{
+    x_putch(XK_ESC);
+    x_puts("[");
+    x_numpr(code);
+    x_puts("m");
+    return 0;
+}
+
+/* x_rstcol() - Reset all color and text attributes. */
+int x_rstcol()
+{
+    x_putch(XK_ESC);
+    x_puts("[0m");
+    return 0;
+}
+
+/* x_erseol() - Erase from cursor to end of line. */
+int x_erseol()
+{
+    x_putch(XK_ESC);
+    x_puts("[K");
+    return 0;
 }

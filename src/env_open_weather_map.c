@@ -165,7 +165,8 @@ static void update_owm_weather(ENVIRONMENT_TELEMETRY *telemetry)
 
 			if (json_object_has_value_of_type(windProperties, "deg", JSONNumber))
 			{
-				telemetry->latest.weather.wind_direction = json_object_get_number(windProperties, "deg");
+				telemetry->latest.weather.wind_direction =
+					FLOAT_TO_INT(json_object_get_number(windProperties, "deg"));
 			}
 		}
 

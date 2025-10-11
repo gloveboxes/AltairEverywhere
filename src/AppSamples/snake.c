@@ -36,6 +36,19 @@ int x_isup();  /* int x_isup(code); */
 int x_isdn();  /* int x_isdn(code); */
 int x_islt();  /* int x_islt(code); */
 int x_isrt();  /* int x_isrt(code); */
+int x_setcol(); /* int x_setcol(code); */
+int x_rstcol(); /* int x_rstcol(); */
+
+/* Color constants */
+#define XC_BLK 30   /* Black */
+#define XC_RED 31   /* Red */
+#define XC_GRN 32   /* Green */
+#define XC_YEL 33   /* Yellow */
+#define XC_BLU 34   /* Blue */
+#define XC_MAG 35   /* Magenta */
+#define XC_CYN 36   /* Cyan */
+#define XC_WHT 37   /* White */
+#define XC_RST 0    /* Reset all attributes */
 
 /* Timer configuration */
 #define TIMER_ID 2  /* Use timer 2 */
@@ -90,6 +103,9 @@ int draw_walls()
 {
     int i;
 
+    /* Set green color for walls */
+    x_setcol(XC_GRN);
+
     /* Draw top wall */
     x_curmv(MIN_ROW - 1, MIN_COL - 1);
     for (i = MIN_COL - 1; i <= MAX_COL + 1; i++)
@@ -113,6 +129,8 @@ int draw_walls()
         x_putch('#');
     }
 
+    /* Reset color */
+    x_rstcol();
     return 0;
 }
 
@@ -134,6 +152,8 @@ int row;
 int col;
 int is_head;
 {
+    /* Set red color for snake */
+    x_setcol(XC_RED);
     x_curmv(row, col);
     if (is_head)
     {
@@ -143,6 +163,8 @@ int is_head;
     {
         x_putch('o'); /* Body */
     }
+    /* Reset color */
+    x_rstcol();
     return 0;
 }
 
@@ -159,8 +181,12 @@ int draw_food(row, col)
 int row;
 int col;
 {
+    /* Set blue color for food */
+    x_setcol(XC_BLU);
     x_curmv(row, col);
     x_putch('*');
+    /* Reset color */
+    x_rstcol();
     return 0;
 }
 

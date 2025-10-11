@@ -17,17 +17,42 @@ int outp();
 int x_tmrset();
 int x_tmrexp();
 
-/* --- Key codes --- */
-#define KEY_ESC   27
-#define KEY_UP     5
-#define KEY_DOWN  24
-#define KEY_LEFT  19
-#define KEY_RIGHT  4
-#define KEY_SPACE 32
+/* --- dxterm library functions --- */
+int x_putch();  /* int x_putch(c); */
+int x_puts();   /* int x_puts(s); */
+int x_numpr();  /* int x_numpr(n); */
+int x_curmv();  /* int x_curmv(row, col); */
+int x_clrsc();  /* int x_clrsc(); */
+int x_hidcr();  /* int x_hidcr(); */
+int x_shwcr();  /* int x_shwcr(); */
+int x_keyck();  /* int x_keyck(); */
+int x_keygt();  /* int x_keygt(); */
+int x_isesc();  /* int x_isesc(code); */
+int x_isup();   /* int x_isup(code); */
+int x_isdn();   /* int x_isdn(code); */
+int x_islt();   /* int x_islt(code); */
+int x_isrt();   /* int x_isrt(code); */
+int x_isspc();  /* int x_isspc(code); */
+int x_setcol(); /* int x_setcol(code); */
+int x_rstcol(); /* int x_rstcol(); */
+int x_erseol(); /* int x_erseol(); */
+
+/* Key codes no longer needed - using dxterm key check functions */
+
+/* dxterm color constants */
+#define XC_BLK 30   /* Black */
+#define XC_RED 31   /* Red */
+#define XC_GRN 32   /* Green */
+#define XC_YEL 33   /* Yellow */
+#define XC_BLU 34   /* Blue */
+#define XC_MAG 35   /* Magenta */
+#define XC_CYN 36   /* Cyan */
+#define XC_WHT 37   /* White */
+#define XC_BYEL 93  /* Bright Yellow */
 
 /* Timer configuration */
 #define TIMER_ID 2      /* Use timer 2 */
-#define DELAY_MS 255    /* 255ms game loop delay */
+#define DELAY_MS 25     /* 25ms game loop delay like snake */
 
 /* --- Board & UI layout --- */
 #define BD_W      10
@@ -76,85 +101,17 @@ int prv_rt;    /* previous active rotation */
 int prv_pc;    /* previous active piece id */
 int prv_on;    /* previous active drawn flag */
 
-/* ========================= Low-level console ========================= */
-int chput(c)
-char c;
-{ return bios(4, c); }
-
-int cputs(s)
-char *s;
-{ while (*s) chput(*s++); return 0; }
-
-int putnum(n)
-int n;
-{
-    char buf[8]; int i;
-    if (n==0) { chput('0'); return 0; }
-    if (n<0) { chput('-'); n = -n; }
-    i = 0; while (n>0 && i<7) { buf[i++] = (n%10)+'0'; n/=10; }
-    while (i--) chput(buf[i]);
-    return 0;
-}
-
-int num_buf(n,buf)
-int n;
-char *buf;
-{
-    char tmp[8]; int i,j;
-    if (buf==0) return 0;
-    i = 0;
-    if (n==0) { buf[i++] = '0'; return i; }
-    if (n<0) { buf[i++]='-'; n = -n; }
-    j = 0;
-    while (n>0 && j<8) { tmp[j++] = (n%10)+'0'; n/=10; }
-    while (j>0) { buf[i++] = tmp[--j]; }
-    return i;
-}
-
-int cur_mov(row,col)
-int row; int col;
-{
-    char seq[16]; int idx;
-    idx = 0;
-    seq[idx++] = 27;
-    seq[idx++] = '[';
-    idx += num_buf(row, &seq[idx]);
-    seq[idx++] = ';';
-    idx += num_buf(col, &seq[idx]);
-    seq[idx++] = 'H';
-    seq[idx] = 0;
-    cputs(seq);
-    return 0;
-}
-
-int clr_scr()
-{
-    cputs("\033[2J");
-    cputs("\033[0m");
-    cur_mov(1,1);
-    return 0;
-}
-
-int hid_cur() { cputs("\033[?25l"); return 0; }
-int shw_cur() { cputs("\033[?25h"); return 0; }
-int ers_cur() { cputs("\033[K"); return 0; } /* erase to end of line */
-
-/* Color support for xterm.js */
-int set_col(colcode)
-int colcode;
-{
-    char seq[12]; int idx;
-    idx = 0;
-    seq[idx++] = 27;
-    seq[idx++] = '[';
-    idx += num_buf(colcode, &seq[idx]);
-    seq[idx++] = 'm';
-    seq[idx] = 0;
-    cputs(seq);
-    return 0;
-}
-
-int rst_col() { cputs("\033[0m"); return 0; }
+/* ========================= Console wrappers using dxterm ========================= */
+#define chput(c) x_putch(c)
+#define cputs(s) x_puts(s)
+#define putnum(n) x_numpr(n)
+#define cur_mov(row,col) x_curmv(row,col)
+#define clr_scr() x_clrsc()
+#define hid_cur() x_hidcr()
+#define shw_cur() x_shwcr()
+#define ers_cur() x_erseol()
+#define set_col(code) x_setcol(code)
+#define rst_col() x_rstcol()
 
 /* ========================= Simple RNG ========================= */
 int iabs(n) int n; { return (n<0)?-n:n; }
@@ -234,18 +191,18 @@ int piece;
     return ' ';
 }
 
-/* Color palette for pieces (ANSI codes) */
+/* Color palette for pieces using dxterm constants */
 int pcs_col(piece)
 int piece;
 {
-    if (piece==PIECE_I) return 36; /* Cyan */
-    if (piece==PIECE_O) return 33; /* Yellow */
-    if (piece==PIECE_T) return 35; /* Magenta */
-    if (piece==PIECE_S) return 32; /* Green */
-    if (piece==PIECE_Z) return 31; /* Red */
-    if (piece==PIECE_J) return 34; /* Blue */
-    if (piece==PIECE_L) return 93; /* Bright Yellow */
-    return 37; /* White */
+    if (piece==PIECE_I) return XC_CYN;  /* Cyan */
+    if (piece==PIECE_O) return XC_YEL;  /* Yellow */
+    if (piece==PIECE_T) return XC_MAG;  /* Magenta */
+    if (piece==PIECE_S) return XC_GRN;  /* Green */
+    if (piece==PIECE_Z) return XC_RED;  /* Red */
+    if (piece==PIECE_J) return XC_BLU;  /* Blue */
+    if (piece==PIECE_L) return XC_BYEL; /* Bright Yellow */
+    return XC_WHT; /* White */
 }
 
 /* ========================= UI ========================= */
@@ -544,7 +501,7 @@ int clr_lin()
         else if (found==3) score += 300*(level+1);
         else if (found==4) score += 1200*(level+1);
         level = lines_cl/10; if (level>20) level=20;
-        fall_sp = 2; /* Keep constant moderate speed */
+        fall_sp = 200; /* Moderate speed - 5 seconds */
         brd_syn();
         upd_stat();
     }
@@ -563,12 +520,9 @@ int spn_new()
     return 1;
 }
 
-/* ========================= Input ========================= */
-int key_rdy() { return (bdos(11) & 0xFF); }
-int get_chr() { return (bdos(6,0xFF) & 0xFF); }
-
-int rd_key()
-{ if (!key_rdy()) return 0; return get_chr(); }
+/* ========================= Input using dxterm ========================= */
+#define key_rdy() x_keyck()
+#define rd_key() x_keygt()
 
 int hnd_inp()
 {
@@ -578,14 +532,14 @@ int hnd_inp()
     int redraw;
     if (!key_rdy()) return 0;
     k = rd_key(); if (k==0) return 0;
-    if (k==KEY_ESC) { game_st = GAME_QUIT; return 1; }
+    if (x_isesc(k)) { game_st = GAME_QUIT; return 1; }
     if (game_st!=GAME_PLAYING) return 0;
 
     moved = 0;
     scch = 0;
     redraw = 0;
 
-    if (k==KEY_LEFT)
+    if (x_islt(k))
     {
         nx = act_x - 1;
         if (is_pos(act_pcs,act_rot,nx,act_y))
@@ -595,7 +549,7 @@ int hnd_inp()
             redraw = 1;
         }
     }
-    else if (k==KEY_RIGHT)
+    else if (x_isrt(k))
     {
         nx = act_x + 1;
         if (is_pos(act_pcs,act_rot,nx,act_y))
@@ -605,7 +559,7 @@ int hnd_inp()
             redraw = 1;
         }
     }
-    else if (k==KEY_UP)
+    else if (x_isup(k))
     {
         nr = (act_rot + 1) & 3;
         if (is_pos(act_pcs,nr,act_x,act_y))
@@ -615,11 +569,11 @@ int hnd_inp()
             redraw = 1;
         }
     }
-    else if (k==KEY_DOWN)
+    else if (x_isdn(k))
     {
         soft_dr = 1;
     }
-    else if (k==KEY_SPACE)
+    else if (x_isspc(k))
     {
         while (is_pos(act_pcs,act_rot,act_x,act_y+1))
         {
@@ -661,7 +615,7 @@ int main()
 {
     int r,c,key; int drop_sp;
 
-    game_st = GAME_PLAYING; score=0; lines_cl=0; level=0; fall_tm=0; fall_sp=2; soft_dr=0;
+    game_st = GAME_PLAYING; score=0; lines_cl=0; level=0; fall_tm=0; fall_sp=200; soft_dr=0;
     for (r=0;r<BD_H;r++) for (c=0;c<BD_W;c++) board[r][c]=0;
     init_shp();
 
@@ -671,43 +625,51 @@ int main()
 
     nxt_pcs = rnd_pcs(); if (!spn_new()) { /* immediate game over */ }
 
-    x_tmrset(TIMER_ID, DELAY_MS);
-
     while (game_st==GAME_PLAYING) {
+        /* Start timer for this loop iteration */
+        x_tmrset(TIMER_ID, DELAY_MS);
+
+        /* Handle input every cycle */
         if (key_rdy())
         {
             hnd_inp();
         }
 
-        if (!x_tmrexp(TIMER_ID))
+        /* Only increment fall timer once per timer cycle */
+        fall_tm++;
+
+        /* Check if piece should fall */
+        drop_sp = soft_dr ? 8 : fall_sp;
+        if (fall_tm >= drop_sp)
         {
-            x_tmrset(TIMER_ID, DELAY_MS);
-
-            drop_sp = soft_dr ? 2 : fall_sp;
-            fall_tm++;
-
-            if (fall_tm >= drop_sp)
+            if (is_pos(act_pcs,act_rot,act_x,act_y+1))
             {
-                if (is_pos(act_pcs,act_rot,act_x,act_y+1))
+                act_y++;
+                brd_drw();
+                if (soft_dr)
                 {
-                    act_y++;
-                    brd_drw();
-                    upd_stat();
-                    if (soft_dr)
-                    {
-                        score += 1;
-                    }
+                    score += 1;
                 }
-                else
-                {
-                    plc_pcs();
-                    brd_drw();
-                    clr_lin();
-                    if (!spn_new()) break;
-                }
+            }
+            else
+            {
+                plc_pcs();
+                brd_drw();
+                clr_lin();
+                if (!spn_new()) break;
+            }
 
-                fall_tm = 0;
-                soft_dr = 0;
+            fall_tm = 0;
+            soft_dr = 0;
+        }
+
+        /* Wait for timer to expire before next loop */
+        while (x_tmrexp(TIMER_ID) && game_st == GAME_PLAYING)
+        {
+            /* Check for input during wait */
+            if (key_rdy())
+            {
+                hnd_inp();
             }
         }
     }
@@ -715,7 +677,7 @@ int main()
     if (game_st==GAME_OVER) {
         brd_drw(); upd_stat();
         show_go();
-        while (1) { if (key_rdy()) { key = rd_key(); if (key==KEY_ESC) break; } }
+        while (1) { if (key_rdy()) { key = rd_key(); if (x_isesc(key)) break; } }
     }
 
     cur_mov(24,1); shw_cur(); cputs("Thanks for playing Tetris!\r\n");

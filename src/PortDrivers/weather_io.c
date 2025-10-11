@@ -36,12 +36,12 @@ static const void *w_value[] = {
 };
 
 static int (*w_formatter[])(const void *value, char *buffer, size_t buffer_length) = {
-    format_int,
-    format_int,
-    format_int,
-    format_float2,
-    format_int,
-    format_string,
+    format_int,     /* Temperature - int as defined in struct */
+    format_int,     /* Pressure - int as defined in struct */
+    format_int,     /* Humidity - int percentage */
+    format_float2,  /* Wind speed - float as defined in struct */
+    format_int,     /* Wind direction - int as defined in struct */
+    format_string,  /* Description - string */
 };
 
 // Location definitions
@@ -76,7 +76,7 @@ static const void *p_key[] = {
     "SO2",
     "NH3",
     "PM2.5",
-    "PM1.0",
+    "PM10",
 };
 
 static const void *p_value[] = {
@@ -115,6 +115,10 @@ static int format_float0(const void *value, char *buffer, size_t buffer_length)
 
 static int format_float2(const void *value, char *buffer, size_t buffer_length)
 {
+    if (value == NULL || buffer == NULL || buffer_length == 0)
+    {
+        return 0;
+    }
     return snprintf(buffer, buffer_length, "%.2f", *(float *)value);
 }
 
@@ -125,17 +129,31 @@ static int format_double4(const void *value, char *buffer, size_t buffer_length)
 
 static int format_int(const void *value, char *buffer, size_t buffer_length)
 {
+    if (value == NULL || buffer == NULL || buffer_length == 0)
+    {
+        return 0;
+    }
     return snprintf(buffer, buffer_length, "%d", *(int *)value);
 }
 
 static int format_string(const void *value, char *buffer, size_t buffer_length)
 {
+    if (value == NULL || buffer == NULL || buffer_length == 0)
+    {
+        return 0;
+    }
     return snprintf(buffer, buffer_length, "%s", (char *)value);
 }
 
 size_t weather_output(int port_number, uint8_t data, char *buffer, size_t buffer_length)
 {
     int len = 0;
+    
+    // Initialize buffer to prevent garbage data
+    if (buffer_length > 0)
+    {
+        buffer[0] = '\0';
+    }
 
     switch (port_number)
     {
@@ -146,7 +164,7 @@ size_t weather_output(int port_number, uint8_t data, char *buffer, size_t buffer
             }
             break;
         case 35: // weather value
-            if (environment.latest.weather.updated && data < NELEMS(w_value))
+            if (environment.latest.weather.updated && data < NELEMS(w_value) && w_value[data] != NULL)
             {
                 len = w_formatter[data](w_value[data], buffer, buffer_length);
             }
@@ -158,7 +176,7 @@ size_t weather_output(int port_number, uint8_t data, char *buffer, size_t buffer
             }
             break;
         case 37: // Location value
-            if (environment.locationInfo.updated && data < NELEMS(l_value))
+            if (environment.locationInfo.updated && data < NELEMS(l_value) && l_value[data] != NULL)
             {
                 len = l_formatter[data](l_value[data], buffer, buffer_length);
             }
@@ -170,7 +188,7 @@ size_t weather_output(int port_number, uint8_t data, char *buffer, size_t buffer
             }
             break;
         case 39: // Pollution value
-            if (environment.latest.pollution.updated && data < NELEMS(p_value))
+            if (environment.latest.pollution.updated && data < NELEMS(p_value) && p_value[data] != NULL)
             {
                 len = p_formatter[data](p_value[data], buffer, buffer_length);
             }
@@ -180,5 +198,16 @@ size_t weather_output(int port_number, uint8_t data, char *buffer, size_t buffer
             break;
     }
 
+    // Ensure buffer is always null-terminated
+    if (len > 0 && len < buffer_length)
+    {
+        buffer[len] = '\0';
+    }
+    else if (buffer_length > 0)
+    {
+        buffer[0] = '\0';
+        len = 0;
+    }
+    
     return (size_t)len;
 }
