@@ -290,6 +290,9 @@
           state.term.prompt("");
           setupTerminalEventHandlers();
           
+          // Set focus to terminal after initialization
+          state.term.focus();
+          
           return true;
         } catch (error) {
           console.error("Failed to initialize terminal:", error);
