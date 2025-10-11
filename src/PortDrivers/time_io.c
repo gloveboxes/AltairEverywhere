@@ -3,8 +3,9 @@
 
 #include "time_io.h"
 
+#include "dx_timer.h"    // For dx_getElapsedMilliseconds()
 #include "dx_utilities.h"
-#include "main.h" // For get_millisecond_tick_count()
+#include "main.h" // For get_second_tick_count()
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -67,16 +68,16 @@ size_t time_output(int port, uint8_t data, char *buffer, size_t buffer_length)
             {
                 ms_timer_delays[timer_idx] = (ms_timer_delays[timer_idx] & 0xFF00) | data;
 
-                // Calculate target time using permanent millisecond timer
-                uint64_t current_time       = get_millisecond_tick_count();
+                // Calculate target time using high-precision monotonic timer
+                uint64_t current_time       = dx_getElapsedMilliseconds();
                 ms_timer_targets[timer_idx] = current_time + ms_timer_delays[timer_idx];
             }
             break;
         case 30: // set seconds timer
-            seconds_timer_target = get_second_tick_count() + data;
+            seconds_timer_target = dx_getElapsedMilliseconds() / 1000 + data;
             break;
         case 41: // System tick count
-            len = (size_t)snprintf(buffer, buffer_length, "%u", (uint32_t)get_second_tick_count());
+            len = (size_t)snprintf(buffer, buffer_length, "%u", (uint32_t)(dx_getElapsedMilliseconds() / 1000));
             break;
         case 42: // get utc date and time
             dx_getCurrentUtc(buffer, buffer_length);
@@ -114,7 +115,7 @@ uint8_t time_input(uint8_t port)
                 uint64_t target_time = ms_timer_targets[timer_idx];
 
                 // Check if timer is active (target > 0) and has expired
-                if (target_time > 0 && get_millisecond_tick_count() >= target_time)
+                if (target_time > 0 && dx_getElapsedMilliseconds() >= target_time)
                 {
                     // Timer has expired, clear it
                     ms_timer_targets[timer_idx] = 0;
@@ -137,7 +138,7 @@ uint8_t time_input(uint8_t port)
             uint64_t target_time = seconds_timer_target;
 
             // Check if timer is active (target > 0) and has expired
-            if (target_time > 0 && get_second_tick_count() >= target_time)
+            if (target_time > 0 && dx_getElapsedMilliseconds() / 1000 >= target_time)
             {
                 // Timer has expired, clear it
                 seconds_timer_target = 0;

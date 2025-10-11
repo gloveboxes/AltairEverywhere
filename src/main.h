@@ -69,7 +69,7 @@ extern ALTAIR_COMMAND cmd_switches;
 extern uint16_t bus_switches;
 
 static DX_DECLARE_TIMER_HANDLER(heart_beat_handler);
-static DX_DECLARE_TIMER_HANDLER(millisecond_tick_handler);
+
 static DX_DECLARE_TIMER_HANDLER(report_memory_usage);
 static DX_DECLARE_TIMER_HANDLER(update_environment_handler);
 static void *altair_thread(void *arg);
@@ -99,19 +99,16 @@ extern DX_ASYNC_BINDING *async_bindings[];
 // initialize bindings
 extern DX_TIMER_BINDING *timer_bindings[];
 
-// Atomic tick counter for high-performance timing
-extern atomic_uint_fast64_t millisecond_tick_count;
-
 // High-performance millisecond tick count getter (inline for maximum performance)
-// Uses atomic load with relaxed ordering for maximum performance
+// Uses direct uv_hrtime() calculation - no atomics needed
 static inline uint64_t get_millisecond_tick_count(void)
 {
-    return atomic_load_explicit(&millisecond_tick_count, memory_order_relaxed);
+    return dx_getElapsedMilliseconds();
 }
 
-// High-performance seconds tick count getter (inline for maximum performance)
+// High-performance seconds tick count getter (inline for maximum performance)  
 // Derives seconds from milliseconds for efficiency (avoids second timer)
 static inline uint64_t get_second_tick_count(void)
 {
-    return atomic_load_explicit(&millisecond_tick_count, memory_order_relaxed) / 1000;
+    return dx_getElapsedMilliseconds() / 1000;
 }
