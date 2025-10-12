@@ -20,6 +20,7 @@ Optionally, the project integrates with free cloud services from [Open Weather M
 
 What will you learn about:
 
+- Vibe-code Altair 8800 apps.
 - Safe low-level machine and assembly programming.
 - Software development in BASIC and C.
 - Programming the Altair 8800 emulator with the virtual front panel.
