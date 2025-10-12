@@ -8,8 +8,6 @@ There are three ways to deploy the Altair 8800 emulator.
 
 The **fastest** and **easiest** way to get started with the Altair emulator is on a system running Docker.
 
-You can run Docker on 64-bit versions of Linux, macOS, Windows, and Raspberry Pi OS. There are 64-bit Docker images for Linux, macOS, Windows, ChromeOS, and Raspberry Pi OS.
-
 For more information, refer to [Deploy with Docker](../40-deploy-with-docker/10-introduction.md).
 
 ## Build from source
@@ -28,7 +26,7 @@ Building the Altair 8800 emulator from source has been tested and is supported o
 - Windows 11 with [WSL 2](https://docs.microsoft.com/windows/wsl/){:target=_blank}
 - Ubuntu 20.04 and 22.04
 - macOS,
-- Raspberry Pi OS 64-bit
+- Raspberry Pi OS 64-bit (preferred) and 32-bit
 
 ## Azure Sphere
 
