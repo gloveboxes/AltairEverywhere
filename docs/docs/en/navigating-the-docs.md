@@ -11,7 +11,7 @@ Take a moment to familiarize yourself with the docs document layout:
 
 Click any image to open a larger view in a new tab.
 
-![Workshop documentation layout](media/document-layout.png)
+![Workshop documentation layout](./20-fundamentals/img/high-level-solution.png)
 
 ## Star the repo
 
