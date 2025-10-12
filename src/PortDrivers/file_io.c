@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #ifdef AZURE_SPHERE
 #include <applibs/storage.h>
@@ -62,6 +63,22 @@ static DEVGET_T devget;
 
 pthread_mutex_t webget_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+/// <summary>
+/// Clean up webget resources and reset state
+/// Must be called with webget_mutex held
+/// </summary>
+static void cleanup_webget_resources(void)
+{
+    if (webget.full_file_buffer != NULL) {
+        free(webget.full_file_buffer);
+        webget.full_file_buffer = NULL;
+    }
+    webget.full_file_size = 0;
+    webget.current_position = 0;
+    webget.status = WEBGET_EOF;
+    webget.end_of_file = true;
+}
+
 DX_ASYNC_HANDLER(async_copyx_request_handler, handle)
 {
     printf("DEBUG: Starting copy_web with URL: %s\n", webget.url);
@@ -86,7 +103,7 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
                 devget.fd = -1;
             }
 
-            if (data != 0 && devget.index < sizeof(devget.filename))
+            if (data != 0 && devget.index < sizeof(devget.filename) - 1)
             {
                 devget.filename[devget.index] = data;
                 devget.index++;
@@ -141,7 +158,7 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
                 memset(webget.filename, 0x00, sizeof(webget.filename));
             }
 
-            if (data != 0 && webget.index < sizeof(webget.filename))
+            if (data != 0 && webget.index < sizeof(webget.filename) - 1)
             {
                 webget.filename[webget.index] = data;
                 webget.index++;
@@ -161,7 +178,7 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
                 webget.full_file_size = 0;
                 webget.current_position = 0;
                 
-                pthread_mutex_unlock(&webget_mutex);
+                // Remove erroneous mutex unlock - no corresponding lock in this context
 
                 memset(webget.url, 0x00, sizeof(webget.url));
 
@@ -323,11 +340,16 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
     struct timespec timeoutTime;
     memset(&timeoutTime, 0, sizeof(struct timespec));
 
-#ifndef __APPLE__
+#ifdef __APPLE__
+    // On macOS, use a simple timeout from current time
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    timeoutTime.tv_sec = tv.tv_sec + 10;
+    timeoutTime.tv_nsec = tv.tv_usec * 1000;
+#else
     clock_gettime(CLOCK_REALTIME, &timeoutTime);
-#endif // __APPLE__
-
     timeoutTime.tv_sec += 10;  // Increased timeout for larger files and embedded devices
+#endif // __APPLE__
 
     if (pthread_mutex_timedlock(&webget_mutex, &timeoutTime) != 0)
     {
@@ -354,16 +376,29 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
     else
     {
         // Subsequent chunks - expand buffer
-        char *new_buffer = realloc(wg->full_file_buffer, wg->full_file_size + realsize);
-        if (new_buffer == NULL)
+        // Check for potential overflow before realloc
+        size_t new_size = wg->full_file_size + realsize;
+        if (new_size < wg->full_file_size) // Overflow check
         {
             pthread_mutex_unlock(&webget_mutex);
             wg->status = WEBGET_FAILED;
+            printf("ERROR: Buffer size overflow in write_data\n");
+            return 0;
+        }
+        
+        char *new_buffer = realloc(wg->full_file_buffer, new_size);
+        if (new_buffer == NULL)
+        {
+            // Don't free original buffer here - it's still referenced by wg->full_file_buffer
+            // The cleanup will happen later when the transfer is complete or fails
+            pthread_mutex_unlock(&webget_mutex);
+            wg->status = WEBGET_FAILED;
+            printf("ERROR: Failed to reallocate buffer for file data\n");
             return 0;
         }
         wg->full_file_buffer = new_buffer;
         memcpy(wg->full_file_buffer + wg->full_file_size, ptr, realsize);
-        wg->full_file_size += realsize;
+        wg->full_file_size = new_size;
         wg->status = WEBGET_WAITING; // Keep waiting until transfer completes
     }
 
@@ -375,13 +410,32 @@ static int copy_web(char *url)
 {
     CURL *curl_handle;
 
+    // Validate input parameters
+    if (url == NULL || strlen(url) == 0) {
+        printf("ERROR: Invalid URL provided to copy_web\n");
+        webget.status = WEBGET_FAILED;
+        return -1;
+    }
+
     /* init the curl session */
     curl_handle = curl_easy_init();
+    
+    if (curl_handle == NULL) {
+        printf("ERROR: Failed to initialize curl handle\n");
+        webget.status = WEBGET_FAILED;
+        return -1;
+    }
 
     /* set URL to get here */
     curl_easy_setopt(curl_handle, CURLOPT_URL, url);
 
-    curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
+    // Enable SSL verification for security (comment out the next line to disable if needed for testing)
+    // For production use, SSL verification should be enabled
+    // curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
+    
+    // Enable SSL verification and certificate validation
+    curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYHOST, 2L);
 
     // https://curl.se/libcurl/c/CURLOPT_NOSIGNAL.html
     curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L);
@@ -419,9 +473,13 @@ static int copy_web(char *url)
     /* get it! */
     CURLcode res = curl_easy_perform(curl_handle);
 
+    // Lock mutex to safely update webget state
+    pthread_mutex_lock(&webget_mutex);
+    
     if (res != CURLE_OK)
     {
         printf("CURL ERROR: %s\n", curl_easy_strerror(res));
+        cleanup_webget_resources(); // This sets status to WEBGET_FAILED via cleanup
         webget.status = WEBGET_FAILED;
     }
     else
@@ -439,11 +497,14 @@ static int copy_web(char *url)
     }
 
     webget.end_of_file = true;
+    
+    pthread_mutex_unlock(&webget_mutex);
 
     /* cleanup curl stuff */
     curl_easy_cleanup(curl_handle);
 
-    curl_global_cleanup();
+    // Note: Don't call curl_global_cleanup() here as it should only be called
+    // once when the application terminates, not after each transfer
 
-    return 0;
+    return (res == CURLE_OK) ? 0 : -1;
 }
