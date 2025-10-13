@@ -62,27 +62,46 @@ Here are some CP/M commands to get you started:
 
 ## Download a retro game
 
-The following is an example of copying the `love.bas` game to the CP/M filesystem using the CP/M `gf` command.
+The `gf` (Get File) utility provides easy access to a built-in games repository. You can download classic retro games directly without needing to set up your own web server or navigate through GitHub repositories.
 
-![](img/retro-games-snippet.png)
+### Using the Built-in Games Repository
 
-1. Review the [Retro Games](https://github.com/AzureSphereCloudEnabledAltair8800/RetroGames){:target=_blank} repo.
-1. From the Altair web terminal CP/M command prompt, run the **Get File** command:
+The simplest way to download retro games is using the `-g` option:
+
+1. From the Altair web terminal CP/M command prompt, use the **Get File** command with the game option:
 
     ```cpm
-    gf
+    gf -g love.bas
     ```
 
-1. Select endpoint 1 (GitHub)
-1. Type the name of the file to be transferred. For example **LOVE.BAS**. Note, that the filenames are case sensitive.
-1. Press <kbd>Enter</kbd> to start the transfer.
-1. From the CP/M command line, start the game. For example
+2. The game file will be downloaded directly to your CP/M filesystem.
+
+3. Start the game from the CP/M command line:
 
     ```cpm
     mbasic love
     ```
 
-Note, a lot of the retro games in the repo expect to find **MENU.BAS** in the CP/M filesystem. So be sure to transfer MENU.BAS as well.
+### Common Games Available
+
+Here are some popular games you can download:
+
+```cpm
+gf -g love.bas          # The classic Love game
+gf -g menu.bas          # Menu system for games
+gf -g adventure.bas     # Text adventure game
+gf -g lunar.bas         # Lunar Lander simulation
+```
+
+### Alternative: Manual Repository Access
+
+You can also browse and download games manually from the [Retro Games](https://github.com/AzureSphereCloudEnabledAltair8800/RetroGames){:target=_blank} repository if you prefer to see what's available before downloading.
+
+**Important Note:** Many retro games expect to find `MENU.BAS` in the CP/M filesystem. Be sure to download it as well:
+
+```cpm
+gf -g menu.bas
+```
 
 ## Retro game acknowledgments
 
