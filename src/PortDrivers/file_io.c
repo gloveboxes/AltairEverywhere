@@ -18,9 +18,7 @@
 
 #define APP_SAMPLES_DIRECTORY "AppSamples"
 
-#define GAMES_REPO              "https://raw.githubusercontent.com/AzureSphereCloudEnabledAltair8800/RetroGames/main"
 #define ENDPOINT_LEN            128
-#define ENDPOINT_ELEMENTS       2
 #define CHUNK_SIZE              256
 
 static int copy_web(char *url);
@@ -42,7 +40,6 @@ typedef struct
     bool transfer_complete;          // True when curl transfer is complete
     uint32_t transfer_id;            // Unique ID for current transfer to detect stale callbacks
     char personal_endpoint[ENDPOINT_LEN];
-    uint8_t selected_endpoint;
     char filename[15];
     char url[150];
     enum WEBGET_STATUS status;
@@ -146,15 +143,6 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
         case 111: // Load getfile (gf) custom endpoint url
             len = (size_t)snprintf(buffer, buffer_length, "%s", webget.personal_endpoint);
             break;
-        case 112: // Select getfile (gf) endpoint to use
-            if (data < ENDPOINT_ELEMENTS)
-            {
-                webget.selected_endpoint = data;
-            }
-            break;
-        case 113: // Load getfile (gf) selected endpoint
-            len = (size_t)snprintf(buffer, buffer_length, "%d", webget.selected_endpoint);
-            break;
         case 114: // copy file from web server to mutable storage
             if (webget.index == 0)
             {
@@ -199,18 +187,9 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 
                 memset(webget.url, 0x00, sizeof(webget.url));
 
-                switch (webget.selected_endpoint)
-                {
-                    case 0:
-                        snprintf(webget.url, sizeof(webget.url), "%s/%s", GAMES_REPO, webget.filename);
-                        break;
-
-                    case 1:
-                        snprintf(webget.url, sizeof(webget.url), "%s/%s", webget.personal_endpoint, webget.filename);
-                        break;
-                    default:
-                        break;
-                }
+                /* Always use the personal_endpoint for URL building */
+                snprintf(webget.url, sizeof(webget.url), "%s/%s", webget.personal_endpoint, webget.filename);
+                
                 dx_asyncSend(&async_copyx_request, NULL);
             }
             break;
