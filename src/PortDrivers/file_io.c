@@ -4,13 +4,14 @@
 #include "file_io.h"
 #include "dx_utilities.h"
 #include <curl/curl.h>
+#include <errno.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #ifdef AZURE_SPHERE
 #include <applibs/storage.h>
@@ -18,8 +19,8 @@
 
 #define APP_SAMPLES_DIRECTORY "AppSamples"
 
-#define ENDPOINT_LEN            128
-#define CHUNK_SIZE              256
+#define ENDPOINT_LEN 128
+#define CHUNK_SIZE   256
 
 static int copy_web(char *url);
 static char devget_path_and_filename[50];
@@ -34,11 +35,10 @@ enum WEBGET_STATUS
 
 typedef struct
 {
-    char chunk_buffer[CHUNK_SIZE];   // Buffer to hold current chunk
-    size_t chunk_bytes_available;    // Number of bytes available in current chunk
-    size_t chunk_position;           // Current read position within chunk
-    bool transfer_complete;          // True when curl transfer is complete
-    uint32_t transfer_id;            // Unique ID for current transfer to detect stale callbacks
+    char chunk_buffer[CHUNK_SIZE]; // Buffer to hold current chunk
+    size_t chunk_bytes_available;  // Number of bytes available in current chunk
+    size_t chunk_position;         // Current read position within chunk
+    bool transfer_complete;        // True when curl transfer is complete
     char personal_endpoint[ENDPOINT_LEN];
     char filename[15];
     char url[150];
@@ -61,7 +61,11 @@ static WEBGET_T webget;
 static DEVGET_T devget;
 
 pthread_mutex_t webget_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t webget_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t webget_cond   = PTHREAD_COND_INITIALIZER;
+
+// Thread management for web transfers
+static pthread_t transfer_thread   = 0;
+static bool transfer_thread_active = false;
 
 /// <summary>
 /// Clean up webget resources and reset state
@@ -71,20 +75,96 @@ static void cleanup_webget_resources(void)
 {
     memset(webget.chunk_buffer, 0, CHUNK_SIZE);
     webget.chunk_bytes_available = 0;
-    webget.chunk_position = 0;
-    webget.transfer_complete = true;
-    webget.status = WEBGET_FAILED;
-    
+    webget.chunk_position        = 0;
+    webget.transfer_complete     = true;
+    webget.status                = WEBGET_FAILED;
+
     // Wake up any waiting curl callback so it can detect the transfer is no longer active
     pthread_cond_broadcast(&webget_cond);
 }
 
-DX_ASYNC_HANDLER(async_copyx_request_handler, handle)
+/// <summary>
+/// Thread function to handle web transfer
+/// </summary>
+static void *transfer_thread_func(void *arg)
 {
-    printf("DEBUG: Starting copy_web with URL: %s\n", webget.url);
-    copy_web(webget.url);
+    char *url = (char *)arg;
+
+    // Enable thread cancellation
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+    printf("DEBUG: Starting copy_web with URL: %s\n", url);
+    copy_web(url);
+
+    pthread_mutex_lock(&webget_mutex);
+    transfer_thread_active = false;
+    transfer_thread        = 0;
+    pthread_mutex_unlock(&webget_mutex);
+
+    free(url);
+    return NULL;
 }
-DX_ASYNC_HANDLER_END
+
+/// <summary>
+/// Start a new web transfer, cancelling any active transfer first
+/// Must be called with webget_mutex held
+/// Returns 0 on success, -1 on failure
+/// </summary>
+static int start_web_transfer(const char *url)
+{
+    // Check if there's an active transfer thread and kill it
+    if (transfer_thread_active && transfer_thread != 0)
+    {
+        printf("DEBUG: Active transfer detected (thread: %lu), cancelling thread\n", (unsigned long)transfer_thread);
+        cleanup_webget_resources();
+
+        pthread_t old_thread   = transfer_thread;
+        transfer_thread        = 0;
+        transfer_thread_active = false;
+
+        pthread_mutex_unlock(&webget_mutex);
+
+        // Cancel and wait for the old thread to finish
+        pthread_cancel(old_thread);
+        pthread_join(old_thread, NULL);
+
+        pthread_mutex_lock(&webget_mutex);
+    }
+
+    // Initialize new transfer state
+    webget.index  = 0;
+    webget.status = WEBGET_WAITING;
+
+    // Initialize chunk buffer fields
+    memset(webget.chunk_buffer, 0, CHUNK_SIZE);
+    webget.chunk_bytes_available = 0;
+    webget.chunk_position        = 0;
+    webget.transfer_complete     = false;
+
+    // Create a copy of the URL for the thread
+    char *url_copy = strdup(url);
+    if (url_copy == NULL)
+    {
+        printf("ERROR: Failed to allocate memory for URL\n");
+        webget.status = WEBGET_FAILED;
+        return -1;
+    }
+
+    // Start the transfer thread
+    transfer_thread_active = true;
+    if (pthread_create(&transfer_thread, NULL, transfer_thread_func, url_copy) != 0)
+    {
+        printf("ERROR: Failed to create transfer thread\n");
+        webget.status          = WEBGET_FAILED;
+        transfer_thread_active = false;
+        transfer_thread        = 0;
+        free(url_copy);
+        return -1;
+    }
+
+    return 0;
+}
 
 size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 {
@@ -116,7 +196,7 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 
             break;
 
-#endif            // AZURE SPHERE
+#endif // AZURE SPHERE
         case 109:
             webget.index = 0;
             break;
@@ -146,19 +226,6 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
         case 114: // copy file from web server to mutable storage
             if (webget.index == 0)
             {
-                // New filename being set - abort any outstanding transfer first
-                pthread_mutex_lock(&webget_mutex);
-                if (webget.status != WEBGET_EOF && webget.status != WEBGET_FAILED)
-                {
-                    printf("DEBUG: New filename detected, aborting outstanding transfer (ID: %u)\n", webget.transfer_id);
-                    cleanup_webget_resources();
-                    // Brief wait to allow any orphaned callbacks to exit
-                    pthread_mutex_unlock(&webget_mutex);
-                    usleep(10000); // 10ms
-                    pthread_mutex_lock(&webget_mutex);
-                }
-                pthread_mutex_unlock(&webget_mutex);
-                
                 memset(webget.filename, 0x00, sizeof(webget.filename));
             }
 
@@ -170,27 +237,16 @@ size_t file_output(int port, uint8_t data, char *buffer, size_t buffer_length)
 
             if (data == 0) // NULL TERMINATION
             {
-                // Initialize new transfer
                 pthread_mutex_lock(&webget_mutex);
-                
-                webget.index              = 0;
-                webget.status             = WEBGET_WAITING;
-                
-                // Initialize chunk buffer fields with new transfer ID
-                memset(webget.chunk_buffer, 0, CHUNK_SIZE);
-                webget.chunk_bytes_available = 0;
-                webget.chunk_position = 0;
-                webget.transfer_complete = false;
-                webget.transfer_id++; // Increment to create unique ID for this transfer
-                
-                pthread_mutex_unlock(&webget_mutex);
 
+                // Build the URL
                 memset(webget.url, 0x00, sizeof(webget.url));
-
-                /* Always use the personal_endpoint for URL building */
                 snprintf(webget.url, sizeof(webget.url), "%s/%s", webget.personal_endpoint, webget.filename);
-                
-                dx_asyncSend(&async_copyx_request, NULL);
+
+                // Start the new transfer (cancelling any active transfer first)
+                start_web_transfer(webget.url);
+
+                pthread_mutex_unlock(&webget_mutex);
             }
             break;
     }
@@ -212,23 +268,23 @@ uint8_t file_input(uint8_t port)
             break;
         case 201: // Read file from http(s) web server
             pthread_mutex_lock(&webget_mutex);
-            
+
             if (webget.chunk_bytes_available > 0 && webget.chunk_position < webget.chunk_bytes_available)
             {
                 // Return byte from current chunk
                 retVal = webget.chunk_buffer[webget.chunk_position];
                 webget.chunk_position++;
-                
+
                 // Check if we've consumed the entire chunk
                 if (webget.chunk_position >= webget.chunk_bytes_available)
                 {
                     // Reset chunk for next fill
                     webget.chunk_bytes_available = 0;
-                    webget.chunk_position = 0;
-                    
+                    webget.chunk_position        = 0;
+
                     // Signal that chunk buffer is now available for new data
                     pthread_cond_signal(&webget_cond);
-                    
+
                     // Set status based on whether more data is expected
                     webget.status = webget.transfer_complete ? WEBGET_EOF : WEBGET_WAITING;
                 }
@@ -251,7 +307,7 @@ uint8_t file_input(uint8_t port)
                 }
                 retVal = 0x00;
             }
-            
+
             pthread_mutex_unlock(&webget_mutex);
             break;
 #ifdef AZURE_SPHERE
@@ -345,10 +401,9 @@ static int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec
 
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
 {
-    size_t realsize = size * nmemb;
-    WEBGET_T *wg    = (WEBGET_T *)webget;
+    size_t realsize        = size * nmemb;
+    WEBGET_T *wg           = (WEBGET_T *)webget;
     size_t bytes_processed = 0;
-    uint32_t current_transfer_id;
 
     struct timespec timeoutTime;
     memset(&timeoutTime, 0, sizeof(struct timespec));
@@ -357,7 +412,7 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
     // On macOS, use a simple timeout from current time
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    timeoutTime.tv_sec = tv.tv_sec + 10;
+    timeoutTime.tv_sec  = tv.tv_sec + 10;
     timeoutTime.tv_nsec = tv.tv_usec * 1000;
 #else
     clock_gettime(CLOCK_REALTIME, &timeoutTime);
@@ -370,9 +425,6 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
         return 0; // Return 0 to indicate error to curl
     }
 
-    // Capture the transfer ID at start to detect if transfer gets cancelled
-    current_transfer_id = wg->transfer_id;
-    
     // Check if transfer is still active
     if (wg->status == WEBGET_FAILED)
     {
@@ -384,63 +436,61 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
     // Process data in chunks, waiting for current chunk to be consumed before adding more
     while (bytes_processed < realsize)
     {
-        // Check if this transfer is still active and has the same ID
-        if (wg->status == WEBGET_FAILED || wg->transfer_id != current_transfer_id)
+        // Check if this transfer is still active
+        if (wg->status == WEBGET_FAILED)
         {
-            printf("DEBUG: Transfer cancelled or superseded (ID: %u -> %u), aborting callback\n", 
-                   current_transfer_id, wg->transfer_id);
+            printf("DEBUG: Transfer cancelled, aborting callback\n");
             pthread_mutex_unlock(&webget_mutex);
             return 0; // Abort this transfer
         }
-        
+
         // Wait for the current chunk to be consumed by the client using condition variable with timeout
-        while (wg->chunk_bytes_available > 0 && wg->status != WEBGET_FAILED && 
-               wg->transfer_id == current_transfer_id)
+        while (wg->chunk_bytes_available > 0 && wg->status != WEBGET_FAILED)
         {
             // Create timeout for client crash detection (5 seconds)
             struct timespec client_timeout;
 #ifdef __APPLE__
             struct timeval tv;
             gettimeofday(&tv, NULL);
-            client_timeout.tv_sec = tv.tv_sec + 5;  // 5 second timeout for client response
+            client_timeout.tv_sec  = tv.tv_sec + 5; // 5 second timeout for client response
             client_timeout.tv_nsec = tv.tv_usec * 1000;
 #else
             clock_gettime(CLOCK_REALTIME, &client_timeout);
-            client_timeout.tv_sec += 5;  // 5 second timeout for client response
+            client_timeout.tv_sec += 5; // 5 second timeout for client response
 #endif
-            
+
             // Efficient wait using condition variable with timeout
             if (pthread_cond_timedwait(&webget_cond, &webget_mutex, &client_timeout) != 0)
             {
                 // Timeout occurred - likely client crashed or stopped reading
-                if (wg->transfer_id == current_transfer_id && wg->status != WEBGET_FAILED)
+                if (wg->status != WEBGET_FAILED)
                 {
-                    printf("DEBUG: Client timeout - assuming client crashed or stopped reading (ID: %u)\n", current_transfer_id);
+                    printf("DEBUG: Client timeout - assuming client crashed or stopped reading\n");
                     wg->status = WEBGET_FAILED;
                 }
                 pthread_mutex_unlock(&webget_mutex);
                 return bytes_processed;
             }
         }
-        
-        if (wg->status == WEBGET_FAILED || wg->transfer_id != current_transfer_id)
+
+        if (wg->status == WEBGET_FAILED)
         {
             break;
         }
 
         // Calculate how much data we can put into the chunk buffer
         size_t remaining_input = realsize - bytes_processed;
-        size_t bytes_to_copy = (remaining_input > CHUNK_SIZE) ? CHUNK_SIZE : remaining_input;
-        
+        size_t bytes_to_copy   = (remaining_input > CHUNK_SIZE) ? CHUNK_SIZE : remaining_input;
+
         // Final check before modifying buffer
-        if (wg->status != WEBGET_FAILED && wg->transfer_id == current_transfer_id)
+        if (wg->status != WEBGET_FAILED)
         {
             // Copy data to chunk buffer
             memcpy(wg->chunk_buffer, (char *)ptr + bytes_processed, bytes_to_copy);
             wg->chunk_bytes_available = bytes_to_copy;
-            wg->chunk_position = 0;
-            wg->status = WEBGET_DATA_READY;
-            
+            wg->chunk_position        = 0;
+            wg->status                = WEBGET_DATA_READY;
+
             bytes_processed += bytes_to_copy;
         }
         else
@@ -451,13 +501,13 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *webget)
     }
 
     pthread_mutex_unlock(&webget_mutex);
-    
-    // Return 0 if transfer was cancelled/superseded, otherwise return what we processed
-    if (wg->status == WEBGET_FAILED || wg->transfer_id != current_transfer_id)
+
+    // Return 0 if transfer was cancelled, otherwise return what we processed
+    if (wg->status == WEBGET_FAILED)
     {
         return 0; // Signal curl to abort
     }
-    
+
     return realsize;
 }
 
@@ -466,7 +516,8 @@ static int copy_web(char *url)
     CURL *curl_handle;
 
     // Validate input parameters
-    if (url == NULL || strlen(url) == 0) {
+    if (url == NULL || strlen(url) == 0)
+    {
         printf("ERROR: Invalid URL provided to copy_web\n");
         webget.status = WEBGET_FAILED;
         return -1;
@@ -474,8 +525,9 @@ static int copy_web(char *url)
 
     /* init the curl session */
     curl_handle = curl_easy_init();
-    
-    if (curl_handle == NULL) {
+
+    if (curl_handle == NULL)
+    {
         printf("ERROR: Failed to initialize curl handle\n");
         webget.status = WEBGET_FAILED;
         return -1;
@@ -487,7 +539,7 @@ static int copy_web(char *url)
     // Enable SSL verification for security (comment out the next line to disable if needed for testing)
     // For production use, SSL verification should be enabled
     // curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
-    
+
     // Enable SSL verification and certificate validation
     curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYHOST, 2L);
@@ -496,7 +548,7 @@ static int copy_web(char *url)
     curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L);
 
     // https://curl.se/libcurl/c/CURLOPT_TIMEOUT.html - increased for larger files
-    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 60L);
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 20L);
 
     /* Disable debug output for production */
     curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0L);
@@ -506,7 +558,7 @@ static int copy_web(char *url)
 
     // Remove artificial buffer size limit to let curl use natural chunk sizes
     // curl_easy_setopt(curl_handle, CURLOPT_BUFFERSIZE, 256L);
-    
+
     // Limit transfer speed to prevent buffer overruns
     // Set low speed limit to 100 bytes/sec for 30 seconds before timeout
     curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_LIMIT, 100L);
@@ -519,7 +571,7 @@ static int copy_web(char *url)
     // or larger than 400
     curl_easy_setopt(curl_handle, CURLOPT_FAILONERROR, 1L);
 
-    webget.status      = WEBGET_WAITING;
+    webget.status = WEBGET_WAITING;
 
     /* write the page body to this file handle */
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &webget);
@@ -529,7 +581,7 @@ static int copy_web(char *url)
 
     // Lock mutex to safely update webget state
     pthread_mutex_lock(&webget_mutex);
-    
+
     if (res != CURLE_OK)
     {
         printf("CURL ERROR: %s\n", curl_easy_strerror(res));
@@ -540,7 +592,7 @@ static int copy_web(char *url)
     {
         // Transfer completed successfully
         webget.transfer_complete = true;
-        
+
         // Check if we have data ready in current chunk
         if (webget.chunk_bytes_available > 0)
         {
@@ -555,7 +607,7 @@ static int copy_web(char *url)
 
     // Mark transfer as complete and inactive
     webget.transfer_complete = true;
-    
+
     pthread_mutex_unlock(&webget_mutex);
 
     /* cleanup curl stuff */
