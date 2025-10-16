@@ -1,0 +1,8 @@
+{
+  "label": "Open Weather Map",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "Learn about Open Weather Map."
+  }
+}
