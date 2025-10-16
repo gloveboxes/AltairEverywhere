@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/src/Altair8800",
+                "${workspaceFolder}/src/FrontPanels",
+                "${workspaceFolder}/src/PortDrivers",
+                "${workspaceFolder}/src/Drivers/pi_sense_hat",
+                "${workspaceFolder}/src/Drivers/front_panel",
+                "${workspaceFolder}/src/Drivers/spidev-lib/src",
+                "${workspaceFolder}/src/Drivers/sensehat-driver/src",
+                "${workspaceFolder}/src/uthash/src",
+                "${workspaceFolder}/src/wsServer/include",
+                "${workspaceFolder}/src/EdgeMqttDevX/include",
+                "/usr/local/include",
+                "/usr/include"
+            ],
+            "defines": [
+                "MAX_CLIENTS=1"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compileCommands": "${workspaceFolder}/src/build/compile_commands.json"
+        }
+    ],
+    "version": 4
+}

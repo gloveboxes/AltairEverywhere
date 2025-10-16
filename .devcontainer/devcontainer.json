@@ -1,0 +1,32 @@
+{
+    "name": "Altair 8800 Emulator Dev Container",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    
+    "features": {},
+    
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-extension-pack"
+            ]
+        }
+    },
+
+    // "postCreateCommand": "echo 'Dev container setup complete!'",
+
+    "remoteUser": "root",
+
+    "mounts": [
+        "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    ],
+
+    "forwardPorts": [5500, 8080, 8082],
+
+    "workspaceFolder": "/workspaces/Altair-8800-Emulator",
+
+    "shutdownAction": "stopContainer"
+}

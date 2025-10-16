@@ -4,6 +4,9 @@
 cmake_minimum_required (VERSION 3.10)
 project (Altair_emulator C)
 
+# Enable generation of compile_commands.json for IDE integration
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Set optimization flags for Release builds
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 
