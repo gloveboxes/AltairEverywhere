@@ -16,7 +16,7 @@
         }
     },
 
-    // "postCreateCommand": "echo 'Dev container setup complete!'",
+    "postCreateCommand": "git submodule update --init --recursive && echo 'Dev container setup complete! Submodules initialized.'",
 
     "remoteUser": "root",
 
