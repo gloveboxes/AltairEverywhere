@@ -34,7 +34,7 @@ uint16_t bus_switches = 0x00;
 
 const uint8_t reverse_lut[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf};
 
-const char ALTAIR_EMULATOR_VERSION[] = "5.2.0";
+const char ALTAIR_EMULATOR_VERSION[] = "5.2.5";
 enum PANEL_MODE_T panel_mode         = PANEL_BUS_MODE;
 char msgBuffer[MSG_BUFFER_BYTES]     = {0};
 const char *network_interface        = NULL;
@@ -42,32 +42,23 @@ const char *network_interface        = NULL;
 static bool stop_cpu = false;
 static char Log_Debug_Time_buffer[128];
 
-// Atomic millisecond timer for high-precision timing
-// Seconds are derived by dividing by 1000 for efficiency
-// Accessed via inline functions in main.h for maximum performance
-atomic_uint_fast64_t millisecond_tick_count = 0;
-
 DX_TIMER_BINDING tmr_ws_ping_pong = {.repeat = &(struct timespec){10, 0}, .name = "tmr_partial_message", .handler = ws_ping_pong_handler};
 
 DX_TIMER_BINDING tmr_heart_beat          = {.repeat = &(struct timespec){30, 0}, .name = "tmr_heart_beat", .handler = heart_beat_handler};
-DX_TIMER_BINDING tmr_millisecond_tick    = {.repeat = &(struct timespec){0, ONE_MS}, .name = "tmr_millisecond_tick", .handler = millisecond_tick_handler};
 DX_TIMER_BINDING tmr_report_memory_usage = {.repeat = &(struct timespec){20, 0}, .name = "tmr_report_memory_usage", .handler = report_memory_usage};
 DX_TIMER_BINDING tmr_update_environment  = {.repeat = &(struct timespec){20, 0}, .name = "tmr_update_environment", .handler = update_environment_handler};
 
-DX_ASYNC_BINDING async_copyx_request   = {.name = "async_copyx_request", .handler = async_copyx_request_handler};
 DX_ASYNC_BINDING async_expire_session  = {.name = "async_expire_session", .handler = async_expire_session_handler};
 DX_ASYNC_BINDING async_publish_json    = {.name = "async_publish_json", .handler = async_publish_json_handler};
 DX_ASYNC_BINDING async_publish_weather = {.name = "async_publish_weather", .handler = async_publish_weather_handler};
 
 DX_ASYNC_BINDING *async_bindings[] = {
-    &async_copyx_request,
     &async_expire_session,
     &async_publish_json,
     &async_publish_weather,
 };
 
 DX_TIMER_BINDING *timer_bindings[] = {
-    &tmr_millisecond_tick,
     &tmr_update_environment,
     &tmr_ws_ping_pong,
 };
@@ -209,15 +200,7 @@ static DX_TIMER_HANDLER(heart_beat_handler)
 
 DX_TIMER_HANDLER_END
 
-/// <summary>
-/// Millisecond timer handler using high-precision monotonic clock
-/// millisecond_tick_count is thread-safe and can be read from any thread using atomic operations
-/// </summary>
-static DX_TIMER_HANDLER(millisecond_tick_handler)
-{
-    dx_updateMonotonicMillisecondTick(&millisecond_tick_count);
-}
-DX_TIMER_HANDLER_END
+
 
 /// <summary>
 /// Client connected successfully
@@ -594,7 +577,7 @@ static void InitPeripheralAndHandlers(int argc, char *argv[])
 
     // Initialize high-precision monotonic millisecond timer system
     dx_Log_Debug("Initializing high-precision monotonic millisecond timer\n");
-    dx_initMonotonicMillisecondTimer(&millisecond_tick_count);
+    dx_initMonotonicMillisecondTimer();
 
     // Initialize timers but don't start them yet
     dx_timerSetStart(timer_bindings, NELEMS(timer_bindings));

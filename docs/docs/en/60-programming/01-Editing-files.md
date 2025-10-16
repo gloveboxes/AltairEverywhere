@@ -45,6 +45,84 @@ Follow this fast loop for most development:
 
 Repeat steps 2, 5, and 6 as you refine your program.
 
+### GF Command Reference
+
+The `gf` (Get File) utility is a versatile file transfer tool with multiple options for downloading files from web endpoints or the built-in games repository.
+
+#### Getting Help
+
+To see all available options and usage information:
+
+```cpm
+gf --help
+```
+
+This displays the full help message with examples.
+
+#### Setting the HTTP Endpoint
+
+Set a custom HTTP or HTTPS endpoint URL for file transfers:
+
+```cpm
+gf -e http://192.168.1.100:5500
+gf -e https://example.com/files
+```
+
+The endpoint URL is automatically saved to `gf.txt` on the emulated disk and persists across emulator restarts.
+
+#### Downloading Files from Your Endpoint
+
+Download a specific file from the configured endpoint:
+
+```cpm
+gf -f myfile.txt
+gf -f hello.bas
+gf -f program.c
+```
+
+File names are case-insensitive, following CP/M conventions.
+
+#### Downloading Games from Built-in Repository
+
+The `gf` utility includes access to a built-in games repository. Download games using:
+
+```cpm
+gf -g love.bas
+gf -g adventure.bas
+```
+
+This feature provides quick access to classic games without needing to set up your own web server.
+
+#### Version Information
+
+Check the current version of the GF utility:
+
+```cpm
+gf --version
+```
+
+#### Complete Command Summary
+
+```plaintext
+GF (Get File) - File Transfer Utility v1.3
+Transfer files from web over HTTP(s)
+
+Usage: gf [--help] [--version] [-e <url>] [-f <filename>] [-g <gamefile>]
+
+Options:
+  --help       Show this help message
+  --version    Show version information
+  -e <url>     Set a custom HTTP/HTTPS endpoint URL
+  -f <filename> Download a specific file from the configured endpoint
+  -g <gamefile> Download a game file from the built-in games repository
+
+Examples:
+  gf -e http://localhost:5500     Set local development server
+  gf -e https://example.com/files Set remote HTTPS endpoint
+  gf -f myfile.txt                Download myfile.txt from configured endpoint
+  gf -g love.bas                  Download love.bas from games repository
+```
+
 ### Automating Transfers & Builds with CP/M SUBMIT
 
 The Submit command automates file transfer and build steps and is a a time-saver.

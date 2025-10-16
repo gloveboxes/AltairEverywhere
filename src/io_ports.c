@@ -104,12 +104,9 @@ void io_port_out(uint8_t port, uint8_t data)
             break;
 
         // File transfer IO Ports
-        case 68:  // Set devget filename
         case 109: // Set webget.index = 0
         case 110: // Set getfile custom endpoint url
         case 111: // Load getfile (gf) custom endpoint url
-        case 112: // Select getfile (gf) endpoint to use
-        case 113: // Load getfile (gf) selected endpoint
         case 114: // copy file from web server to mutable storage
             ru.len = file_output(port, data, ru.buffer, sizeof(ru.buffer));
             break;
@@ -159,9 +156,7 @@ uint8_t io_port_in(uint8_t port)
 
         // File transfer IO Ports
         case 33:  // Is copyx file need copied and loaded
-        case 68:  // Is devget eof
         case 201: // Read file from http(s) web server
-        case 202: // Read DEVGET file from immutable storage
             retVal = file_input(port);
             break;
 

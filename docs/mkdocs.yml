@@ -14,6 +14,7 @@ copyright: >
 
 nav:
   - Introduction: index.md
+  - Navigating the Docs: "navigating-the-docs.md"
   - Fundamentals:
     - Introduction: "20-fundamentals/05-Introduction.md"
     - Deployment Options: "20-fundamentals/10-deployment-options.md"

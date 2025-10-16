@@ -16,7 +16,7 @@ The Altair emulator runs on [POSIX](https://en.wikipedia.org/wiki/POSIX){:target
 Starting from the bottom left and moving up and then to the right.
 
 - **POSIX Compatible OS:**. The Altair 8800 emulator runs on [POSIX](https://en.wikipedia.org/wiki/POSIX){:target=_blank} compatible operating systems, including Linux, macOS, [Windows WSL 2](https://docs.microsoft.com/windows/wsl){:target=_blank}, and Raspberry Pi OS.
-- **WebSocket & Azure IoT C:** These communication libraries connect the Altair emulator to the web terminal and cloud services. The Altair terminal IO messages are routed over [WebSockets](https://en.wikipedia.org/wiki/WebSocket){:target=_blank}, and the IoT data over MQTT.
+- **WebSocket & MQTT C:** These communication libraries connect the Altair emulator to the web terminal and cloud services. The Altair terminal IO messages are routed over [WebSockets](https://en.wikipedia.org/wiki/WebSocket){:target=_blank}, and the IoT data over MQTT.
 - **Event library:** The Altair coordinates activities on the main thread using the [event](https://libevent.org/){:target=_blank} event loop library.
 - **EdgeDevX:** This library simplifies access to Azure IoT services, provides event-timer services, along with several useful utilities.
 - **Terminal IO & Cloud Services:** The Intel 8080 CPU provides 256 input ports and 256 output ports. The Intel 8080 ports were used to integrate peripherals such as disk drives, printers, and modems. However, for the Altair emulator, these ports are used to integrate communications and cloud services. Terminal input and output ports are routed over WebSockets, other ports are used for timing services, access to weather and pollution data, plus Azure IoT services.

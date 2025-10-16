@@ -1,27 +1,111 @@
 #include <stdio.h>
 
-#define GF_VERSION "1.2"
+#define GF_VERSION "1.3"
+#define GMSREPO "https://raw.githubusercontent.com/AzureSphereCloudEnabledAltair8800/RetroGames/main"
+
 
 /* Function prototypes */
-int get_endpoint();
-int get_filename();
-int set_selected();
 int save_ep_url();
-int dxstgfn();
-int dxstgcpy();
-int dxwebcpy();
-int dxwebfn();
-int dxseturl();
-int dxgeturl();
 int validate_endpoint();
 int str_tolower();
 
-FILE *fp_input;
+/* --- Begin dxweb.c inlined --- */
+#define WG_IDX_RESET 109
+#define WWG_SET_URL  112
+#define WG_FILENAME  114
+#define WG_EP_NAME   110
+
+#define WG_STATUS    33
+#define WG_EOF       0
+#define WG_FAILED    3
+#define WG_DATAREADY 2
+#define WG_GET_BYTE  201
+#define WG_WAITING   1
+
+int inp();
+int outp();
+int fputc();
+
+int dxwebfn(filename, len, endpoint)
+char *filename;
+int len;
+int endpoint;
+{
+    int c;
+
+    outp(WWG_SET_URL, endpoint);
+    outp(WG_IDX_RESET, 0);
+
+    for (c = 0; c < len; c++)
+    {
+        outp(WG_FILENAME, filename[c]);
+    }
+    outp(WG_FILENAME, 0);
+    return 0;
+}
+
+int dxwebcpy(fp_output, bytes_written)
+FILE *fp_output;
+int *bytes_written;
+{
+    int status;
+    int count;
+    int next_byte;
+
+    count = 0;
+
+    while (1)
+    {
+        status = inp(WG_STATUS) & 255;
+        if (status == WG_EOF)
+        {
+            break;
+        }
+
+        if (status == WG_FAILED)
+        {
+            return -1;
+        }
+
+        if (status == WG_DATAREADY)
+        {
+            next_byte = inp(WG_GET_BYTE) & 255;
+            fputc(next_byte, fp_output);
+            count++;
+        }
+        else if (status == WG_WAITING)
+        {
+            /* nothing to do */
+        }
+    }
+
+    if (bytes_written != 0)
+    {
+        *bytes_written = count;
+    }
+
+    return 0;
+}
+
+int dxseturl(endpoint, len)
+char *endpoint;
+int len;
+{
+    int c;
+
+    outp(WG_IDX_RESET, 0);
+    for (c = 0; c < len; c++)
+    {
+        outp(WG_EP_NAME, endpoint[c]);
+    }
+    outp(WG_EP_NAME, 0);
+    return 0;
+}
+/* --- End dxweb.c inlined --- */
+
 FILE *fp_output;
 char *endpoint;
 char *filename;
-char buf[128];
-int selected_ep;
 char file_content[128];
 
 int defaults()
@@ -62,20 +146,37 @@ char **argv;
 
     wg_result = 0;
     bytes_written = 0;
-    fp_input = fopen("stdin", "r");
 
     defaults();
 
-    printf("\nGF (Get File) - File Transfer Utility v%s\n", GF_VERSION);
-    printf("Transfer files from Azure Sphere storage or web over HTTP(s)\n");
-    printf("Available flags: --help, --version, -e <url>, -f <filename>\n\n");
+    if (argc == 1)
+    {
+        printf("GF (Get File) - File Transfer Utility v%s\n", GF_VERSION);
+        printf("Transfer files from web over HTTP(s)\n\n");
+        printf("Usage: gf [--help] [--version] [-e <url>] [-f <filename>] [-g <gamefile>]\n");
+        printf("\nOptions:\n");
+        printf("  --help       Show this help message\n");
+        printf("  --version    Show version information\n");
+        printf("  -e <url>     Set a custom HTTP/HTTPS endpoint URL\n");
+        printf("               The URL will be used for web-based file transfers\n");
+        printf("  -f <filename> Download a specific file from the configured endpoint\n");
+        printf("  -g <gamefile> Download a game file from the built-in games repository\n");
+        printf("\nExamples:\n");
+        printf("  gf -e http://localhost:5500     Set local development server\n");
+        printf("  gf -e https://example.com/files Set remote HTTPS endpoint\n");
+        printf("  gf -f myfile.txt                Download myfile.txt from configured endpoint\n");
+        printf("  gf -g love.bas                  Download love.bas from games repository\n");
+        return 0;
+    }
 
     if (argc == 3)
     {
+        char *save_filename;
+        char *path_iter;
+        
         if (strcmp(argv[1], "-e") == 0 || strcmp(argv[1], "-E") == 0)
         {
             endpoint = argv[2];
-            str_tolower(endpoint);
             if (validate_endpoint(endpoint) == 0)
             {
                 save_ep_url(endpoint);
@@ -90,8 +191,6 @@ char **argv;
         }
         else if (strcmp(argv[1], "-f") == 0 || strcmp(argv[1], "-F") == 0)
         {
-            char *save_filename;
-            char *path_iter;
 
             filename = argv[2];
             save_filename = filename;
@@ -130,9 +229,7 @@ char **argv;
                 return -1;
             }
             
-            selected_ep = 1; 
-
-            dxwebfn(filename, strlen(filename), selected_ep);
+            dxwebfn(filename, strlen(filename), 0);
             wg_result = dxwebcpy(fp_output, &bytes_written);
             if (wg_result == 0)
             {
@@ -151,10 +248,62 @@ char **argv;
             }
             return 0;
         }
+        else if (strcmp(argv[1], "-g") == 0 || strcmp(argv[1], "-G") == 0)
+        {
+            filename = argv[2];
+            save_filename = filename;
+            path_iter = filename;
+
+            while (*path_iter != '\0')
+            {
+                if (*path_iter == '/' || *path_iter == '\\')
+                {
+                    if (*(path_iter + 1) != '\0')
+                    {
+                        save_filename = path_iter + 1;
+                    }
+                }
+                path_iter++;
+            }
+
+            printf("\nDownloading game '%s' from games repository\n", filename);
+            if (save_filename != filename)
+            {
+                printf("Saving as '%s'\n", save_filename);
+            }
+
+            if ((fp_output = fopen(save_filename, "w")) == NULL)
+            {
+                printf("Error: Failed to create output file '%s'\n", save_filename);
+                printf("Check disk space and write permissions.\n");
+                return -1;
+            }
+            
+            /* Set games repository as the custom endpoint */
+            dxseturl(GMSREPO, strlen(GMSREPO));
+            dxwebfn(filename, strlen(filename), 0);
+            wg_result = dxwebcpy(fp_output, &bytes_written);
+            if (wg_result == 0)
+            {
+                printf(" done (%d bytes)\n", bytes_written);
+            }
+            else
+            {
+                printf(" failed\n");
+            }
+
+            fclose(fp_output);
+            if (wg_result == -1)
+            {
+                printf("\n\nGame download failed for file '%s'. Check filename and network connection\n", save_filename);
+                unlink(save_filename);
+            }
+            return 0;
+        }
         else
         {
             printf("Unrecognized option: %s\n", argv[1]);
-            printf("Usage: gf [--help] [-e <url>] [-f <filename>]\n");
+            printf("Usage: gf [--help] [-e <url>] [-f <filename>] [-g <gamefile>]\n");
             return -1;
         }
     }
@@ -164,22 +313,20 @@ char **argv;
         if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "--HELP") == 0)
         {
             printf("GF (Get File) - File Transfer Utility v%s\n", GF_VERSION);
-            printf("Transfer files from Azure Sphere storage or web over HTTP(s)\n\n");
-            printf("Usage: gf [--help] [--version] [-e <url>]\n");
-            printf("       gf (interactive mode)\n");
+            printf("Transfer files from web over HTTP(s)\n\n");
+            printf("Usage: gf [--help] [--version] [-e <url>] [-f <filename>] [-g <gamefile>]\n");
             printf("\nOptions:\n");
             printf("  --help       Show this help message\n");
             printf("  --version    Show version information\n");
             printf("  -e <url>     Set a custom HTTP/HTTPS endpoint URL\n");
             printf("               The URL will be used for web-based file transfers\n");
+            printf("  -f <filename> Download a specific file from the configured endpoint\n");
+            printf("  -g <gamefile> Download a game file from the built-in games repository\n");
             printf("\nExamples:\n");
             printf("  gf -e http://localhost:5500     Set local development server\n");
             printf("  gf -e https://example.com/files Set remote HTTPS endpoint\n");
-            printf("  gf                              Run in interactive mode\n");
-            printf("\nInteractive mode allows you to:\n");
-            printf("- Choose from predefined endpoints\n");
-            printf("- Transfer files from Azure Sphere storage\n");
-            printf("- Transfer files from web endpoints\n");
+            printf("  gf -f myfile.txt                Download myfile.txt from configured endpoint\n");
+            printf("  gf -g love.bas                  Download love.bas from games repository\n");
             return 0;
         }
 
@@ -196,93 +343,10 @@ char **argv;
         return -1;
     }
 
-    if (argc == 1)
-    {
-        while (set_selected() == -1)
-        {
-        }
-
-        while (get_filename() == -1)
-        {
-        }
-
-        printf("\nTransferring file '%s' from endpoint '%d'\n\n", filename, selected_ep + 1);
-    }
-
-    if ((fp_output = fopen(filename, "w")) == NULL)
-    {
-        printf("Error: Failed to create output file '%s'\n", filename);
-        printf("Check disk space and write permissions.\n");
-        return -1;
-    }
-
-    switch (selected_ep)
-    {
-        case 0:
-            printf("Copying from storage...");
-            dxstgfn(filename);
-            if (dxstgcpy(fp_output, &bytes_written) == 0)
-            {
-                printf(" done (%d bytes)\n", bytes_written);
-            }
-            else
-            {
-                printf(" failed\n");
-            }
-            break;
-        case 1:
-            printf("Downloading from web endpoint %d...", selected_ep + 1);
-            dxwebfn(filename, strlen(filename), 0);
-            wg_result = dxwebcpy(fp_output, &bytes_written);
-            if (wg_result == 0)
-            {
-                printf(" done (%d bytes)\n", bytes_written);
-            }
-            else
-            {
-                printf(" failed\n");
-            }
-            break;
-        case 2:
-            printf("Downloading from web endpoint %d...", selected_ep + 1);
-            dxwebfn(filename, strlen(filename), 1);
-            wg_result = dxwebcpy(fp_output, &bytes_written);
-            if (wg_result == 0)
-            {
-                printf(" done (%d bytes)\n", bytes_written);
-            }
-            else
-            {
-                printf(" failed\n");
-            }
-            break;
-        default:
-            break;
-    }
-
-    fclose(fp_output);
-    if (wg_result == -1)
-    {
-        printf("\n\nWeb copy failed for file '%s'. Check filename and network connection\n", filename);
-        unlink(filename);
-    }
     return 0;
 }
 
-int str_tolower(str)
-char *str;
-{
-    int i;
 
-    for (i = 0; str[i] != '\0'; i++)
-    {
-        if (str[i] >= 'A' && str[i] <= 'Z')
-        {
-            str[i] = str[i] + 32;
-        }
-    }
-    return 0;
-}
 
 int validate_endpoint(url)
 char *url;
@@ -292,37 +356,26 @@ char *url;
     int len;
 
     if (url == NULL)
-    {
         return -1;
-    }
 
     len = 0;
     while (url[len] != '\0')
-    {
         len++;
-    }
 
     if (len < 8 || len > 120)
-    {
         return -1;
-    }
 
-    /* Check for http:// or https:// */
+    /* Check for http:// or https:// (CP/M always upper case) */
     for (c = 0; c < 4 && c < len; c++)
-    {
-        check_url[c] = (url[c] >= 'a' && url[c] <= 'z') ? url[c] - 32 : url[c];
-    }
+        check_url[c] = url[c];
     check_url[4] = '\0';
 
     if (check_url[0] == 'H' && check_url[1] == 'T' && check_url[2] == 'T' && check_url[3] == 'P')
     {
         /* Verify it has :// after http */
         if (len > 6 && url[4] == ':' && url[5] == '/' && url[6] == '/')
-        {
             return 0;
-        }
     }
-
     return -1;
 }
 
@@ -330,7 +383,6 @@ int save_ep_url(endpoint)
 char *endpoint;
 {
     FILE *fp;
-
     /* write endpoint to gf.txt */
     fp = fopen("gf.txt", "w");
     if (fp != NULL)
@@ -345,120 +397,7 @@ char *endpoint;
         fputc('\n', fp);
         fclose(fp);
     }
-
     return 0;
 }
 
-int get_filename()
-{
-    int len, i;
 
-    printf("Enter filename to transfer: ");
-    filename = fgets(buf, 128, fp_input);
-
-    if (filename == NULL)
-    {
-        printf("Error reading filename.\n");
-        return -1;
-    }
-
-    len = 0;
-    while (filename[len] != '\0')
-    {
-        len++;
-    }
-
-    if (len < 2 || len > 13)
-    {
-        printf("Filename must be 1 to 12 characters. Try again.\n");
-        return -1;
-    }
-
-    /* Remove newline */
-    filename[len - 1] = 0x00;
-    len--;
-
-    /* Check for valid characters */
-    for (i = 0; i < len; i++)
-    {
-        if (filename[i] < 32 || filename[i] > 126)
-        {
-            printf("Invalid character in filename. Use printable ASCII only.\n");
-            return -1;
-        }
-    }
-
-    return 1;
-}
-
-int get_endpoint()
-{
-    char url[5];
-    int c;
-    int len;
-
-    printf("Enter endpoint url: ");
-
-    endpoint = fgets(buf, 128, fp_input);
-
-    len = 0;
-    while (endpoint[len] != '\0')
-    {
-        len++;
-    }
-    len--;
-
-    endpoint[len] = 0x00;
-
-    if (len < 8)
-    {
-        printf("Invalid endpoint url.\n");
-        return -1;
-    }
-
-    for (c = 0; c < 4; c++)
-    {
-        url[c] = toupper(endpoint[c]);
-    }
-    url[4] = 0x00;
-
-    if (strcmp(url, "HTTP"))
-    {
-        printf("Invalid endpoint url. Must start with 'http'.\n");
-        return -1;
-    }
-
-    return 0;
-}
-
-int set_selected()
-{
-    char *endpoint;
-    char url_buffer[128];
-    int url_len;
-
-    printf("Select endpoint:\n");
-    printf("1) Azure Sphere immutable storage\n");
-    printf("2) https://raw.githubusercontent.com/AzureSphereCloudEnabledAltair8800/RetroGames/main\n");
-
-    url_len = dxgeturl(2, url_buffer, 128);
-    if (url_len > 0)
-    {
-        printf("3) %s\n", url_buffer);
-    }
-
-    printf("\nSelect endpoint number: ");
-    endpoint = fgets(buf, 128, fp_input);
-
-    if (strlen(endpoint) > 2)
-    {
-        return -1;
-    }
-
-    if (endpoint[0] >= '1' && endpoint[0] <= '3')
-    {
-        selected_ep = atoi(endpoint) - 1;
-        return 0;
-    }
-    return -1;
-}
