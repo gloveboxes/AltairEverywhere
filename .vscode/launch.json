@@ -28,6 +28,32 @@
             "miDebuggerPath": "/usr/bin/gdb"
         },
         {
+            "name": "Launch Altair Emulator (Release)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/build/Altair_emulator",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/src",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build-release",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
             "name": "Launch Altair Emulator (No Build)",
             "type": "cppdbg",
             "request": "launch",
@@ -161,10 +187,11 @@
             }
         },
         {
-            "name": "Start Both Web Servers",
+            "name": "Launch Altair Release with Web Servers",
             "configurations": [
                 "Terminal Web Server",
-                "Samples Web Server"
+                "Samples Web Server",
+                "Launch Altair Emulator (Release)"
             ],
             "stopAll": true,
             "presentation": {

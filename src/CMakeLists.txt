@@ -7,8 +7,23 @@ project (Altair_emulator C)
 # Enable generation of compile_commands.json for IDE integration
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Set optimization flags for Release builds
+# Set build type to Debug if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
+# Set optimization flags for different build types
+set(CMAKE_C_FLAGS_DEBUG "-g -O0 -DALTAIR_DEBUG -Wno-macro-redefined")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
+set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG")
+
+# Suppress CMake policy warnings from submodules
+set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
+if(POLICY CMP0048)
+    cmake_policy(SET CMP0048 NEW)
+endif()
 
 # SELECT FRONT PANEL CONFIG #######################################################################################
 #
@@ -124,7 +139,10 @@ endif(ALTAIR_MQTT_BROKER_HOSTNAME)
 
 ################################################################################
 # Following lines required for EdgeMqttDevX
+# Suppress warnings from submodules
+set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 add_subdirectory("EdgeMqttDevX" edge_mqtt_devx)
+set(CMAKE_WARN_DEPRECATED ON CACHE BOOL "" FORCE)
 target_link_libraries(${PROJECT_NAME} "edge_mqtt_devx")
 ################################################################################
 

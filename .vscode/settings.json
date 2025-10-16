@@ -1,4 +1,5 @@
 {
     "liveServer.settings.port": 5501,
-    "cmake.sourceDirectory": "/workspaces/Altair-8800-Emulator/src"
+    "cmake.sourceDirectory": "/workspaces/Altair-8800-Emulator/src",
+    "postman.settings.dotenv-detection-notification-visibility": false
 }
