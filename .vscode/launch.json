@@ -173,7 +173,7 @@
     ],
     "compounds": [
         {
-            "name": "Launch Altair with Web Servers",
+            "name": "Launch Altair Debug with Web Servers",
             "configurations": [
                 "Terminal Web Server",
                 "Samples Web Server",
